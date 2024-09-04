@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="e09b162241e0b490fd93a1a23901a41a6152d550">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="3e820f728d4d4cf3d197cf257a0a455c924ceb5f">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -169,13 +169,13 @@
         <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20open%20Master%20Bypass%20Manager.lua</source>
       </version>
     </reapack>
-    <reapack name="mike - Scroller.lua" type="script" desc="Panel to select and scroll to desired track or folder. In midi editor panel can show notes of selected tracks.">
+    <reapack name="mike - Scroller.lua" type="script" desc="Scroller">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Uses first-order folder as buttons left click - select folder track and scroll view to it right click - show folder track structure, you can click on children track to select and scroll to it shift + click - mute folder track control + click - solo folder track\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Panel to select and scroll to desired track or folder. In midi editor panel can show notes of selected tracks.-- Uses first-order folder as buttons left click - select folder track and scroll view to it right click - show folder track structure, you can click on children track to select and scroll to it shift + click - mute folder track control + click - solo folder track\par}
 }
 ]]></description>
       </metadata>
