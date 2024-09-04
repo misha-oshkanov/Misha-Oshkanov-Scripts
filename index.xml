@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="f8730c7be762022a4bfefba514b7507a54fb2756">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="e09b162241e0b490fd93a1a23901a41a6152d550">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -9,29 +9,6 @@
     <reapack name="Monitor Controller Trim.jsfx" type="effect" desc="Monitor Controller Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T09:43:38Z">
         <source>https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/56691b5d7b934089b50035277c8b37f6ce4b8be9/Effects/Monitor%20Controller%20Trim.jsfx</source>
-      </version>
-    </reapack>
-  </category>
-  <category name="Example">
-    <reapack name="cfillion_Hello world.lua" type="script" desc="Hello world">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-<<<<<<< HEAD
-=======
-
-{\pard \ql \f0 \sa180 \li0 \fi0 This is an example of a package file. It installs itself as a ReaScript that does nothing but show "Hello World!" in REAPER's scripting console.\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 Packages may also include additional files specified using the @provides tag.\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 This text is the documentation shown when using ReaPack's "About this package" feature. {\field{\*\fldinst{HYPERLINK "https://commonmark.org/"}}{\fldrslt{\ul
-Markdown
-}}}
- {\i formatting} is supported.\par}
-}
-]]></description>
-      </metadata>
-      <version name="1.0" author="cfillion" time="2021-01-04T23:30:32Z">
-        <source main="main">https://github.com/cfillion/reapack-repository-template/raw/58a3e39ba95bd0f35846aa1f39aa4cb2574295e1/Example/cfillion_Hello%20world.lua</source>
       </version>
     </reapack>
   </category>
@@ -87,6 +64,34 @@ Markdown
       </metadata>
       <version name="1.0" author="Misha Oshkanov" time="2024-09-04T07:03:08Z">
         <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/6233a32613b7d9c36fa6cf5592dc4eb00036d652/ReaScripts/Rendering/mike%20-%20asset%20renderer%20-%20remove%20specific%20regions.lua</source>
+      </version>
+    </reapack>
+    <reapack name="mike - Dimmer Trim - Turn off.lua" type="script" desc="Dimmer Trim - Turn off">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Sets bypass for all effect in project named Dimeer Trim. The original effect is used for applying temporary gain chainges. You can use is with Stem Manager script to change levels of tracks only for certain render preset.\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="Misha Oshkanov" time="2024-09-04T11:12:02Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e09b162241e0b490fd93a1a23901a41a6152d550/ReaScripts/Rendering/mike%20-%20Dimmer%20Trim%20-%20Turn%20off.lua</source>
+      </version>
+    </reapack>
+    <reapack name="mike - Dimmer Trim - Turn on.lua" type="script" desc="Dimmer Trim - Turn on">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Sets bypass for all effect in project named Dimeer Trim. The original effect is used for applying temporary gain chainges. You can use is with Stem Manager script to change levels of tracks only for certain render preset.\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="Misha Oshkanov" time="2024-09-04T11:12:02Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e09b162241e0b490fd93a1a23901a41a6152d550/ReaScripts/Rendering/mike%20-%20Dimmer%20Trim%20-%20Turn%20on.lua</source>
       </version>
     </reapack>
   </category>
@@ -162,6 +167,20 @@ Markdown
       </metadata>
       <version name="1.3" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
         <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20open%20Master%20Bypass%20Manager.lua</source>
+      </version>
+    </reapack>
+    <reapack name="mike - Scroller.lua" type="script" desc="Panel to select and scroll to desired track or folder. In midi editor panel can show notes of selected tracks.">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Uses first-order folder as buttons left click - select folder track and scroll view to it right click - show folder track structure, you can click on children track to select and scroll to it shift + click - mute folder track control + click - solo folder track\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.5" author="Misha Oshkanov" time="2024-09-04T11:12:02Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e09b162241e0b490fd93a1a23901a41a6152d550/ReaScripts/UI%20Utilities/mike%20-%20Scroller.lua</source>
       </version>
     </reapack>
     <reapack name="mike - show peak lufs readouts in arrange view.lua" type="script" desc="Show master peak lufs readouts in arrange view">
