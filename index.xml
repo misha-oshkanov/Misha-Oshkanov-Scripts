@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="56691b5d7b934089b50035277c8b37f6ce4b8be9">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="e42b0921339579979e2251efc643111ed9bec6cb">
   <category name="Effects">
+    <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
+      <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
+        <source>https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e42b0921339579979e2251efc643111ed9bec6cb/Effects/Dimmer%20Trim..jsfx</source>
+      </version>
+    </reapack>
     <reapack name="Monitor Controller Trim.jsfx" type="effect" desc="Monitor Controller Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T09:43:38Z">
         <source>https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/56691b5d7b934089b50035277c8b37f6ce4b8be9/Effects/Monitor%20Controller%20Trim.jsfx</source>
@@ -130,7 +135,7 @@ Markdown
     </reapack>
     <reapack name="mike - monitor volume controller.lua" type="script" desc="Monitor Volume Controller">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -186,11 +191,11 @@ Markdown
     </reapack>
   </category>
   <metadata>
-    <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+    <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel0 \b \fs36 Misha Oshkanov Reaper Scripts\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs36 Misha Oshkanov Reaper Scripts\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 The URL to import in ReaPack is\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 \f1 https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/master/index.xml\par}
 }
