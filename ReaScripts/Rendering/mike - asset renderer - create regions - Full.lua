@@ -27,7 +27,6 @@ regions_to_remove = {'Loop','Full'} -- Name of regions to delete before creating
 
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
 
-
 function get_region_track()
     local count = reaper.CountTracks(0)
     for i=1,count do 
@@ -50,8 +49,6 @@ function remove_regions()
     end
 end
 
-
-
 remove_regions()
 track = get_region_track()
 
@@ -65,10 +62,8 @@ for i=1,count do
             item_start = reaper.GetMediaItemInfo_Value(item, 'D_POSITION')
             item_end   = item_start + reaper.GetMediaItemInfo_Value(item, 'D_LENGTH')
             col = reaper.GetMediaItemInfo_Value(item, 'I_CUSTOMCOLOR')
-            -- reaper.SetMediaItemInfo_Value(item, 'B_MUTE', mute)
             reaper.AddProjectMarker2(0, 1, item_start, item_end, item_name, 0,col)
         end 
     end 
 end
-
 reaper.UpdateArrange()
