@@ -115,13 +115,14 @@ function Main()
     ImGui.SameLine(ctx)
     ImGui.PopStyleColor(ctx, 4)
     ImGui.PopID(ctx)
-      
-
     
-      if b.button then
-          index = reaper.TrackFX_AddByName(reaper.GetMasterTrack(), controller_fx, true, 100)
-          reaper.TrackFX_SetParam( reaper.GetMasterTrack(), index+mon, 0, b.value )
-      end
+    if b.button then
+
+        master_track = reaper.GetMasterTrack()
+        index = reaper.TrackFX_AddByName(reaper.GetMasterTrack(), controller_fx, true, 100)
+        if reaper.TrackFX_GetOpen(master_track, mon+index) then reaper.TrackFX_Show( master_track, mon+index, 2 ) end
+        reaper.TrackFX_SetParam(master_track, index+mon, 0, b.value )
+    end
   end
   
 end
