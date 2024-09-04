@@ -1,4 +1,4 @@
-#  Misha Oshkanov ReaPack Repository
+#  Misha Oshkanov Reaper Scripts
 
 The URL to import in ReaPack is
 ```xml
