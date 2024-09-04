@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="e42b0921339579979e2251efc643111ed9bec6cb">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="f8730c7be762022a4bfefba514b7507a54fb2756">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -145,6 +145,9 @@ Markdown
       </metadata>
       <version name="1.3" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
         <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20monitor%20volume%20controller.lua</source>
+      </version>
+      <version name="1.4" author="Misha Oshkanov" time="2024-09-04T10:29:41Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/f8730c7be762022a4bfefba514b7507a54fb2756/ReaScripts/UI%20Utilities/mike%20-%20monitor%20volume%20controller.lua</source>
       </version>
     </reapack>
     <reapack name="mike - open Master Bypass Manager.lua" type="script" desc="Master Bypass Manager">
