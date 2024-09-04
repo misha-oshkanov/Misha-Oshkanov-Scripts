@@ -6,6 +6,191 @@
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
+<<<<<<< HEAD
+=======
+
+{\pard \ql \f0 \sa180 \li0 \fi0 This is an example of a package file. It installs itself as a ReaScript that does nothing but show "Hello World!" in REAPER's scripting console.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Packages may also include additional files specified using the @provides tag.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 This text is the documentation shown when using ReaPack's "About this package" feature. {\field{\*\fldinst{HYPERLINK "https://commonmark.org/"}}{\fldrslt{\ul
+Markdown
+}}}
+ {\i formatting} is supported.\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="cfillion" time="2021-01-04T23:30:32Z">
+        <source main="main">https://github.com/cfillion/reapack-repository-template/raw/58a3e39ba95bd0f35846aa1f39aa4cb2574295e1/Example/cfillion_Hello%20world.lua</source>
+      </version>
+    </reapack>
+  </category>
+  <category name="ReaScripts/Rendering">
+    <reapack name="mike - asset renderer - create regions - Full.lua" type="script" desc="Asset Renderer - Create regions 'FUll'">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab Define a region track name and item name (RENDER by default). Region track is a track in the project that contains empty items with text/\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab Use these empty items with text to specify where regions with item names will be created.\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Script wii delete all regions in the project with names listed in regions to remove table before creating new regions Use this script as template for your own preferences\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab \u1054 ?\u1087 ?\u1088 ?\u1077 ?\u1076 ?\u1077 ?\u1083 ?\u1080 ?\u1090 ?\u1077 ? \u1085 ?\u1072 ?\u1079 ?\u1074 ?\u1072 ?\u1085 ?\u1080 ?\u1077 ? \u1090 ?\u1088 ?\u1077 ?\u1082 ?\u1072 ? \u1074 ? \u1087 ?\u1088 ?\u1086 ?\u1077 ?\u1082 ?\u1090 ?\u1077 ? (\u1087 ?\u1086 ? \u1091 ?\u1084 ?\u1086 ?\u1083 ?\u1095 ?\u1072 ?\u1085 ?\u1080 ?\u1102 ? RENDER), \u1082 ?\u1086 ?\u1090 ?\u1086 ?\u1088 ?\u1099 ?\u1081 ? \u1073 ?\u1091 ?\u1076 ?\u1077 ?\u1090 ? \u1080 ?\u1089 ?\u1087 ?\u1086 ?\u1083 ?\u1100 ?\u1079 ?\u1086 ?\u1074 ?\u1072 ?\u1090 ?\u1100 ?\u1089 ?\u1103 ? \u1076 ?\u1083 ?\u1103 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1086 ?\u1074 ?. \u1053 ?\u1072 ? \u1101 ?\u1090 ?\u1086 ?\u1084 ? \u1090 ?\u1088 ?\u1077 ?\u1082 ?\u1077 ? \u1076 ?\u1086 ?\u1083 ?\u1078 ?\u1085 ?\u1099 ? \u1073 ?\u1099 ?\u1090 ?\u1100 ? \u1087 ?\u1091 ?\u1089 ?\u1090 ?\u1099 ?\u1077 ? \u1072 ?\u1081 ?\u1090 ?\u1077 ?\u1084 ?\u1099 ? \u1089 ? \u1090 ?\u1077 ?\u1082 ?\u1089 ?\u1090 ?\u1086 ?\u1084 ?\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab \u1058 ?\u1077 ?\u1082 ?\u1089 ?\u1090 ? \u1074 ? \u1087 ?\u1091 ?\u1089 ?\u1090 ?\u1099 ?\u1093 ? \u1072 ?\u1081 ?\u1090 ?\u1077 ?\u1084 ?\u1072 ?\u1093 ? \u1073 ?\u1091 ?\u1076 ?\u1077 ?\u1090 ? \u1086 ?\u1087 ?\u1088 ?\u1077 ?\u1076 ?\u1077 ?\u1083 ?\u1103 ?\u1090 ?\u1100 ? \u1085 ?\u1072 ?\u1079 ?\u1074 ?\u1072 ?\u1085 ?\u1080 ?\u1077 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1072 ?, \u1075 ?\u1088 ?\u1072 ?\u1085 ?\u1080 ?\u1094 ?\u1099 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1072 ? \u1073 ?\u1091 ?\u1076 ?\u1091 ?\u1090 ? \u1089 ?\u1086 ?\u1086 ?\u1090 ?\u1074 ?\u1077 ?\u1090 ?\u1089 ?\u1090 ?\u1074 ?\u1086 ?\u1074 ?\u1072 ?\u1090 ?\u1100 ? \u1075 ?\u1088 ?\u1072 ?\u1085 ?\u1080 ?\u1094 ?\u1072 ?\u1084 ? \u1072 ?\u1081 ?\u1090 ?\u1077 ?\u1084 ?\u1072 ?\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \u1057 ?\u1082 ?\u1088 ?\u1080 ?\u1087 ?\u1090 ? \u1091 ?\u1076 ?\u1072 ?\u1083 ?\u1080 ?\u1090 ? \u1074 ?\u1089 ?\u1077 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1099 ?, \u1082 ?\u1086 ?\u1090 ?\u1086 ?\u1088 ?\u1099 ?\u1077 ? \u1091 ?\u1082 ?\u1072 ?\u1079 ?\u1072 ?\u1085 ?\u1099 ? \u1074 ? \u1089 ?\u1087 ?\u1080 ?\u1089 ?\u1082 ?\u1077 ? regions to remove \u1087 ?\u1077 ?\u1088 ?\u1077 ?\u1076 ? \u1089 ?\u1086 ?\u1079 ?\u1076 ?\u1072 ?\u1085 ?\u1080 ?\u1077 ?\u1084 ? \u1085 ?\u1086 ?\u1074 ?\u1099 ?\u1093 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1086 ?\u1074 ? \u1048 ?\u1089 ?\u1087 ?\u1086 ?\u1083 ?\u1100 ?\u1079 ?\u1091 ?\u1081 ?\u1090 ?\u1077 ? \u1101 ?\u1090 ?\u1086 ?\u1090 ? \u1089 ?\u1082 ?\u1088 ?\u1080 ?\u1087 ?\u1090 ? \u1082 ?\u1072 ?\u1082 ? \u1090 ?\u1077 ?\u1084 ?\u1087 ?\u1083 ?\u1077 ?\u1081 ?\u1090 ? \u1076 ?\u1083 ?\u1103 ? \u1089 ?\u1086 ?\u1079 ?\u1076 ?\u1072 ?\u1085 ?\u1080 ?\u1103 ? \u1089 ?\u1074 ?\u1086 ?\u1080 ?\u1093 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1086 ?\u1074 ?, \u1080 ?\u1079 ?\u1084 ?\u1077 ?\u1085 ?\u1080 ?\u1090 ?\u1077 ? item name \u1080 ? regions to remove\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="Misha Oshkanov" time="2024-09-04T07:03:08Z">
+        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/6233a32613b7d9c36fa6cf5592dc4eb00036d652/ReaScripts/Rendering/mike%20-%20asset%20renderer%20-%20create%20regions%20-%20Full.lua</source>
+      </version>
+    </reapack>
+    <reapack name="mike - asset renderer - create regions - Loop.lua" type="script" desc="Asset Renderer - Create regions 'Loop'">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab Define a region track name and item name (RENDER by default). Region track is a track in the project that contains empty items with text/\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab Use these empty items with text to specify where regions with item names will be created.\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Script wii delete all regions in the project with names listed in regions to remove table before creating new regions Use this script as template for your own preferences\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab \u1054 ?\u1087 ?\u1088 ?\u1077 ?\u1076 ?\u1077 ?\u1083 ?\u1080 ?\u1090 ?\u1077 ? \u1085 ?\u1072 ?\u1079 ?\u1074 ?\u1072 ?\u1085 ?\u1080 ?\u1077 ? \u1090 ?\u1088 ?\u1077 ?\u1082 ?\u1072 ? \u1074 ? \u1087 ?\u1088 ?\u1086 ?\u1077 ?\u1082 ?\u1090 ?\u1077 ? (\u1087 ?\u1086 ? \u1091 ?\u1084 ?\u1086 ?\u1083 ?\u1095 ?\u1072 ?\u1085 ?\u1080 ?\u1102 ? RENDER), \u1082 ?\u1086 ?\u1090 ?\u1086 ?\u1088 ?\u1099 ?\u1081 ? \u1073 ?\u1091 ?\u1076 ?\u1077 ?\u1090 ? \u1080 ?\u1089 ?\u1087 ?\u1086 ?\u1083 ?\u1100 ?\u1079 ?\u1086 ?\u1074 ?\u1072 ?\u1090 ?\u1100 ?\u1089 ?\u1103 ? \u1076 ?\u1083 ?\u1103 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1086 ?\u1074 ?. \u1053 ?\u1072 ? \u1101 ?\u1090 ?\u1086 ?\u1084 ? \u1090 ?\u1088 ?\u1077 ?\u1082 ?\u1077 ? \u1076 ?\u1086 ?\u1083 ?\u1078 ?\u1085 ?\u1099 ? \u1073 ?\u1099 ?\u1090 ?\u1100 ? \u1087 ?\u1091 ?\u1089 ?\u1090 ?\u1099 ?\u1077 ? \u1072 ?\u1081 ?\u1090 ?\u1077 ?\u1084 ?\u1099 ? \u1089 ? \u1090 ?\u1077 ?\u1082 ?\u1089 ?\u1090 ?\u1086 ?\u1084 ?\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab \u1058 ?\u1077 ?\u1082 ?\u1089 ?\u1090 ? \u1074 ? \u1087 ?\u1091 ?\u1089 ?\u1090 ?\u1099 ?\u1093 ? \u1072 ?\u1081 ?\u1090 ?\u1077 ?\u1084 ?\u1072 ?\u1093 ? \u1073 ?\u1091 ?\u1076 ?\u1077 ?\u1090 ? \u1086 ?\u1087 ?\u1088 ?\u1077 ?\u1076 ?\u1077 ?\u1083 ?\u1103 ?\u1090 ?\u1100 ? \u1085 ?\u1072 ?\u1079 ?\u1074 ?\u1072 ?\u1085 ?\u1080 ?\u1077 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1072 ?, \u1075 ?\u1088 ?\u1072 ?\u1085 ?\u1080 ?\u1094 ?\u1099 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1072 ? \u1073 ?\u1091 ?\u1076 ?\u1091 ?\u1090 ? \u1089 ?\u1086 ?\u1086 ?\u1090 ?\u1074 ?\u1077 ?\u1090 ?\u1089 ?\u1090 ?\u1074 ?\u1086 ?\u1074 ?\u1072 ?\u1090 ?\u1100 ? \u1075 ?\u1088 ?\u1072 ?\u1085 ?\u1080 ?\u1094 ?\u1072 ?\u1084 ? \u1072 ?\u1081 ?\u1090 ?\u1077 ?\u1084 ?\u1072 ?\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \u1057 ?\u1082 ?\u1088 ?\u1080 ?\u1087 ?\u1090 ? \u1091 ?\u1076 ?\u1072 ?\u1083 ?\u1080 ?\u1090 ? \u1074 ?\u1089 ?\u1077 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1099 ?, \u1082 ?\u1086 ?\u1090 ?\u1086 ?\u1088 ?\u1099 ?\u1077 ? \u1091 ?\u1082 ?\u1072 ?\u1079 ?\u1072 ?\u1085 ?\u1099 ? \u1074 ? \u1089 ?\u1087 ?\u1080 ?\u1089 ?\u1082 ?\u1077 ? regions to remove \u1087 ?\u1077 ?\u1088 ?\u1077 ?\u1076 ? \u1089 ?\u1086 ?\u1079 ?\u1076 ?\u1072 ?\u1085 ?\u1080 ?\u1077 ?\u1084 ? \u1085 ?\u1086 ?\u1074 ?\u1099 ?\u1093 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1086 ?\u1074 ? \u1048 ?\u1089 ?\u1087 ?\u1086 ?\u1083 ?\u1100 ?\u1079 ?\u1091 ?\u1081 ?\u1090 ?\u1077 ? \u1101 ?\u1090 ?\u1086 ?\u1090 ? \u1089 ?\u1082 ?\u1088 ?\u1080 ?\u1087 ?\u1090 ? \u1082 ?\u1072 ?\u1082 ? \u1090 ?\u1077 ?\u1084 ?\u1087 ?\u1083 ?\u1077 ?\u1081 ?\u1090 ? \u1076 ?\u1083 ?\u1103 ? \u1089 ?\u1086 ?\u1079 ?\u1076 ?\u1072 ?\u1085 ?\u1080 ?\u1103 ? \u1089 ?\u1074 ?\u1086 ?\u1080 ?\u1093 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1086 ?\u1074 ?, \u1080 ?\u1079 ?\u1084 ?\u1077 ?\u1085 ?\u1080 ?\u1090 ?\u1077 ? item name \u1080 ? regions to remove\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="Misha Oshkanov" time="2024-09-04T07:07:39Z">
+        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/858a8171ef93c63d94905cfa3c4ae100725ca3c4/ReaScripts/Rendering/mike%20-%20asset%20renderer%20-%20create%20regions%20-%20Loop.lua</source>
+      </version>
+    </reapack>
+    <reapack name="mike - asset renderer - remove specific regions.lua" type="script" desc="Asset Renderer - Remove scecific regions">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Use in pairs with create regions scripts Script wii delete all regions in the project with names listed in regions to remove table before creating new regions Use this script as template for your own preferences\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \u1048 ?\u1089 ?\u1087 ?\u1086 ?\u1083 ?\u1100 ?\u1079 ?\u1091 ?\u1081 ?\u1090 ?\u1077 ? \u1074 ?\u1084 ?\u1077 ?\u1089 ?\u1090 ?\u1077 ? \u1089 ?\u1086 ? \u1089 ?\u1082 ?\u1088 ?\u1080 ?\u1087 ?\u1090 ?\u1072 ?\u1084 ?\u1080 ? \u1076 ?\u1083 ?\u1103 ? \u1089 ?\u1086 ?\u1079 ?\u1076 ?\u1072 ?\u1085 ?\u1080 ?\u1103 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1086 ?\u1074 ? \u1057 ?\u1082 ?\u1088 ?\u1080 ?\u1087 ?\u1090 ? \u1091 ?\u1076 ?\u1072 ?\u1083 ?\u1080 ?\u1090 ? \u1074 ?\u1089 ?\u1077 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1099 ?, \u1082 ?\u1086 ?\u1090 ?\u1086 ?\u1088 ?\u1099 ?\u1077 ? \u1091 ?\u1082 ?\u1072 ?\u1079 ?\u1072 ?\u1085 ?\u1099 ? \u1074 ? \u1089 ?\u1087 ?\u1080 ?\u1089 ?\u1082 ?\u1077 ? regions to remove \u1087 ?\u1077 ?\u1088 ?\u1077 ?\u1076 ? \u1089 ?\u1086 ?\u1079 ?\u1076 ?\u1072 ?\u1085 ?\u1080 ?\u1077 ?\u1084 ? \u1085 ?\u1086 ?\u1074 ?\u1099 ?\u1093 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1086 ?\u1074 ? \u1048 ?\u1089 ?\u1087 ?\u1086 ?\u1083 ?\u1100 ?\u1079 ?\u1091 ?\u1081 ?\u1090 ?\u1077 ? \u1101 ?\u1090 ?\u1086 ?\u1090 ? \u1089 ?\u1082 ?\u1088 ?\u1080 ?\u1087 ?\u1090 ? \u1082 ?\u1072 ?\u1082 ? \u1090 ?\u1077 ?\u1084 ?\u1087 ?\u1083 ?\u1077 ?\u1081 ?\u1090 ? \u1076 ?\u1083 ?\u1103 ? \u1089 ?\u1086 ?\u1079 ?\u1076 ?\u1072 ?\u1085 ?\u1080 ?\u1103 ? \u1089 ?\u1074 ?\u1086 ?\u1080 ?\u1093 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1086 ?\u1074 ?, \u1080 ?\u1079 ?\u1084 ?\u1077 ?\u1085 ?\u1080 ?\u1090 ?\u1077 ? item name \u1080 ? regions to remove\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="Misha Oshkanov" time="2024-09-04T07:03:08Z">
+        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/6233a32613b7d9c36fa6cf5592dc4eb00036d652/ReaScripts/Rendering/mike%20-%20asset%20renderer%20-%20remove%20specific%20regions.lua</source>
+      </version>
+    </reapack>
+  </category>
+  <category name="ReaScripts/UI Utilities">
+    <reapack name="mike - Master Bypass Manager - activate toggle.lua" type="script" desc="Master Bypass Manager">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Manages bypass states of effects in master fx chain use activate and deactivate toggle scripts to switch bypass states\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.3" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
+        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20Master%20Bypass%20Manager%20-%20activate%20toggle.lua</source>
+      </version>
+    </reapack>
+    <reapack name="mike - Master Bypass Manager - deactivate toggle.lua" type="script" desc="Master Bypass Manager">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Manages bypass states of effects in master fx chain use activate and deactivate toggle scripts to switch bypass states\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.3" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
+        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20Master%20Bypass%20Manager%20-%20deactivate%20toggle.lua</source>
+      </version>
+    </reapack>
+    <reapack name="mike - Master Bypass Manager - toggle bypass.lua" type="script" desc="Master Bypass Manager">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Manages bypass states of effects in master fx chain use activate and deactivate toggle scripts to switch bypass states\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.3" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
+        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20Master%20Bypass%20Manager%20-%20toggle%20bypass.lua</source>
+      </version>
+    </reapack>
+    <reapack name="mike - monitor volume controller.lua" type="script" desc="Monitor Volume Controller">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. If you need more levels or change db values you can edit buttons table.\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.3" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
+        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20monitor%20volume%20controller.lua</source>
+      </version>
+    </reapack>
+    <reapack name="mike - open Master Bypass Manager.lua" type="script" desc="Master Bypass Manager">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Manages bypass states of effects in master fx chain use activate and deactivate toggle scripts to switch bypass states\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.3" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
+        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20open%20Master%20Bypass%20Manager.lua</source>
+      </version>
+    </reapack>
+    <reapack name="mike - show peak lufs readouts in arrange view.lua" type="script" desc="Show master peak lufs readouts in arrange view">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Shows little text readout for master lufs and peak meters Right click toggle to selected track meter readouts. Track mode adds rectangle around the text\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="Misha Oshkanov" time="2024-09-04T07:03:08Z">
+        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/6233a32613b7d9c36fa6cf5592dc4eb00036d652/ReaScripts/UI%20Utilities/mike%20-%20show%20peak%20lufs%20readouts%20in%20arrange%20view.lua</source>
+      </version>
+    </reapack>
+    <reapack name="mike - ShowHide Manager.lua" type="script" desc="ShowHide Manager">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 UI panel for showind and hiding different types of tracks in project Types: sends, selected tracks, muted tracks, empty tracks, track within region, offline tracks\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
+        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20ShowHide%20Manager.lua</source>
+      </version>
+    </reapack>
+  </category>
+  <metadata>
+    <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs36 Misha Oshkanov Reaper Scripts\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The URL to import in ReaPack is\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/master/index.xml\par}
+}
+]]></description>
+  </metadata>
+</index>
+>>>>>>> 0f3830723787d3b9e14e6af676672070514cc403
 
 {\pard \ql \f0 \sa180 \li0 \fi0 This is an example of a package file. It installs itself as a ReaScript that does nothing but show "Hello World!" in REAPER's scripting console.\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Packages may also include additional files specified using the @provides tag.\par}
