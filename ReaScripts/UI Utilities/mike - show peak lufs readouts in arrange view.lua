@@ -1,7 +1,19 @@
+-- @description Show master peak lufs readouts in arrange view
+-- @author Misha Oshkanov
+-- @version 1.0
+-- @about
+--  Shows little text readout for master lufs and peak meters
+--  Right click toggle to selected track meter readouts. Track mode adds rectangle around the text
 
+--  Показывает текстовые значения LUFS и пика на мастер канале в углу окна аранжировки
+--  Правый клик по значению вкючает режим трека, в этом режиме паказаны значеня выбранного трека. В этом режиме вокруг значений появляется прямоугольник
+
+---------------------------------------------------------------------
+---------------------------------------------------------------------
 
 floating_window = false
 only_master = true
+font_size = 26
 
 offset_x = 40
 offset_y = 25
@@ -10,10 +22,6 @@ offset_y = 25
 window_w = 150
 h = 10
 lufs_h = 16
-
-palette = {
-
-}
 
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
 
@@ -32,7 +40,7 @@ end
 
 
 local ctx = reaper.ImGui_CreateContext('Meter')
-local font = reaper.ImGui_CreateFont('sans-serif', 26,reaper.ImGui_FontFlags_Bold())
+local font = reaper.ImGui_CreateFont('sans-serif', font_size,reaper.ImGui_FontFlags_Bold())
 reaper.ImGui_Attach(ctx, font)
 
 proj = 0
@@ -231,8 +239,6 @@ function loop()
     if not floating_window then 
         reaper.ImGui_SetNextWindowPos( ctx, (ar_right-offset_x)*(1/scale), (ar_bottom-offset_y)*(1/scale), condIn, 0.5, 0.5 )
     end
-
-
     
 
     local visible, open = reaper.ImGui_Begin(ctx, 'Meter', true,window_flags)
