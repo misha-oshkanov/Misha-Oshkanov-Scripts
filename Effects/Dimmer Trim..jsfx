@@ -1,6 +1,8 @@
 desc:Dimmer Trim
+
 //tags: utility gain stereo
 //author: Cockos
+//version: 1.0
 
 slider1:0<-60,24,0.1>Volume
 --slider2:0<-100,100,0.1>Pan
