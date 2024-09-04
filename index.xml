@@ -38,7 +38,7 @@ Markdown
 ]]></description>
       </metadata>
       <version name="1.0" author="Misha Oshkanov" time="2024-09-04T07:03:08Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/6233a32613b7d9c36fa6cf5592dc4eb00036d652/ReaScripts/Rendering/mike%20-%20asset%20renderer%20-%20create%20regions%20-%20Full.lua</source>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/6233a32613b7d9c36fa6cf5592dc4eb00036d652/ReaScripts/Rendering/mike%20-%20asset%20renderer%20-%20create%20regions%20-%20Full.lua</source>
       </version>
     </reapack>
     <reapack name="mike - asset renderer - create regions - Loop.lua" type="script" desc="Asset Renderer - Create regions 'Loop'">
@@ -57,7 +57,7 @@ Markdown
 ]]></description>
       </metadata>
       <version name="1.0" author="Misha Oshkanov" time="2024-09-04T07:07:39Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/858a8171ef93c63d94905cfa3c4ae100725ca3c4/ReaScripts/Rendering/mike%20-%20asset%20renderer%20-%20create%20regions%20-%20Loop.lua</source>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/858a8171ef93c63d94905cfa3c4ae100725ca3c4/ReaScripts/Rendering/mike%20-%20asset%20renderer%20-%20create%20regions%20-%20Loop.lua</source>
       </version>
     </reapack>
     <reapack name="mike - asset renderer - remove specific regions.lua" type="script" desc="Asset Renderer - Remove scecific regions">
@@ -72,7 +72,7 @@ Markdown
 ]]></description>
       </metadata>
       <version name="1.0" author="Misha Oshkanov" time="2024-09-04T07:03:08Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/6233a32613b7d9c36fa6cf5592dc4eb00036d652/ReaScripts/Rendering/mike%20-%20asset%20renderer%20-%20remove%20specific%20regions.lua</source>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/6233a32613b7d9c36fa6cf5592dc4eb00036d652/ReaScripts/Rendering/mike%20-%20asset%20renderer%20-%20remove%20specific%20regions.lua</source>
       </version>
     </reapack>
   </category>
@@ -88,7 +88,7 @@ Markdown
 ]]></description>
       </metadata>
       <version name="1.3" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20Master%20Bypass%20Manager%20-%20activate%20toggle.lua</source>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20Master%20Bypass%20Manager%20-%20activate%20toggle.lua</source>
       </version>
     </reapack>
     <reapack name="mike - Master Bypass Manager - deactivate toggle.lua" type="script" desc="Master Bypass Manager">
@@ -102,7 +102,7 @@ Markdown
 ]]></description>
       </metadata>
       <version name="1.3" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20Master%20Bypass%20Manager%20-%20deactivate%20toggle.lua</source>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20Master%20Bypass%20Manager%20-%20deactivate%20toggle.lua</source>
       </version>
     </reapack>
     <reapack name="mike - Master Bypass Manager - toggle bypass.lua" type="script" desc="Master Bypass Manager">
@@ -116,7 +116,7 @@ Markdown
 ]]></description>
       </metadata>
       <version name="1.3" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20Master%20Bypass%20Manager%20-%20toggle%20bypass.lua</source>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20Master%20Bypass%20Manager%20-%20toggle%20bypass.lua</source>
       </version>
     </reapack>
     <reapack name="mike - monitor volume controller.lua" type="script" desc="Monitor Volume Controller">
@@ -130,7 +130,7 @@ Markdown
 ]]></description>
       </metadata>
       <version name="1.3" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20monitor%20volume%20controller.lua</source>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20monitor%20volume%20controller.lua</source>
       </version>
     </reapack>
     <reapack name="mike - open Master Bypass Manager.lua" type="script" desc="Master Bypass Manager">
@@ -144,7 +144,7 @@ Markdown
 ]]></description>
       </metadata>
       <version name="1.3" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20open%20Master%20Bypass%20Manager.lua</source>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20open%20Master%20Bypass%20Manager.lua</source>
       </version>
     </reapack>
     <reapack name="mike - show peak lufs readouts in arrange view.lua" type="script" desc="Show master peak lufs readouts in arrange view">
@@ -158,7 +158,7 @@ Markdown
 ]]></description>
       </metadata>
       <version name="1.0" author="Misha Oshkanov" time="2024-09-04T07:03:08Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/6233a32613b7d9c36fa6cf5592dc4eb00036d652/ReaScripts/UI%20Utilities/mike%20-%20show%20peak%20lufs%20readouts%20in%20arrange%20view.lua</source>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/6233a32613b7d9c36fa6cf5592dc4eb00036d652/ReaScripts/UI%20Utilities/mike%20-%20show%20peak%20lufs%20readouts%20in%20arrange%20view.lua</source>
       </version>
     </reapack>
     <reapack name="mike - ShowHide Manager.lua" type="script" desc="ShowHide Manager">
@@ -172,7 +172,7 @@ Markdown
 ]]></description>
       </metadata>
       <version name="1.0" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20ShowHide%20Manager.lua</source>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20ShowHide%20Manager.lua</source>
       </version>
     </reapack>
   </category>
@@ -181,9 +181,9 @@ Markdown
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel0 \b \fs36 Misha Oshkanov ReaPack Repository\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel0 \b \fs36 Misha Oshkanov Reaper Scripts\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 The URL to import in ReaPack is\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 \f1 https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/master/index.xml\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \f1 https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/master/index.xml\par}
 }
 ]]></description>
   </metadata>
