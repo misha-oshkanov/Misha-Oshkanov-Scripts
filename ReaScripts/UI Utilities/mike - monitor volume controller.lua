@@ -15,7 +15,6 @@ buttons = {
   {button = nil, value = 0, s = nil},
   {button = nil, value = 6, s = nil},
   {button = nil, value = 12, s = nil},
-
 }
 
 move_x = 10 -- move panel in x coordinate
