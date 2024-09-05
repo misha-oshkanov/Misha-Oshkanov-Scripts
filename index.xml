@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="a627eaabb77f19be61043b5b8831aac21c4c287e">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="e031d4a19fa5133813a5928c36d85420dc06f840">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -222,6 +222,20 @@
       </metadata>
       <version name="1.0" author="Misha Oshkanov" time="2024-09-05T07:26:38Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54/ReaScripts/UI%20Utilities/misha%20-%20ShowHide%20Manager.lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - Track Renamer.lua" type="script" desc="Track Renamer">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 UI panel to quickly rename track with sliders. Work in progress\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.4" author="Misha Oshkanov" time="2024-09-05T07:56:03Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e031d4a19fa5133813a5928c36d85420dc06f840/ReaScripts/UI%20Utilities/misha%20-%20Track%20Renamer.lua</source>
       </version>
     </reapack>
   </category>
