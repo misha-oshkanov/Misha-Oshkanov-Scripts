@@ -1,8 +1,8 @@
 -- @description Track Renamer
 -- @author Misha Oshkanov
--- @version 1.3
+-- @version 1.4
 -- @about
--- UI panel to quickly rename track with sliders. Work in progress
+--  UI panel to quickly rename track with sliders. Work in progress
 
 
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
