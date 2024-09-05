@@ -2,6 +2,7 @@
 -- @author Misha Oshkanov
 -- @version 1.0
 -- @about
+--  Script uses mouse pointer to determine what fx window should be opened
 
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
 
