@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="3e820f728d4d4cf3d197cf257a0a455c924ceb5f">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -13,60 +13,60 @@
     </reapack>
   </category>
   <category name="ReaScripts/Rendering">
-    <reapack name="mike - asset renderer - create regions - Full.lua" type="script" desc="Asset Renderer - Create regions 'FUll'">
+    <reapack name="misha - Asset Renderer - Create Regions - Full.lua" type="script" desc="Asset Renderer - Create regions 'FUll'">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
 {\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab Define a region track name and item name (RENDER by default). Region track is a track in the project that contains empty items with text/\par}
 {\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab Use these empty items with text to specify where regions with item names will be created.\sa180\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Script wii delete all regions in the project with names listed in regions to remove table before creating new regions Use this script as template for your own preferences\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab \u1054 ?\u1087 ?\u1088 ?\u1077 ?\u1076 ?\u1077 ?\u1083 ?\u1080 ?\u1090 ?\u1077 ? \u1085 ?\u1072 ?\u1079 ?\u1074 ?\u1072 ?\u1085 ?\u1080 ?\u1077 ? \u1090 ?\u1088 ?\u1077 ?\u1082 ?\u1072 ? \u1074 ? \u1087 ?\u1088 ?\u1086 ?\u1077 ?\u1082 ?\u1090 ?\u1077 ? (\u1087 ?\u1086 ? \u1091 ?\u1084 ?\u1086 ?\u1083 ?\u1095 ?\u1072 ?\u1085 ?\u1080 ?\u1102 ? RENDER), \u1082 ?\u1086 ?\u1090 ?\u1086 ?\u1088 ?\u1099 ?\u1081 ? \u1073 ?\u1091 ?\u1076 ?\u1077 ?\u1090 ? \u1080 ?\u1089 ?\u1087 ?\u1086 ?\u1083 ?\u1100 ?\u1079 ?\u1086 ?\u1074 ?\u1072 ?\u1090 ?\u1100 ?\u1089 ?\u1103 ? \u1076 ?\u1083 ?\u1103 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1086 ?\u1074 ?. \u1053 ?\u1072 ? \u1101 ?\u1090 ?\u1086 ?\u1084 ? \u1090 ?\u1088 ?\u1077 ?\u1082 ?\u1077 ? \u1076 ?\u1086 ?\u1083 ?\u1078 ?\u1085 ?\u1099 ? \u1073 ?\u1099 ?\u1090 ?\u1100 ? \u1087 ?\u1091 ?\u1089 ?\u1090 ?\u1099 ?\u1077 ? \u1072 ?\u1081 ?\u1090 ?\u1077 ?\u1084 ?\u1099 ? \u1089 ? \u1090 ?\u1077 ?\u1082 ?\u1089 ?\u1090 ?\u1086 ?\u1084 ?\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab \u1058 ?\u1077 ?\u1082 ?\u1089 ?\u1090 ? \u1074 ? \u1087 ?\u1091 ?\u1089 ?\u1090 ?\u1099 ?\u1093 ? \u1072 ?\u1081 ?\u1090 ?\u1077 ?\u1084 ?\u1072 ?\u1093 ? \u1073 ?\u1091 ?\u1076 ?\u1077 ?\u1090 ? \u1086 ?\u1087 ?\u1088 ?\u1077 ?\u1076 ?\u1077 ?\u1083 ?\u1103 ?\u1090 ?\u1100 ? \u1085 ?\u1072 ?\u1079 ?\u1074 ?\u1072 ?\u1085 ?\u1080 ?\u1077 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1072 ?, \u1075 ?\u1088 ?\u1072 ?\u1085 ?\u1080 ?\u1094 ?\u1099 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1072 ? \u1073 ?\u1091 ?\u1076 ?\u1091 ?\u1090 ? \u1089 ?\u1086 ?\u1086 ?\u1090 ?\u1074 ?\u1077 ?\u1090 ?\u1089 ?\u1090 ?\u1074 ?\u1086 ?\u1074 ?\u1072 ?\u1090 ?\u1100 ? \u1075 ?\u1088 ?\u1072 ?\u1085 ?\u1080 ?\u1094 ?\u1072 ?\u1084 ? \u1072 ?\u1081 ?\u1090 ?\u1077 ?\u1084 ?\u1072 ?\sa180\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 \u1057 ?\u1082 ?\u1088 ?\u1080 ?\u1087 ?\u1090 ? \u1091 ?\u1076 ?\u1072 ?\u1083 ?\u1080 ?\u1090 ? \u1074 ?\u1089 ?\u1077 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1099 ?, \u1082 ?\u1086 ?\u1090 ?\u1086 ?\u1088 ?\u1099 ?\u1077 ? \u1091 ?\u1082 ?\u1072 ?\u1079 ?\u1072 ?\u1085 ?\u1099 ? \u1074 ? \u1089 ?\u1087 ?\u1080 ?\u1089 ?\u1082 ?\u1077 ? regions to remove \u1087 ?\u1077 ?\u1088 ?\u1077 ?\u1076 ? \u1089 ?\u1086 ?\u1079 ?\u1076 ?\u1072 ?\u1085 ?\u1080 ?\u1077 ?\u1084 ? \u1085 ?\u1086 ?\u1074 ?\u1099 ?\u1093 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1086 ?\u1074 ? \u1048 ?\u1089 ?\u1087 ?\u1086 ?\u1083 ?\u1100 ?\u1079 ?\u1091 ?\u1081 ?\u1090 ?\u1077 ? \u1101 ?\u1090 ?\u1086 ?\u1090 ? \u1089 ?\u1082 ?\u1088 ?\u1080 ?\u1087 ?\u1090 ? \u1082 ?\u1072 ?\u1082 ? \u1090 ?\u1077 ?\u1084 ?\u1087 ?\u1083 ?\u1077 ?\u1081 ?\u1090 ? \u1076 ?\u1083 ?\u1103 ? \u1089 ?\u1086 ?\u1079 ?\u1076 ?\u1072 ?\u1085 ?\u1080 ?\u1103 ? \u1089 ?\u1074 ?\u1086 ?\u1080 ?\u1093 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1086 ?\u1074 ?, \u1080 ?\u1079 ?\u1084 ?\u1077 ?\u1085 ?\u1080 ?\u1090 ?\u1077 ? item name \u1080 ? regions to remove\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab \u1054?\u1087?\u1088?\u1077?\u1076?\u1077?\u1083?\u1080?\u1090?\u1077? \u1085?\u1072?\u1079?\u1074?\u1072?\u1085?\u1080?\u1077? \u1090?\u1088?\u1077?\u1082?\u1072? \u1074? \u1087?\u1088?\u1086?\u1077?\u1082?\u1090?\u1077? (\u1087?\u1086? \u1091?\u1084?\u1086?\u1083?\u1095?\u1072?\u1085?\u1080?\u1102? RENDER), \u1082?\u1086?\u1090?\u1086?\u1088?\u1099?\u1081? \u1073?\u1091?\u1076?\u1077?\u1090? \u1080?\u1089?\u1087?\u1086?\u1083?\u1100?\u1079?\u1086?\u1074?\u1072?\u1090?\u1100?\u1089?\u1103? \u1076?\u1083?\u1103? \u1088?\u1077?\u1075?\u1080?\u1086?\u1085?\u1086?\u1074?. \u1053?\u1072? \u1101?\u1090?\u1086?\u1084? \u1090?\u1088?\u1077?\u1082?\u1077? \u1076?\u1086?\u1083?\u1078?\u1085?\u1099? \u1073?\u1099?\u1090?\u1100? \u1087?\u1091?\u1089?\u1090?\u1099?\u1077? \u1072?\u1081?\u1090?\u1077?\u1084?\u1099? \u1089? \u1090?\u1077?\u1082?\u1089?\u1090?\u1086?\u1084?\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab \u1058?\u1077?\u1082?\u1089?\u1090? \u1074? \u1087?\u1091?\u1089?\u1090?\u1099?\u1093? \u1072?\u1081?\u1090?\u1077?\u1084?\u1072?\u1093? \u1073?\u1091?\u1076?\u1077?\u1090? \u1086?\u1087?\u1088?\u1077?\u1076?\u1077?\u1083?\u1103?\u1090?\u1100? \u1085?\u1072?\u1079?\u1074?\u1072?\u1085?\u1080?\u1077? \u1088?\u1077?\u1075?\u1080?\u1086?\u1085?\u1072?, \u1075?\u1088?\u1072?\u1085?\u1080?\u1094?\u1099? \u1088?\u1077?\u1075?\u1080?\u1086?\u1085?\u1072? \u1073?\u1091?\u1076?\u1091?\u1090? \u1089?\u1086?\u1086?\u1090?\u1074?\u1077?\u1090?\u1089?\u1090?\u1074?\u1086?\u1074?\u1072?\u1090?\u1100? \u1075?\u1088?\u1072?\u1085?\u1080?\u1094?\u1072?\u1084? \u1072?\u1081?\u1090?\u1077?\u1084?\u1072?\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \u1057?\u1082?\u1088?\u1080?\u1087?\u1090? \u1091?\u1076?\u1072?\u1083?\u1080?\u1090? \u1074?\u1089?\u1077? \u1088?\u1077?\u1075?\u1080?\u1086?\u1085?\u1099?, \u1082?\u1086?\u1090?\u1086?\u1088?\u1099?\u1077? \u1091?\u1082?\u1072?\u1079?\u1072?\u1085?\u1099? \u1074? \u1089?\u1087?\u1080?\u1089?\u1082?\u1077? regions to remove \u1087?\u1077?\u1088?\u1077?\u1076? \u1089?\u1086?\u1079?\u1076?\u1072?\u1085?\u1080?\u1077?\u1084? \u1085?\u1086?\u1074?\u1099?\u1093? \u1088?\u1077?\u1075?\u1080?\u1086?\u1085?\u1086?\u1074? \u1048?\u1089?\u1087?\u1086?\u1083?\u1100?\u1079?\u1091?\u1081?\u1090?\u1077? \u1101?\u1090?\u1086?\u1090? \u1089?\u1082?\u1088?\u1080?\u1087?\u1090? \u1082?\u1072?\u1082? \u1090?\u1077?\u1084?\u1087?\u1083?\u1077?\u1081?\u1090? \u1076?\u1083?\u1103? \u1089?\u1086?\u1079?\u1076?\u1072?\u1085?\u1080?\u1103? \u1089?\u1074?\u1086?\u1080?\u1093? \u1088?\u1077?\u1075?\u1080?\u1086?\u1085?\u1086?\u1074?, \u1080?\u1079?\u1084?\u1077?\u1085?\u1080?\u1090?\u1077? item name \u1080? regions to remove\par}
 }
 ]]></description>
       </metadata>
-      <version name="1.0" author="Misha Oshkanov" time="2024-09-04T07:03:08Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/6233a32613b7d9c36fa6cf5592dc4eb00036d652/ReaScripts/Rendering/mike%20-%20asset%20renderer%20-%20create%20regions%20-%20Full.lua</source>
+      <version name="1.0" author="Misha Oshkanov" time="2024-09-05T07:26:38Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54/ReaScripts/Rendering/misha%20-%20Asset%20Renderer%20-%20Create%20Regions%20-%20Full.lua</source>
       </version>
     </reapack>
-    <reapack name="mike - asset renderer - create regions - Loop.lua" type="script" desc="Asset Renderer - Create regions 'Loop'">
+    <reapack name="misha - Asset Renderer - Create Regions - Loop.lua" type="script" desc="Asset Renderer - Create regions 'Loop'">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
 {\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab Define a region track name and item name (RENDER by default). Region track is a track in the project that contains empty items with text/\par}
 {\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab Use these empty items with text to specify where regions with item names will be created.\sa180\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Script wii delete all regions in the project with names listed in regions to remove table before creating new regions Use this script as template for your own preferences\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab \u1054 ?\u1087 ?\u1088 ?\u1077 ?\u1076 ?\u1077 ?\u1083 ?\u1080 ?\u1090 ?\u1077 ? \u1085 ?\u1072 ?\u1079 ?\u1074 ?\u1072 ?\u1085 ?\u1080 ?\u1077 ? \u1090 ?\u1088 ?\u1077 ?\u1082 ?\u1072 ? \u1074 ? \u1087 ?\u1088 ?\u1086 ?\u1077 ?\u1082 ?\u1090 ?\u1077 ? (\u1087 ?\u1086 ? \u1091 ?\u1084 ?\u1086 ?\u1083 ?\u1095 ?\u1072 ?\u1085 ?\u1080 ?\u1102 ? RENDER), \u1082 ?\u1086 ?\u1090 ?\u1086 ?\u1088 ?\u1099 ?\u1081 ? \u1073 ?\u1091 ?\u1076 ?\u1077 ?\u1090 ? \u1080 ?\u1089 ?\u1087 ?\u1086 ?\u1083 ?\u1100 ?\u1079 ?\u1086 ?\u1074 ?\u1072 ?\u1090 ?\u1100 ?\u1089 ?\u1103 ? \u1076 ?\u1083 ?\u1103 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1086 ?\u1074 ?. \u1053 ?\u1072 ? \u1101 ?\u1090 ?\u1086 ?\u1084 ? \u1090 ?\u1088 ?\u1077 ?\u1082 ?\u1077 ? \u1076 ?\u1086 ?\u1083 ?\u1078 ?\u1085 ?\u1099 ? \u1073 ?\u1099 ?\u1090 ?\u1100 ? \u1087 ?\u1091 ?\u1089 ?\u1090 ?\u1099 ?\u1077 ? \u1072 ?\u1081 ?\u1090 ?\u1077 ?\u1084 ?\u1099 ? \u1089 ? \u1090 ?\u1077 ?\u1082 ?\u1089 ?\u1090 ?\u1086 ?\u1084 ?\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab \u1058 ?\u1077 ?\u1082 ?\u1089 ?\u1090 ? \u1074 ? \u1087 ?\u1091 ?\u1089 ?\u1090 ?\u1099 ?\u1093 ? \u1072 ?\u1081 ?\u1090 ?\u1077 ?\u1084 ?\u1072 ?\u1093 ? \u1073 ?\u1091 ?\u1076 ?\u1077 ?\u1090 ? \u1086 ?\u1087 ?\u1088 ?\u1077 ?\u1076 ?\u1077 ?\u1083 ?\u1103 ?\u1090 ?\u1100 ? \u1085 ?\u1072 ?\u1079 ?\u1074 ?\u1072 ?\u1085 ?\u1080 ?\u1077 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1072 ?, \u1075 ?\u1088 ?\u1072 ?\u1085 ?\u1080 ?\u1094 ?\u1099 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1072 ? \u1073 ?\u1091 ?\u1076 ?\u1091 ?\u1090 ? \u1089 ?\u1086 ?\u1086 ?\u1090 ?\u1074 ?\u1077 ?\u1090 ?\u1089 ?\u1090 ?\u1074 ?\u1086 ?\u1074 ?\u1072 ?\u1090 ?\u1100 ? \u1075 ?\u1088 ?\u1072 ?\u1085 ?\u1080 ?\u1094 ?\u1072 ?\u1084 ? \u1072 ?\u1081 ?\u1090 ?\u1077 ?\u1084 ?\u1072 ?\sa180\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 \u1057 ?\u1082 ?\u1088 ?\u1080 ?\u1087 ?\u1090 ? \u1091 ?\u1076 ?\u1072 ?\u1083 ?\u1080 ?\u1090 ? \u1074 ?\u1089 ?\u1077 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1099 ?, \u1082 ?\u1086 ?\u1090 ?\u1086 ?\u1088 ?\u1099 ?\u1077 ? \u1091 ?\u1082 ?\u1072 ?\u1079 ?\u1072 ?\u1085 ?\u1099 ? \u1074 ? \u1089 ?\u1087 ?\u1080 ?\u1089 ?\u1082 ?\u1077 ? regions to remove \u1087 ?\u1077 ?\u1088 ?\u1077 ?\u1076 ? \u1089 ?\u1086 ?\u1079 ?\u1076 ?\u1072 ?\u1085 ?\u1080 ?\u1077 ?\u1084 ? \u1085 ?\u1086 ?\u1074 ?\u1099 ?\u1093 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1086 ?\u1074 ? \u1048 ?\u1089 ?\u1087 ?\u1086 ?\u1083 ?\u1100 ?\u1079 ?\u1091 ?\u1081 ?\u1090 ?\u1077 ? \u1101 ?\u1090 ?\u1086 ?\u1090 ? \u1089 ?\u1082 ?\u1088 ?\u1080 ?\u1087 ?\u1090 ? \u1082 ?\u1072 ?\u1082 ? \u1090 ?\u1077 ?\u1084 ?\u1087 ?\u1083 ?\u1077 ?\u1081 ?\u1090 ? \u1076 ?\u1083 ?\u1103 ? \u1089 ?\u1086 ?\u1079 ?\u1076 ?\u1072 ?\u1085 ?\u1080 ?\u1103 ? \u1089 ?\u1074 ?\u1086 ?\u1080 ?\u1093 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1086 ?\u1074 ?, \u1080 ?\u1079 ?\u1084 ?\u1077 ?\u1085 ?\u1080 ?\u1090 ?\u1077 ? item name \u1080 ? regions to remove\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab \u1054?\u1087?\u1088?\u1077?\u1076?\u1077?\u1083?\u1080?\u1090?\u1077? \u1085?\u1072?\u1079?\u1074?\u1072?\u1085?\u1080?\u1077? \u1090?\u1088?\u1077?\u1082?\u1072? \u1074? \u1087?\u1088?\u1086?\u1077?\u1082?\u1090?\u1077? (\u1087?\u1086? \u1091?\u1084?\u1086?\u1083?\u1095?\u1072?\u1085?\u1080?\u1102? RENDER), \u1082?\u1086?\u1090?\u1086?\u1088?\u1099?\u1081? \u1073?\u1091?\u1076?\u1077?\u1090? \u1080?\u1089?\u1087?\u1086?\u1083?\u1100?\u1079?\u1086?\u1074?\u1072?\u1090?\u1100?\u1089?\u1103? \u1076?\u1083?\u1103? \u1088?\u1077?\u1075?\u1080?\u1086?\u1085?\u1086?\u1074?. \u1053?\u1072? \u1101?\u1090?\u1086?\u1084? \u1090?\u1088?\u1077?\u1082?\u1077? \u1076?\u1086?\u1083?\u1078?\u1085?\u1099? \u1073?\u1099?\u1090?\u1100? \u1087?\u1091?\u1089?\u1090?\u1099?\u1077? \u1072?\u1081?\u1090?\u1077?\u1084?\u1099? \u1089? \u1090?\u1077?\u1082?\u1089?\u1090?\u1086?\u1084?\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab \u1058?\u1077?\u1082?\u1089?\u1090? \u1074? \u1087?\u1091?\u1089?\u1090?\u1099?\u1093? \u1072?\u1081?\u1090?\u1077?\u1084?\u1072?\u1093? \u1073?\u1091?\u1076?\u1077?\u1090? \u1086?\u1087?\u1088?\u1077?\u1076?\u1077?\u1083?\u1103?\u1090?\u1100? \u1085?\u1072?\u1079?\u1074?\u1072?\u1085?\u1080?\u1077? \u1088?\u1077?\u1075?\u1080?\u1086?\u1085?\u1072?, \u1075?\u1088?\u1072?\u1085?\u1080?\u1094?\u1099? \u1088?\u1077?\u1075?\u1080?\u1086?\u1085?\u1072? \u1073?\u1091?\u1076?\u1091?\u1090? \u1089?\u1086?\u1086?\u1090?\u1074?\u1077?\u1090?\u1089?\u1090?\u1074?\u1086?\u1074?\u1072?\u1090?\u1100? \u1075?\u1088?\u1072?\u1085?\u1080?\u1094?\u1072?\u1084? \u1072?\u1081?\u1090?\u1077?\u1084?\u1072?\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \u1057?\u1082?\u1088?\u1080?\u1087?\u1090? \u1091?\u1076?\u1072?\u1083?\u1080?\u1090? \u1074?\u1089?\u1077? \u1088?\u1077?\u1075?\u1080?\u1086?\u1085?\u1099?, \u1082?\u1086?\u1090?\u1086?\u1088?\u1099?\u1077? \u1091?\u1082?\u1072?\u1079?\u1072?\u1085?\u1099? \u1074? \u1089?\u1087?\u1080?\u1089?\u1082?\u1077? regions to remove \u1087?\u1077?\u1088?\u1077?\u1076? \u1089?\u1086?\u1079?\u1076?\u1072?\u1085?\u1080?\u1077?\u1084? \u1085?\u1086?\u1074?\u1099?\u1093? \u1088?\u1077?\u1075?\u1080?\u1086?\u1085?\u1086?\u1074? \u1048?\u1089?\u1087?\u1086?\u1083?\u1100?\u1079?\u1091?\u1081?\u1090?\u1077? \u1101?\u1090?\u1086?\u1090? \u1089?\u1082?\u1088?\u1080?\u1087?\u1090? \u1082?\u1072?\u1082? \u1090?\u1077?\u1084?\u1087?\u1083?\u1077?\u1081?\u1090? \u1076?\u1083?\u1103? \u1089?\u1086?\u1079?\u1076?\u1072?\u1085?\u1080?\u1103? \u1089?\u1074?\u1086?\u1080?\u1093? \u1088?\u1077?\u1075?\u1080?\u1086?\u1085?\u1086?\u1074?, \u1080?\u1079?\u1084?\u1077?\u1085?\u1080?\u1090?\u1077? item name \u1080? regions to remove\par}
 }
 ]]></description>
       </metadata>
-      <version name="1.0" author="Misha Oshkanov" time="2024-09-04T07:07:39Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/858a8171ef93c63d94905cfa3c4ae100725ca3c4/ReaScripts/Rendering/mike%20-%20asset%20renderer%20-%20create%20regions%20-%20Loop.lua</source>
+      <version name="1.0" author="Misha Oshkanov" time="2024-09-05T07:26:38Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54/ReaScripts/Rendering/misha%20-%20Asset%20Renderer%20-%20Create%20Regions%20-%20Loop.lua</source>
       </version>
     </reapack>
-    <reapack name="mike - asset renderer - remove specific regions.lua" type="script" desc="Asset Renderer - Remove scecific regions">
+    <reapack name="misha - Asset Renderer - Remove Specific Regions.lua" type="script" desc="Asset Renderer - Remove specific regions">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
 {\pard \ql \f0 \sa180 \li0 \fi0 Use in pairs with create regions scripts Script wii delete all regions in the project with names listed in regions to remove table before creating new regions Use this script as template for your own preferences\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 \u1048 ?\u1089 ?\u1087 ?\u1086 ?\u1083 ?\u1100 ?\u1079 ?\u1091 ?\u1081 ?\u1090 ?\u1077 ? \u1074 ?\u1084 ?\u1077 ?\u1089 ?\u1090 ?\u1077 ? \u1089 ?\u1086 ? \u1089 ?\u1082 ?\u1088 ?\u1080 ?\u1087 ?\u1090 ?\u1072 ?\u1084 ?\u1080 ? \u1076 ?\u1083 ?\u1103 ? \u1089 ?\u1086 ?\u1079 ?\u1076 ?\u1072 ?\u1085 ?\u1080 ?\u1103 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1086 ?\u1074 ? \u1057 ?\u1082 ?\u1088 ?\u1080 ?\u1087 ?\u1090 ? \u1091 ?\u1076 ?\u1072 ?\u1083 ?\u1080 ?\u1090 ? \u1074 ?\u1089 ?\u1077 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1099 ?, \u1082 ?\u1086 ?\u1090 ?\u1086 ?\u1088 ?\u1099 ?\u1077 ? \u1091 ?\u1082 ?\u1072 ?\u1079 ?\u1072 ?\u1085 ?\u1099 ? \u1074 ? \u1089 ?\u1087 ?\u1080 ?\u1089 ?\u1082 ?\u1077 ? regions to remove \u1087 ?\u1077 ?\u1088 ?\u1077 ?\u1076 ? \u1089 ?\u1086 ?\u1079 ?\u1076 ?\u1072 ?\u1085 ?\u1080 ?\u1077 ?\u1084 ? \u1085 ?\u1086 ?\u1074 ?\u1099 ?\u1093 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1086 ?\u1074 ? \u1048 ?\u1089 ?\u1087 ?\u1086 ?\u1083 ?\u1100 ?\u1079 ?\u1091 ?\u1081 ?\u1090 ?\u1077 ? \u1101 ?\u1090 ?\u1086 ?\u1090 ? \u1089 ?\u1082 ?\u1088 ?\u1080 ?\u1087 ?\u1090 ? \u1082 ?\u1072 ?\u1082 ? \u1090 ?\u1077 ?\u1084 ?\u1087 ?\u1083 ?\u1077 ?\u1081 ?\u1090 ? \u1076 ?\u1083 ?\u1103 ? \u1089 ?\u1086 ?\u1079 ?\u1076 ?\u1072 ?\u1085 ?\u1080 ?\u1103 ? \u1089 ?\u1074 ?\u1086 ?\u1080 ?\u1093 ? \u1088 ?\u1077 ?\u1075 ?\u1080 ?\u1086 ?\u1085 ?\u1086 ?\u1074 ?, \u1080 ?\u1079 ?\u1084 ?\u1077 ?\u1085 ?\u1080 ?\u1090 ?\u1077 ? item name \u1080 ? regions to remove\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \u1048?\u1089?\u1087?\u1086?\u1083?\u1100?\u1079?\u1091?\u1081?\u1090?\u1077? \u1074?\u1084?\u1077?\u1089?\u1090?\u1077? \u1089?\u1086? \u1089?\u1082?\u1088?\u1080?\u1087?\u1090?\u1072?\u1084?\u1080? \u1076?\u1083?\u1103? \u1089?\u1086?\u1079?\u1076?\u1072?\u1085?\u1080?\u1103? \u1088?\u1077?\u1075?\u1080?\u1086?\u1085?\u1086?\u1074? \u1057?\u1082?\u1088?\u1080?\u1087?\u1090? \u1091?\u1076?\u1072?\u1083?\u1080?\u1090? \u1074?\u1089?\u1077? \u1088?\u1077?\u1075?\u1080?\u1086?\u1085?\u1099?, \u1082?\u1086?\u1090?\u1086?\u1088?\u1099?\u1077? \u1091?\u1082?\u1072?\u1079?\u1072?\u1085?\u1099? \u1074? \u1089?\u1087?\u1080?\u1089?\u1082?\u1077? regions to remove \u1087?\u1077?\u1088?\u1077?\u1076? \u1089?\u1086?\u1079?\u1076?\u1072?\u1085?\u1080?\u1077?\u1084? \u1085?\u1086?\u1074?\u1099?\u1093? \u1088?\u1077?\u1075?\u1080?\u1086?\u1085?\u1086?\u1074? \u1048?\u1089?\u1087?\u1086?\u1083?\u1100?\u1079?\u1091?\u1081?\u1090?\u1077? \u1101?\u1090?\u1086?\u1090? \u1089?\u1082?\u1088?\u1080?\u1087?\u1090? \u1082?\u1072?\u1082? \u1090?\u1077?\u1084?\u1087?\u1083?\u1077?\u1081?\u1090? \u1076?\u1083?\u1103? \u1089?\u1086?\u1079?\u1076?\u1072?\u1085?\u1080?\u1103? \u1089?\u1074?\u1086?\u1080?\u1093? \u1088?\u1077?\u1075?\u1080?\u1086?\u1085?\u1086?\u1074?, \u1080?\u1079?\u1084?\u1077?\u1085?\u1080?\u1090?\u1077? item name \u1080? regions to remove\par}
 }
 ]]></description>
       </metadata>
-      <version name="1.0" author="Misha Oshkanov" time="2024-09-04T07:03:08Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/6233a32613b7d9c36fa6cf5592dc4eb00036d652/ReaScripts/Rendering/mike%20-%20asset%20renderer%20-%20remove%20specific%20regions.lua</source>
+      <version name="1.1" author="Misha Oshkanov" time="2024-09-05T07:26:38Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54/ReaScripts/Rendering/misha%20-%20Asset%20Renderer%20-%20Remove%20Specific%20Regions.lua</source>
       </version>
     </reapack>
-    <reapack name="mike - Dimmer Trim - Turn off.lua" type="script" desc="Dimmer Trim - Turn off">
+    <reapack name="misha - Dimmer Trim - Turn off.lua" type="script" desc="Dimmer Trim - Turn off">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -76,11 +76,11 @@
 }
 ]]></description>
       </metadata>
-      <version name="1.0" author="Misha Oshkanov" time="2024-09-04T11:12:02Z">
-        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e09b162241e0b490fd93a1a23901a41a6152d550/ReaScripts/Rendering/mike%20-%20Dimmer%20Trim%20-%20Turn%20off.lua</source>
+      <version name="1.0" author="Misha Oshkanov" time="2024-09-05T07:26:38Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54/ReaScripts/Rendering/misha%20-%20Dimmer%20Trim%20-%20Turn%20off.lua</source>
       </version>
     </reapack>
-    <reapack name="mike - Dimmer Trim - Turn on.lua" type="script" desc="Dimmer Trim - Turn on">
+    <reapack name="misha - Dimmer Trim - Turn on.lua" type="script" desc="Dimmer Trim - Turn on">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -90,15 +90,15 @@
 }
 ]]></description>
       </metadata>
-      <version name="1.0" author="Misha Oshkanov" time="2024-09-04T11:12:02Z">
-        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e09b162241e0b490fd93a1a23901a41a6152d550/ReaScripts/Rendering/mike%20-%20Dimmer%20Trim%20-%20Turn%20on.lua</source>
+      <version name="1.0" author="Misha Oshkanov" time="2024-09-05T07:26:38Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54/ReaScripts/Rendering/misha%20-%20Dimmer%20Trim%20-%20Turn%20on.lua</source>
       </version>
     </reapack>
   </category>
   <category name="ReaScripts/UI Utilities">
-    <reapack name="mike - Master Bypass Manager - activate toggle.lua" type="script" desc="Master Bypass Manager">
+    <reapack name="misha - Master FX Inverter - OFF.lua" type="script" desc="Master FX Inverter - OFF">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -106,13 +106,13 @@
 }
 ]]></description>
       </metadata>
-      <version name="1.3" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20Master%20Bypass%20Manager%20-%20activate%20toggle.lua</source>
+      <version name="1.4" author="Misha Oshkanov" time="2024-09-05T07:26:38Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54/ReaScripts/UI%20Utilities/misha%20-%20Master%20FX%20Inverter%20-%20OFF.lua</source>
       </version>
     </reapack>
-    <reapack name="mike - Master Bypass Manager - deactivate toggle.lua" type="script" desc="Master Bypass Manager">
+    <reapack name="misha - Master FX Inverter - ON.lua" type="script" desc="Master FX Inverter - OFF">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -120,13 +120,13 @@
 }
 ]]></description>
       </metadata>
-      <version name="1.3" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20Master%20Bypass%20Manager%20-%20deactivate%20toggle.lua</source>
+      <version name="1.4" author="Misha Oshkanov" time="2024-09-05T07:26:38Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54/ReaScripts/UI%20Utilities/misha%20-%20Master%20FX%20Inverter%20-%20ON.lua</source>
       </version>
     </reapack>
-    <reapack name="mike - Master Bypass Manager - toggle bypass.lua" type="script" desc="Master Bypass Manager">
+    <reapack name="misha - Master FX Inverter Panel.lua" type="script" desc="Master FX Inverter Panel">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -134,11 +134,11 @@
 }
 ]]></description>
       </metadata>
-      <version name="1.3" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20Master%20Bypass%20Manager%20-%20toggle%20bypass.lua</source>
+      <version name="1.3" author="Misha Oshkanov" time="2024-09-05T07:26:38Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54/ReaScripts/UI%20Utilities/misha%20-%20Master%20FX%20Inverter%20Panel.lua</source>
       </version>
     </reapack>
-    <reapack name="mike - monitor volume controller.lua" type="script" desc="Monitor Volume Controller">
+    <reapack name="misha - Monitor Volume Controller.lua" type="script" desc="Monitor Volume Controller">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -148,28 +148,11 @@
 }
 ]]></description>
       </metadata>
-      <version name="1.3" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20monitor%20volume%20controller.lua</source>
-      </version>
-      <version name="1.4" author="Misha Oshkanov" time="2024-09-04T10:29:41Z">
-        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/f8730c7be762022a4bfefba514b7507a54fb2756/ReaScripts/UI%20Utilities/mike%20-%20monitor%20volume%20controller.lua</source>
+      <version name="1.4" author="Misha Oshkanov" time="2024-09-05T07:26:38Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller.lua</source>
       </version>
     </reapack>
-    <reapack name="mike - open Master Bypass Manager.lua" type="script" desc="Master Bypass Manager">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 Manages bypass states of effects in master fx chain use activate and deactivate toggle scripts to switch bypass states\par}
-}
-]]></description>
-      </metadata>
-      <version name="1.3" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20open%20Master%20Bypass%20Manager.lua</source>
-      </version>
-    </reapack>
-    <reapack name="mike - Scroller.lua" type="script" desc="Scroller">
+    <reapack name="misha - Scroller.lua" type="script" desc="Scroller">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -179,13 +162,13 @@
 }
 ]]></description>
       </metadata>
-      <version name="0.5" author="Misha Oshkanov" time="2024-09-04T11:12:02Z">
-        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e09b162241e0b490fd93a1a23901a41a6152d550/ReaScripts/UI%20Utilities/mike%20-%20Scroller.lua</source>
+      <version name="0.5" author="Misha Oshkanov" time="2024-09-05T07:26:38Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54/ReaScripts/UI%20Utilities/misha%20-%20Scroller.lua</source>
       </version>
     </reapack>
-    <reapack name="mike - show peak lufs readouts in arrange view.lua" type="script" desc="Show master peak lufs readouts in arrange view">
+    <reapack name="misha - Show peak LUFS readouts in arrange view.lua" type="script" desc="Show master peak lufs readouts in arrange view">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -193,13 +176,13 @@
 }
 ]]></description>
       </metadata>
-      <version name="1.0" author="Misha Oshkanov" time="2024-09-04T07:03:08Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/6233a32613b7d9c36fa6cf5592dc4eb00036d652/ReaScripts/UI%20Utilities/mike%20-%20show%20peak%20lufs%20readouts%20in%20arrange%20view.lua</source>
+      <version name="1.0" author="Misha Oshkanov" time="2024-09-05T07:26:38Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54/ReaScripts/UI%20Utilities/misha%20-%20Show%20peak%20LUFS%20readouts%20in%20arrange%20view.lua</source>
       </version>
     </reapack>
-    <reapack name="mike - ShowHide Manager.lua" type="script" desc="ShowHide Manager">
+    <reapack name="misha - ShowHide Manager.lua" type="script" desc="ShowHide Manager">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -207,8 +190,8 @@
 }
 ]]></description>
       </metadata>
-      <version name="1.0" author="Misha Oshkanov" time="2024-09-04T09:03:07Z">
-        <source main="main">https://github.com/mooqa/Misha-Oshkanov-Scripts/raw/e68e147919345e46d95272727d31f772f154e15c/ReaScripts/UI%20Utilities/mike%20-%20ShowHide%20Manager.lua</source>
+      <version name="1.0" author="Misha Oshkanov" time="2024-09-05T07:26:38Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54/ReaScripts/UI%20Utilities/misha%20-%20ShowHide%20Manager.lua</source>
       </version>
     </reapack>
   </category>
