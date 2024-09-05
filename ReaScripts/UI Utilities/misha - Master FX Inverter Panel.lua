@@ -1,4 +1,4 @@
--- @description Master Bypass Manager
+-- @description Master FX Inverter Panel
 -- @author Misha Oshkanov
 -- @version 1.3
 -- @about
@@ -38,7 +38,8 @@ reaper.ImGui_WindowFlags_NoNavInputs() +
 reaper.ImGui_WindowFlags_NoScrollbar() + 
 reaper.ImGui_WindowFlags_NoResize()
 
-list_window_flags =  reaper.ImGui_WindowFlags_NoTitleBar() +  
+list_window_flags =  
+                reaper.ImGui_WindowFlags_NoTitleBar() +  
                 reaper.ImGui_WindowFlags_NoDocking() +
                 reaper.ImGui_WindowFlags_NoResize() +
                 reaper.ImGui_WindowFlags_NoBackground()  +
@@ -275,20 +276,22 @@ function frame()
         end
 
         width = reaper.ImGui_GetWindowWidth(ctx)
+        if not b_toggle then toggle_text = 'Invert State' end
 
         reaper.ImGui_Dummy( ctx, width, 5 )
 
         b_all = reaper.ImGui_Button(ctx, 'All', (width-23)/2, 26)
         reaper.ImGui_SameLine(ctx)
         b_none = reaper.ImGui_Button(ctx, 'None', (width-23)/2, 26)
-        b_toggle = reaper.ImGui_Button(ctx, 'Bypass', width-15, 26)
+        b_toggle = reaper.ImGui_Button(ctx, toggle_text, width-15, 26)
 
 
         if b_all then 
             set_all = true 
         elseif b_none then 
             set_none = true 
-        elseif b_toggle then     
+        elseif b_toggle then  
+            toggle_text = 'Inverted'   
             reaper.SetProjExtState(0, 'INEED_BYPASS_STATE', 'STATE', toggle_state == '0' and '1' or '0')
             i=-1
             enum, key, val = reaper.EnumProjExtState(0, "INEED_BYPASS_MANAGER", 0)
@@ -344,7 +347,7 @@ function loop()
     reaper.ImGui_SetNextFrameWantCaptureKeyboard( ctx, 1 )
     if fx_list then reaper.ImGui_SetNextWindowSize(ctx, 58+def_w, 70+36+(30*#fx_list), reaper.ImGui_Cond_Always()) end
 
-    local visible, open = reaper.ImGui_Begin(ctx, 'Bypass Manager', true,  window_flags)
+    local visible, open = reaper.ImGui_Begin(ctx, 'Master FX Inverter', true,  window_flags)
     if visible then
         frame()
         reaper.ImGui_End(ctx)
@@ -355,8 +358,6 @@ function loop()
     
     if open then
         reaper.defer(loop)
-    else
-        reaper.ImGui_DestroyContext(ctx)
     end
 
 end

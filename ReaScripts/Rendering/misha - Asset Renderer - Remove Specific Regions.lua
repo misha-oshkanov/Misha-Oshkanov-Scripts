@@ -1,6 +1,6 @@
--- @description Asset Renderer - Remove scecific regions 
+-- @description Asset Renderer - Remove specific regions 
 -- @author Misha Oshkanov
--- @version 1.0
+-- @version 1.1
 -- @about
 --  Use in pairs with create regions scripts
 --  Script wii delete all regions in the project with names listed in regions to remove table before creating new regions

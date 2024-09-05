@@ -1,6 +1,6 @@
--- @description Master Bypass Manager
+-- @description Master FX Inverter - OFF
 -- @author Misha Oshkanov
--- @version 1.3
+-- @version 1.4
 -- @about
 --  Manages bypass states of effects in master fx chain
 --  use activate and deactivate toggle scripts to switch bypass states 
