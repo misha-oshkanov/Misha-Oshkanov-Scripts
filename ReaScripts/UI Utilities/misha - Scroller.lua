@@ -687,6 +687,8 @@ function draw_buttons()
                 else
                     -- set_height(t.track)
                     scroll_to_track(t.track)
+                    reaper.SetOnlyTrackSelected(t.track)
+
                     reaper.TrackList_AdjustWindows(0)
                 end
             end
