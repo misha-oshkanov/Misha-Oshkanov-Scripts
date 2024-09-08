@@ -1,6 +1,6 @@
 -- @description Scroller
 -- @author Misha Oshkanov
--- @version 0.5
+-- @version 0.6
 -- @about
 --  Panel to select and scroll to desired track or folder. In midi editor panel can show notes of selected tracks.--
 --  Uses first-order folder as buttons
