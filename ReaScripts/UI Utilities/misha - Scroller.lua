@@ -1,6 +1,6 @@
 -- @description Scroller
 -- @author Misha Oshkanov
--- @version 0.6
+-- @version 0.7
 -- @about
 --  Panel to select and scroll to desired track or folder. In midi editor panel can show notes of selected tracks.--
 --  Uses first-order folder as buttons
@@ -64,6 +64,16 @@ local ctx   = reaper.ImGui_CreateContext('Scroller')
 local font       = reaper.ImGui_CreateFont('sans-serif', folder_font_size)
 local font2      = reaper.ImGui_CreateFont('sans-serif', child_font_size)
 local font_bold  = reaper.ImGui_CreateFont('sans-serif', folder_font_size, reaper.ImGui_FontFlags_Bold())
+
+-- Detect operating system
+local os = reaper.GetOS()
+local is_windows = os:match('Win')
+local is_macos = os:match('OSX') or os:match('macOS')
+local is_linux = os:match('Other')
+
+
+scale = reaper.ImGui_GetWindowDpiScale( ctx )
+
 
 reaper.ImGui_Attach(ctx, font)
 reaper.ImGui_Attach(ctx, font2)
@@ -1036,19 +1046,32 @@ function loop()
     end
 
     retval, ar_left, ar_top, ar_right, ar_bottom = reaper.JS_Window_GetClientRect( windowHWND )
+    if is_macos then m_left, m_top, m_right, m_bottom = reaper.JS_Window_GetViewportFromRect(0, 0, 0, 0, false ) end
 
     -- if use_arr_bottom and not editor then bottom = ar_bottom end 
-
-    scale = reaper.ImGui_GetWindowDpiScale( ctx )
-    -- reaper.ImGui_SetNextWindowPos( ctx,(right)/2, bottom-button_h-bottom_padding, condIn, 0.5, 0.5 ) -- h = 1400
+        -- reaper.ImGui_SetNextWindowPos( ctx,(right)/2, bottom-button_h-bottom_padding, condIn, 0.5, 0.5 ) -- h = 1400
     if not floating_window then 
         if panel_position == 'BOTTOM' then 
-            reaper.ImGui_SetNextWindowPos( ctx,(right-((right-left)/2))*(1/scale), (bottom-button_h-bottom_padding)*(1/scale), condIn, 0.5, 0.5 ) -- h = 1400
+            if is_windows then  
+                reaper.ImGui_SetNextWindowPos( ctx,(right-((right-left)/2))*(1/scale), (bottom-button_h-bottom_padding)*(1/scale), condIn, 0.5, 0.5 )
+            else 
+                reaper.ImGui_SetNextWindowPos( ctx,right-((right-left)/2), m_top-bottom, condIn, 0.5, 0.5 )
+            end
+                
         elseif panel_position == 'TOP' then 
-            reaper.ImGui_SetNextWindowPos( ctx,(right-((right-left)/2))*(1/scale), (top+top_padding)*(1/scale), condIn, 0.5, 0.5 )
+            if is_windows then  
+                reaper.ImGui_SetNextWindowPos( ctx,(right-((right-left)/2))*(1/scale), (top+top_padding)*(1/scale), condIn, 0.5, 0.5 )
+            else
+                reaper.ImGui_SetNextWindowPos( ctx,right-((right-left)/2), m_top-bottom, condIn, 0.5, 0.5 )
+            end
         elseif panel_position == 'RIGHT' and not editor then 
-            reaper.ImGui_SetNextWindowPos( ctx,(right-(calc_w/2))*(1/scale), (ar_bottom-((ar_bottom-ar_top)/2)-button_h-bottom_padding)*(1/scale), condIn, 0.5, 0.5 )
+            if is_windows then  
+                reaper.ImGui_SetNextWindowPos( ctx,(right-(calc_w/2))*(1/scale), (ar_bottom-((ar_bottom-ar_top)/2)-button_h-bottom_padding)*(1/scale), condIn, 0.5, 0.5 )
+            else
+                reaper.ImGui_SetNextWindowPos( ctx,right-((right-left)/2), m_top-bottom, condIn, 0.5, 0.5 )
+            end
         end
+
     end
     if panel_position == 'RIGHT' then 
         reaper.ImGui_SetNextWindowSize(ctx, calc_w+5,(#folder_list*(button_h+4)+4) ,  reaper.ImGui_Cond_Always())
