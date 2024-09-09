@@ -1,6 +1,6 @@
 -- @description Scroller
 -- @author Misha Oshkanov
--- @version 0.7
+-- @version 0.7.1
 -- @about
 --  Panel to select and scroll to desired track or folder. In midi editor panel can show notes of selected tracks.--
 --  Uses first-order folder as buttons
@@ -72,7 +72,6 @@ local is_macos = os:match('OSX') or os:match('macOS')
 local is_linux = os:match('Other')
 
 
-scale = reaper.ImGui_GetWindowDpiScale( ctx )
 
 
 reaper.ImGui_Attach(ctx, font)
@@ -80,6 +79,7 @@ reaper.ImGui_Attach(ctx, font2)
 reaper.ImGui_Attach(ctx, font_bold)
 
 collapse_action = reaper.NamedCommandLookup('_RS1e92997967aa4e08ac529e9e3b83120b26f55fce')
+scale = reaper.ImGui_GetWindowDpiScale( ctx )
 
 proj = 0
 active = {}
