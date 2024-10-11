@@ -1,6 +1,6 @@
 -- @description Scroller
 -- @author Misha Oshkanov
--- @version 0.7.2
+-- @version 0.7.3
 -- @about
 --  Panel to select and scroll to desired track or folder. In midi editor panel can show notes of selected tracks.--
 --  Uses first-order folder as buttons
@@ -47,7 +47,15 @@ use_arr_middle = false
 folder_font_size = 16    -- font for main buttons
 child_font_size  = 14    -- font for tracklist
 
-main_depth = 0
+
+-- Other settings
+show_only_tracks_with_midi_in_editor =  false   -- children tracklist will contain all tracks in folder if false, otherwise will contain only tracks with midi items
+use_custom_color_for_folder_names = false       -- folders in children tracklist will have red labels
+custom_color = {255,132,132}                    -- set custom color here (rgb)
+
+BLOCKED_TRACK_LAYOUTS = {'Separator'}
+BLOCKED_TRACK_NAMES = {'VCA'}
+
 
 -----------------------------------------------------------------------
 
@@ -222,10 +230,10 @@ function clear_list()
 end
 
 function get_ch_list(parent,editor)
-    
     children_list = {}
     children = GetChildren(parent)
     for t=1, #children do 
+        local blocked = false
         has_midi = false
         tr = {
             track = nil,
@@ -242,6 +250,8 @@ function get_ch_list(parent,editor)
         id    = reaper.GetMediaTrackInfo_Value(track, 'IP_TRACKNUMBER')
         check_hide = reaper.GetMediaTrackInfo_Value(track, 'B_SHOWINTCP' )
         _, layout = reaper.GetSetMediaTrackInfo_String(track, 'P_TCP_LAYOUT', '', false )
+
+
         
         -- for f=1, reaper.TrackFX_GetCount(track) do 
         --     get_off =  reaper.TrackFX_GetOffline(track, f)
@@ -251,16 +261,29 @@ function get_ch_list(parent,editor)
         depth = reaper.GetTrackDepth(track)
         color = reaper.GetTrackColor(track)
         _, tn = reaper.GetTrackName(track)
-        if reaper.CountTrackMediaItems( track )  > 0 then  
-            item = reaper.GetTrackMediaItem(track, 0 )
-            take = reaper.GetActiveTake(item)
-            if take and reaper.TakeIsMIDI (take) then 
-                has_midi = true 
-            end
-        else 
-            has_midi = false 
+
+        for v,k in pairs (BLOCKED_TRACK_NAMES) do 
+            if tn == k or string.sub(tn,1,1) == arch_prefix then 
+                blocked = true 
+            end   
         end
-        if depth > 0 and check_hide == 1 then 
+      
+        for v,l in pairs (BLOCKED_TRACK_LAYOUTS) do 
+            if layout == l then blocked = true  end   
+        end
+
+        if show_only_tracks_with_midi_in_editor then 
+            if reaper.CountTrackMediaItems(track)  > 0 then  
+                item = reaper.GetTrackMediaItem(track, 0)
+                take = reaper.GetActiveTake(item)
+                if take and reaper.TakeIsMIDI (take) then 
+                    has_midi = true 
+                end
+            else 
+                has_midi = false 
+            end
+        else has_midi = true end
+        if depth > 0 and check_hide == 1 and not blocked then 
             tr.track  = track
             tr.id     = id
             tr.name   = tn
@@ -298,6 +321,8 @@ function get_list()
     clear_list()
     local count = reaper.CountTracks(proj)
     for t=1, count do 
+        local blocked = false
+
         tr = {
             track  = nil,
             name   = nil,
@@ -310,11 +335,18 @@ function get_list()
         color = reaper.GetTrackColor(track)
         _, tn = reaper.GetTrackName(track)
 
+        for v,k in pairs (BLOCKED_TRACK_NAMES) do 
+            if tn == k or string.sub(tn,1,1) == arch_prefix then 
+                blocked = true 
+            end   
+        end
+        for v,l in pairs (BLOCKED_TRACK_LAYOUTS) do 
+            if layout == l then blocked = true  end   
+        end
+
         check_off = check_fx_offline(track)
-
-
         
-        if fold == 1 and depth == folder_level and check_off == false then 
+        if fold == 1 and depth == folder_level and check_off == false and not blocked then 
             tr.track = track
             tr.name = tn
             tr.col = color
@@ -762,8 +794,6 @@ function getStartPosSelItems()
     return position
 end
 
-
-
 function move_items(track)
     local count = reaper.CountSelectedMediaItems(0)
     if count > 0 then 
@@ -773,7 +803,6 @@ function move_items(track)
         end 
     end
 end 
-
 
 function copy_items(track)
     reaper.Undo_BeginBlock()
@@ -848,7 +877,11 @@ function frame()
             if ct.fol == 1 then
                 -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        col(children_list[t].col,0.35))  --0x768EFF
                 reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),         col_vib(ct.col,0.58))
-                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(),               col_sat(ct.col,0.4))
+                if use_custom_color_for_folder_names then 
+                    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(),               rgba(custom_color[1],custom_color[2],custom_color[3],1))
+                else 
+                    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(),               col_sat(ct.col,0.4))
+                end
             elseif string.match( ct.layout,'delay' ) then 
                 reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),         col_vib(ct.col,0.50))  --0x768EFF
                 reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(),               rgba(243,168,255,1))
