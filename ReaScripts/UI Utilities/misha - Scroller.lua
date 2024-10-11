@@ -1,13 +1,20 @@
 -- @description Scroller
 -- @author Misha Oshkanov
--- @version 0.7.1
+-- @version 0.7.2
 -- @about
 --  Panel to select and scroll to desired track or folder. In midi editor panel can show notes of selected tracks.--
 --  Uses first-order folder as buttons
+--
 --  left click - select folder track and scroll view to it
 --  right click - show folder track structure, you can click on children track to select and scroll to it
 --  shift + click - mute folder track
 --  control + click - solo folder track
+--
+--  control + click in child tracklist - copy items to clicked track
+--  shift + click in child tracklist - move items to clicked track
+--  alt + click in child tracklist - rename selected track
+
+
 
 -------------- SETTINGS -------------- 
 floating_window = false -- use to freely move script
@@ -40,6 +47,8 @@ use_arr_middle = false
 folder_font_size = 16    -- font for main buttons
 child_font_size  = 14    -- font for tracklist
 
+main_depth = 0
+
 -----------------------------------------------------------------------
 
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
@@ -70,9 +79,6 @@ local os = reaper.GetOS()
 local is_windows = os:match('Win')
 local is_macos = os:match('OSX') or os:match('macOS')
 local is_linux = os:match('Other')
-
-
-
 
 reaper.ImGui_Attach(ctx, font)
 reaper.ImGui_Attach(ctx, font2)
@@ -740,6 +746,53 @@ function calc_text_size(list,name_w)
     return name_w
 end 
 
+
+function getStartPosSelItems()
+    local position = math.huge
+    local num_sel_items = reaper.CountSelectedMediaItems(0)
+    if num_sel_items > 0 then
+      for i=0, num_sel_items - 1 do
+        local item = reaper.GetSelectedMediaItem( 0, i )
+        local item_start_pos = reaper.GetMediaItemInfo_Value( item, "D_POSITION" )
+        if item_start_pos < position then
+          position = item_start_pos
+        end
+      end
+    end
+    return position
+end
+
+
+
+function move_items(track)
+    local count = reaper.CountSelectedMediaItems(0)
+    if count > 0 then 
+        for i=1,count do 
+            local item = reaper.GetSelectedMediaItem(0, i-1)
+            reaper.MoveMediaItemToTrack(item, track)
+        end 
+    end
+end 
+
+
+function copy_items(track)
+    reaper.Undo_BeginBlock()
+    init_cursor_pos = reaper.GetCursorPosition()
+
+    if reaper.CountSelectedMediaItems() > 0 then
+        reaper.Main_OnCommand(40297, 0) -- Unselect all tracks (so that it can copy items)
+        reaper.Main_OnCommand(40698, 0) -- Copy selected items
+        local pos = getStartPosSelItems()
+        reaper.SetEditCurPos2(0, pos, false, false)
+        reaper.SetTrackSelected(track, true)
+        reaper.Main_OnCommand(40914,0) -- Set first selected track as last touched
+        reaper.Main_OnCommand(40058,0) -- Paste
+    end
+    reaper.SetEditCurPos(init_cursor_pos, false, false)
+
+    reaper.Undo_EndBlock('Copy items to track',-1)
+end
+
 function frame()
     get_list()
     draw_buttons()
@@ -783,7 +836,6 @@ function frame()
         for ci,ct in ipairs(children_list) do 
             reaper.ImGui_PushID(ctx, ci)
 
-
             -- if string.match( ct.layout,'delay' ) then 
             --     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(),               rgba(205,85,225,1))
             --     reaper.ImGui_PopStyleColor(ctx, 1)
@@ -792,8 +844,6 @@ function frame()
             -- elseif string.match( ct.layout,'reverb' ) then
 
             -- elseif string.match( ct.layout,'par' )
-                
-        
 
             if ct.fol == 1 then
                 -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        col(children_list[t].col,0.35))  --0x768EFF
@@ -841,6 +891,12 @@ function frame()
             --     i_clicked_button_x, i_clicked_button_y = reaper.ImGui_GetItemRectMin(ctx)
             --     i_t = children_list[t]
             -- end 
+
+            if ct.depth - folder_level > 1  then
+                reaper.ImGui_Dummy(ctx, (ct.depth-1-folder_level)*folder_padding,child_button_h)
+                reaper.ImGui_SameLine(ctx)
+            end
+
             cb = reaper.ImGui_Button(ctx, ct.name, child_button_w+(dw*folder_padding), child_button_h)
 
             if todb(peak) > -40 then
@@ -858,22 +914,28 @@ function frame()
             -- if editor and current_track == ct.track then 
             --     reaper.ImGui_PushFont( ctx, font_bold )
             -- end
-
-
             
             if cb then 
-                if reaper.ImGui_IsKeyDown( ctx,  reaper.ImGui_Key_LeftAlt()) then 
+                if reaper.ImGui_IsKeyDown(ctx,  reaper.ImGui_Key_LeftAlt()) then 
                     input = ''
                     show_input = true
                     i_clicked_button_x, i_clicked_button_y = reaper.ImGui_GetItemRectMin(ctx)
-                    i_clicked_w, i_clicked_h = reaper.ImGui_GetItemRectSize( ctx )
+                    i_clicked_w, i_clicked_h = reaper.ImGui_GetItemRectSize(ctx)
                     i_t = ct
+                elseif reaper.ImGui_IsKeyDown(ctx,  reaper.ImGui_Key_LeftShift()) then 
+                    move_items(ct.track)
+                    scroll_to_track(ct.track)
+                    show_list = false 
+                elseif reaper.ImGui_IsKeyDown(ctx,  reaper.ImGui_Key_LeftCtrl()) then 
+                    copy_items(ct.track)
+                    scroll_to_track(ct.track)
+                    show_list = false 
                 else
                     show_input = false
                     scroll_to_track(ct.track)
                     if editor then 
                         reload = false
-                        reaper.SetMediaItemSelected( reaper.GetMediaItemTake_Item( current_take ), 0)
+                        reaper.SetMediaItemSelected(reaper.GetMediaItemTake_Item( current_take ), 0)
                         if table_contains(active,GetParent(current_track)) then 
                             reload = true
                         end
@@ -927,7 +989,8 @@ function frame()
             reaper.ImGui_PopStyleColor(ctx, 4)
             reaper.ImGui_PopStyleVar  (ctx, 2)
             reaper.ImGui_PopID(ctx)
-            reaper.ImGui_PopFont( ctx )
+            reaper.ImGui_PopFont(ctx)
+            -- reaper.ImGui_EndGroup(ctx)
 
 
         end 
@@ -1090,8 +1153,9 @@ function loop()
 
     if visible then
         frame()
-        if reaper.JS_Mouse_GetState( 1 ) == 1 and not reaper.ImGui_IsAnyItemHovered( ctx ) == true and show_list and not show_input then show_list = false end
+        if reaper.JS_Mouse_GetState( 1 ) == 1 and not reaper.ImGui_IsAnyMouseDown( ctx ) == true and show_list and not show_input then show_list = false end
 
+        -- print(reaper.ImGui_IsAnyMouseDown( ctx ))
         -- p_open = reaper.ImGui_ShowMetricsWindow( ctx, p_open )
  
     --   if editor then
