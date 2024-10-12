@@ -1,6 +1,6 @@
--- @description Add envelope points on razor edit edges
+-- @description Smart remove razor edit content
 -- @author Misha Oshkanov
--- @version 1.0
+-- @version 1.1
 -- @about
 --  Use to delete content within razor edit area(items, envelope points, automation items)
 
