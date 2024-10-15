@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="3b68263c4f3f3a5d475f393509c920c221e11c09">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="6f9e5ff40316f40111b55f5181260062e68e5e5a">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -217,7 +217,7 @@
     </reapack>
     <reapack name="misha - Scroller.lua" type="script" desc="Scroller">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -244,6 +244,9 @@
       </version>
       <version name="0.7.3" author="Misha Oshkanov" time="2024-10-11T16:57:21Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/50bca3b9079b0ade30022fe1e6946958393dac8a/ReaScripts/UI%20Utilities/misha%20-%20Scroller.lua</source>
+      </version>
+      <version name="0.7.4" author="Misha Oshkanov" time="2024-10-15T16:52:50Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/6f9e5ff40316f40111b55f5181260062e68e5e5a/ReaScripts/UI%20Utilities/misha%20-%20Scroller.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Show peak LUFS readouts in arrange view.lua" type="script" desc="Show master peak lufs readouts in arrange view">
@@ -290,11 +293,11 @@
     </reapack>
   </category>
   <metadata>
-    <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+    <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs36 Misha Oshkanov Reaper Scripts\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel0 \b \fs36 Misha Oshkanov Reaper Scripts\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 The URL to import in ReaPack is\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 \f1 https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/master/index.xml\par}
 }
