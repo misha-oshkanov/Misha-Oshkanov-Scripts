@@ -1,6 +1,6 @@
 -- @description Scroller
 -- @author Misha Oshkanov
--- @version 0.7.3
+-- @version 0.7.4
 -- @about
 --  Panel to select and scroll to desired track or folder. In midi editor panel can show notes of selected tracks.--
 --  Uses first-order folder as buttons
@@ -15,18 +15,17 @@
 --  alt + click in child tracklist - rename selected track
 
 
-
 -------------- SETTINGS -------------- 
 floating_window = false -- use to freely move script
 
 -- Mode
 panel_position = 'BOTTOM'  -- Panel position There is two modes: 'TOP', 'BOTTOM', 'RIGHT'
 
-max_list = 38   ----- MAX AMOUNT OF CHILDREN TRACKS IN THE LIST
+max_list = 44   ----- MAX AMOUNT OF CHILDREN TRACKS IN THE LIST
 
 --- TRICS TO UPDATE MIDI EDITOR 
 use_invert_hack = false  -- do 2x Time selection invert action to update midi editor
-select_tracks   = true   -- select tracks on click
+select_tracks   = false   -- select tracks on click
 
 -- Buttons
 button_w  = 96           -- minimum button width
@@ -50,12 +49,13 @@ child_font_size  = 14    -- font for tracklist
 
 -- Other settings
 show_only_tracks_with_midi_in_editor =  false   -- children tracklist will contain all tracks in folder if false, otherwise will contain only tracks with midi items
-use_custom_color_for_folder_names = false       -- folders in children tracklist will have red labels
+use_custom_color_for_folder_names = true        -- folders in children tracklist will have red labels
 custom_color = {255,132,132}                    -- set custom color here (rgb)
 
-BLOCKED_TRACK_LAYOUTS = {'Separator'}
-BLOCKED_TRACK_NAMES = {'VCA'}
-
+BLOCKED_TRACK_LAYOUTS = {'Separator', 'M - VCA'}                        -- tracks with this names will be hidden
+BLOCKED_CHILD_TRACK_NAMES  = {'VCA'}                                    -- tracks with this names will be hidden
+BLOCKED_FOLDER_TRACK_NAMES = {'VCA'}                                    -- tracks with this names will be hidden
+arch_prefix = "_" -- tracks with this prefix will be hidden
 
 -----------------------------------------------------------------------
 
@@ -249,10 +249,8 @@ function get_ch_list(parent,editor)
         fold  = reaper.GetMediaTrackInfo_Value(track, 'I_FOLDERDEPTH')
         id    = reaper.GetMediaTrackInfo_Value(track, 'IP_TRACKNUMBER')
         check_hide = reaper.GetMediaTrackInfo_Value(track, 'B_SHOWINTCP' )
-        _, layout = reaper.GetSetMediaTrackInfo_String(track, 'P_TCP_LAYOUT', '', false )
+        local _, layout = reaper.GetSetMediaTrackInfo_String(track, 'P_TCP_LAYOUT', '', false )
 
-
-        
         -- for f=1, reaper.TrackFX_GetCount(track) do 
         --     get_off =  reaper.TrackFX_GetOffline(track, f)
         --     print(get_off)
@@ -262,8 +260,8 @@ function get_ch_list(parent,editor)
         color = reaper.GetTrackColor(track)
         _, tn = reaper.GetTrackName(track)
 
-        for v,k in pairs (BLOCKED_TRACK_NAMES) do 
-            if tn == k or string.sub(tn,1,1) == arch_prefix then 
+        for v,k in pairs (BLOCKED_CHILD_TRACK_NAMES) do 
+            if tn:match(k) or string.sub(tn,1,1) == arch_prefix then 
                 blocked = true 
             end   
         end
@@ -330,13 +328,14 @@ function get_list()
         }
         track = reaper.GetTrack(proj,t-1)
         fold  = reaper.GetMediaTrackInfo_Value(track, 'I_FOLDERDEPTH')
+        local _, layout = reaper.GetSetMediaTrackInfo_String(track, 'P_TCP_LAYOUT', '', false )
         guid  = reaper.BR_GetMediaTrackGUID(track)
         depth = reaper.GetTrackDepth(track)
         color = reaper.GetTrackColor(track)
         _, tn = reaper.GetTrackName(track)
 
-        for v,k in pairs (BLOCKED_TRACK_NAMES) do 
-            if tn == k or string.sub(tn,1,1) == arch_prefix then 
+        for v,k in pairs (BLOCKED_FOLDER_TRACK_NAMES) do 
+            if tn:match(k) or string.sub(tn,1,1) == arch_prefix then 
                 blocked = true 
             end   
         end
@@ -430,7 +429,6 @@ function col_vib_inv(col,vib)
     result = rgba(r,g,b,1)
     return result
 end
-
 
 function col_sat(col,sat)
     sat = math.ceil(255 * sat)
@@ -831,11 +829,11 @@ function frame()
         dw = 0
         for t=1,#children_list do 
             tw, _ = reaper.ImGui_CalcTextSize( ctx, children_list[t].name )
-            dw = children_list[t].depth
+            dw = children_list[t].depth - folder_level
             if tw > name_w then 
                 name_w = tw
             elseif dw > children_list[t].depth then 
-                dw = children_list[t].depth
+                dw = children_list[t].depth - folder_level
             end
         end 
         -- if dw>0 then dw = dw-1 end
@@ -856,6 +854,7 @@ function frame()
             -- reaper.ImGui_SetNextWindowPos( ctx,clicked_button_x-(name_w+(dw*folder_padding)),clicked_button_y+max_h+4, condIn, 0, 1 )
             reaper.ImGui_SetNextWindowPos( ctx,clicked_button_x-((dw*folder_padding)),clicked_button_y+max_h+4, condIn, 0, 1 )
         end
+
 
         reaper.ImGui_SetNextWindowSize(ctx, name_w+(dw*folder_padding), max_h+8,  reaper.ImGui_Cond_Always()) 
 
@@ -908,9 +907,9 @@ function frame()
             reaper.ImGui_PushFont( ctx, font2 )
 
             if #children_list > max_list then  
-            child_button_w = (name_w-4)-(ct.depth-1)*folder_padding - 14
+            child_button_w = (name_w-4)-(ct.depth-1-folder_level)*folder_padding - 14
             else 
-            child_button_w = (name_w-4)-(ct.depth-1)*folder_padding   
+            child_button_w = (name_w-4)-(ct.depth-1-folder_level)*folder_padding   
             end 
 
             peak = reaper.Track_GetPeakInfo(ct.track, 1, false)
@@ -1216,7 +1215,6 @@ function loop()
     end
 
 end
-
 
 reaper.defer(loop)
 
