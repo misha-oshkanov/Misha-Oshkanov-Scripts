@@ -1,6 +1,6 @@
 -- @description Scroller
 -- @author Misha Oshkanov
--- @version 0.7.4
+-- @version 0.7.5
 -- @about
 --  Panel to select and scroll to desired track or folder. In midi editor panel can show notes of selected tracks.--
 --  Uses first-order folder as buttons
@@ -21,11 +21,11 @@ floating_window = false -- use to freely move script
 -- Mode
 panel_position = 'BOTTOM'  -- Panel position There is two modes: 'TOP', 'BOTTOM', 'RIGHT'
 
-max_list = 44   ----- MAX AMOUNT OF CHILDREN TRACKS IN THE LIST
+max_list = 40   ----- MAX AMOUNT OF CHILDREN TRACKS IN THE LIST
 
 --- TRICS TO UPDATE MIDI EDITOR 
-use_invert_hack = false  -- do 2x Time selection invert action to update midi editor
-select_tracks   = false   -- select tracks on click
+use_invert_hack = false  -- do 2x Time selection invert action to update midi editor -- use if you you don't see notes when folder buttons are clicked
+select_tracks   = false   -- select tracks on click -- use if you you don't see notes when folder buttons are clicked
 
 -- Buttons
 button_w  = 96           -- minimum button width
@@ -39,7 +39,7 @@ scroll_offset = 0        -- this will offset scroll position by x pixels, can be
 bottom_padding = -10       -- padding in bottom mode
 top_padding = 84         -- padding in top mode
 midi_padding = 0        -- padding with open midi editor
-use_arr_bottom = true    -- if true use bottom of arrange view for panel positioning, if false use reaper window bottom/
+use_arr_bottom = true    -- if true use bottom of arrange view for panel positioning, if false use reaper window bottom
 use_arr_middle = false
 
 -- Fonts
