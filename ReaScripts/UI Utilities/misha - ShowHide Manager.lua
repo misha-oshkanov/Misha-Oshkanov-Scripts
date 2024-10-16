@@ -1,6 +1,6 @@
 -- @description ShowHide Manager
 -- @author Misha Oshkanov
--- @version 1.0
+-- @version 1.1
 -- @about
 --  UI panel for showind and hiding different types of tracks in project
 --  Types: sends, selected tracks, muted tracks, empty tracks, track within region, offline tracks
@@ -47,18 +47,18 @@ panel_position = 'TOP' -- 'BOTTOM'
 ----------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------
 
-
-
-
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
 function pname(track)  retval, buf = reaper.GetTrackName(track) print(buf) end
 
 dofile(reaper.GetResourcePath() .. '/Scripts/ReaTeam Extensions/API/imgui.lua')('0.6')
 
 extname = 'INEED_TRACKS_STATE'
-
 tracklist_extname = 'INEED_HIDE_TCP' 
 
+local os = reaper.GetOS()
+local is_windows = os:match('Win')
+local is_macos = os:match('OSX') or os:match('macOS')
+local is_linux = os:match('Other')
 
 local ctx = reaper.ImGui_CreateContext('Show/Hide')
 local font = reaper.ImGui_CreateFont('sans-serif', 15)
@@ -122,14 +122,6 @@ buttons = {
   },
 }
 
-function old_rgba(r, g, b, a)
-  local b = math.floor(b * 255) * 256
-  local g = math.floor(g * 255) * 256 * 256
-  local r = math.floor(r * 255) * 256 * 256 * 256
-  local a = math.floor(a * 255)
-  return r + g + b + a
-end
-
 function get_state(key)
   key = tostring(key)
   retval, extstate = reaper.GetProjExtState( 0, extname, string.upper(key) )  
@@ -137,7 +129,7 @@ function get_state(key)
 end
 
 function set_state(key,state)
-  reaper.SetProjExtState( 0, extname, key, tostring(state) )
+  reaper.SetProjExtState( 0, extname, key, tostring(state))
 end 
 
 function colored_frame(col)
@@ -152,9 +144,6 @@ function draw_color_fill(color)
   min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
   max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
   draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-  -- reaper.ImGui_DrawList_AddRectFilled(draw_list, min_x, min_y, max_x, max_y, rgba(0.2, 1, 1, 0.1))
-  -- reaper.ImGui_DrawList_AddRect( draw_list, min_x, min_y, max_x, max_y,  rgba(0.2, 0.5, 0.9, 1), 0 ,0, 3 )
-  -- reaper.ImGui_DrawList_AddRect( draw_list, min_x, min_y, max_x, max_y,  color,0,0,3)
   reaper.ImGui_DrawList_AddRectFilled(draw_list, min_x, min_y, max_x, max_y, color)
 end
 
@@ -163,11 +152,7 @@ function draw_color(color)
   min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
   max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
   draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-  -- reaper.ImGui_DrawList_AddRectFilled(draw_list, min_x, min_y, max_x, max_y, rgba(0.2, 1, 1, 0.1))
-  -- reaper.ImGui_DrawList_AddRect( draw_list, min_x, min_y, max_x, max_y,  rgba(0.2, 0.5, 0.9, 1), 0 ,0, 3 )
   reaper.ImGui_DrawList_AddRect( draw_list, min_x, min_y, max_x, max_y,  color,0,0,3)
-  -- reaper.ImGui_DrawList_AddRectFilled(draw_list, min_x, min_y, max_x, max_y, color)
--- 
 end
 
 function check_regions(track, rg_start, rg_end)
@@ -392,28 +377,6 @@ function rgba(r, g, b, a)
   return r + g + b + a
 end
 
-function col_sat(col,sat)
-  sat = math.ceil(255 * sat)
-  r, g, b = reaper.ColorFromNative(col)
-  h, s, v = reaper.ImGui_ColorConvertRGBtoHSV(r, g, b)
-  if v < 100 then 
-      v = 180 - v
-      r, g, b = reaper.ImGui_ColorConvertHSVtoRGB( h, s, v )
-  end 
-
-  if sat > 0 then 
-      r = math.min(r+sat,255)
-      g = math.min(g+sat,255)
-      b = math.min(b+sat,255)
-  else
-      r = math.max(r+sat,0)
-      g = math.max(g+sat,0)
-      b = math.max(b+sat,0)
-  end
-
-  result = rgba(r,g,b,1)
-  return result
-end
 
 function get_children(parent)
   if parent then 
@@ -497,17 +460,10 @@ function Main()
     
     if MOD == 'BOX' and i%3~=0 then reaper.ImGui_SameLine(ctx) end
 
-    -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(),        old_rgba(b.col[1], b.col[2], b.col[3], b.col[4]))
-    -- s = get_state(b.key)
-    -- s = tonumber(s)
-
     ImGui.PopStyleColor(ctx, 4)
     ImGui.PopID(ctx)
-
     
     if b.button then 
-      -- ImGui.PushStyleColor(ctx, ImGui.Col_Text(),  rgba(240,240,240,1))
-      -- ImGui.PopStyleColor(ctx, 1)
 
       s = s == 1 and 0 or 1
       if reaper.ImGui_IsKeyDown( ctx, reaper.ImGui_Key_LeftCtrl()) then 
@@ -520,9 +476,7 @@ function Main()
 
       reaper.UpdateArrange()
       reaper.TrackList_AdjustWindows(true)
-    
     end 
-
    end
 
 end
@@ -546,7 +500,6 @@ function loop()
 
   reaper.ImGui_PushFont(ctx, font)
 
-  scale = reaper.ImGui_GetWindowDpiScale( ctx )
   mainHWND = reaper.GetMainHwnd()
   windowHWND = reaper.JS_Window_FindChildByID(mainHWND, 1000)
   retval, left, top, right, bottom = reaper.JS_Window_GetClientRect( mainHWND )
@@ -554,6 +507,13 @@ function loop()
 
   -- reaper.ImGui_SetNextWindowSize(ctx, 130, 230, reaper.ImGui_Cond_FirstUseEver())
   -- reaper.ImGui_SetNextWindowSize(ctx, (button_w+3)*6, button_h+8)
+
+  if is_windows then 
+    scale = reaper.ImGui_GetWindowDpiScale(ctx)
+    os_scale = 1/scale
+  else 
+    os_scale = 1
+  end
 
   cw, ch = reaper.ImGui_GetWindowSize( ctx )
 
@@ -564,7 +524,6 @@ function loop()
   end
 
   if panel_position == 'TOP' then
-    
     ar_bottom = ar_top
     ar_right = right
   end
@@ -573,25 +532,24 @@ function loop()
     reaper.ImGui_SetNextWindowSize(ctx, ((button_w+2)*3)+4, (button_h*2)+10)
     
     if not floating_window then 
-        reaper.ImGui_SetNextWindowPos( ctx, move_x + (ar_right-(cw/6))*(1/scale), move_y + (ar_bottom-(ch-10))*(1/scale), condIn, 0.5, 0.5 )
-
+      reaper.ImGui_SetNextWindowPos( ctx, move_x + (ar_right-(cw/6))*os_scale, move_y + (ar_bottom-(ch-10))*os_scale, condIn, 0.5, 0.5)
     end
 
 
   elseif MOD == 'LINE' then 
     -- reaper.ImGui_SetNextWindowSize(ctx, ((button_w+2)*6)+8, button_h+8)
-    reaper.ImGui_SetNextWindowSize(ctx, tcp_w*(1/scale), (button_h+8)*(1/scale))
+    reaper.ImGui_SetNextWindowSize(ctx, tcp_w*os_scale, (button_h+8)*os_scale)
     button_w = (tcp_w/6)-3
     -- print(right-ar_right)
     if not floating_window then 
-      -- reaper.ImGui_SetNextWindowPos( ctx, move_x + (ar_right-(cw/2.3))*(1/scale), move_y + (ar_bottom-(ch/9.8))*(1/scale), condIn, 0.5, 0.5 )
-      reaper.ImGui_SetNextWindowPos( ctx,  move_x + (tcp_right-(tcp_right-right)-(tcp_w/2))*(1/scale), move_y + (ar_bottom-(ch))*(1/scale), condIn, 0.5, 0.5 )
+      -- reaper.ImGui_SetNextWindowPos( ctx, move_x + (ar_right-(cw/2.3))*os_scale, move_y + (ar_bottom-(ch/9.8))*os_scale, condIn, 0.5, 0.5 )
+      reaper.ImGui_SetNextWindowPos( ctx,  move_x + (tcp_right-(tcp_right-right)-(tcp_w/2))*os_scale, move_y + (ar_bottom-(ch))*os_scale, condIn, 0.5, 0.5 )
     end
 
   elseif MOD == 'VERTLINE' then 
     reaper.ImGui_SetNextWindowSize(ctx, (button_w+3)+3, ((button_h+2)*6)+6)
     if not floating_window then 
-      reaper.ImGui_SetNextWindowPos( ctx, move_x + (ar_right-button_w/6)*(1/scale), move_y + (ar_bottom-ch*4.1)*(1/scale), condIn, 0.5, 0.5 )
+      reaper.ImGui_SetNextWindowPos( ctx, move_x + (ar_right-button_w/6)*os_scale, move_y + (ar_bottom-ch*4.1)*os_scale, condIn, 0.5, 0.5 )
     end
 
   end
@@ -608,12 +566,8 @@ function loop()
 
   if open then
     reaper.defer(loop)
-  else
-    reaper.ImGui_DestroyContext(ctx)
   end
-
 end
 
-
-Main()
-reaper.defer(loop)
+loop()
+-- reaper.defer(loop)
