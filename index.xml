@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="6f9e5ff40316f40111b55f5181260062e68e5e5a">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="d9fa95fbd7c61781e4d8c440432313912c0acac5">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -247,6 +247,9 @@
       </version>
       <version name="0.7.4" author="Misha Oshkanov" time="2024-10-15T16:52:50Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/6f9e5ff40316f40111b55f5181260062e68e5e5a/ReaScripts/UI%20Utilities/misha%20-%20Scroller.lua</source>
+      </version>
+      <version name="0.7.5" author="Misha Oshkanov" time="2024-10-15T16:58:51Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/d9fa95fbd7c61781e4d8c440432313912c0acac5/ReaScripts/UI%20Utilities/misha%20-%20Scroller.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Show peak LUFS readouts in arrange view.lua" type="script" desc="Show master peak lufs readouts in arrange view">
