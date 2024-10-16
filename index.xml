@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="d9fa95fbd7c61781e4d8c440432313912c0acac5">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="915264fbd4d3fd0365f259efbab620f54e8c4d34">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -254,7 +254,7 @@
     </reapack>
     <reapack name="misha - Show peak LUFS readouts in arrange view.lua" type="script" desc="Show master peak lufs readouts in arrange view">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -265,10 +265,13 @@
       <version name="1.0" author="Misha Oshkanov" time="2024-09-05T07:26:38Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54/ReaScripts/UI%20Utilities/misha%20-%20Show%20peak%20LUFS%20readouts%20in%20arrange%20view.lua</source>
       </version>
+      <version name="1.1" author="Misha Oshkanov" time="2024-10-16T08:44:15Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/915264fbd4d3fd0365f259efbab620f54e8c4d34/ReaScripts/UI%20Utilities/misha%20-%20Show%20peak%20LUFS%20readouts%20in%20arrange%20view.lua</source>
+      </version>
     </reapack>
     <reapack name="misha - ShowHide Manager.lua" type="script" desc="ShowHide Manager">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -278,6 +281,9 @@
       </metadata>
       <version name="1.0" author="Misha Oshkanov" time="2024-09-05T07:26:38Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54/ReaScripts/UI%20Utilities/misha%20-%20ShowHide%20Manager.lua</source>
+      </version>
+      <version name="1.1" author="Misha Oshkanov" time="2024-10-16T08:44:15Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/915264fbd4d3fd0365f259efbab620f54e8c4d34/ReaScripts/UI%20Utilities/misha%20-%20ShowHide%20Manager.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Track Renamer.lua" type="script" desc="Track Renamer">
