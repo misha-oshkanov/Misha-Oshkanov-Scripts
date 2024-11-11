@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="915264fbd4d3fd0365f259efbab620f54e8c4d34">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="112e18bce1cdc5cc6805daf1a456af664164b0d0">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -207,12 +207,15 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. If you need more levels or change db values you can edit buttons table.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. If you need more levels or change db values you can edit buttons table. Use Right click to access listen filters\par}
 }
 ]]></description>
       </metadata>
       <version name="1.4" author="Misha Oshkanov" time="2024-09-05T07:26:38Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller.lua</source>
+      </version>
+      <version name="1.6" author="Misha Oshkanov" time="2024-11-11T17:42:26Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/112e18bce1cdc5cc6805daf1a456af664164b0d0/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Scroller.lua" type="script" desc="Scroller">
@@ -302,11 +305,11 @@
     </reapack>
   </category>
   <metadata>
-    <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+    <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel0 \b \fs36 Misha Oshkanov Reaper Scripts\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs36 Misha Oshkanov Reaper Scripts\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 The URL to import in ReaPack is\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 \f1 https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/master/index.xml\par}
 }
