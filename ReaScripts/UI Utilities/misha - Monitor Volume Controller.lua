@@ -1,18 +1,14 @@
 -- @description Monitor Volume Controller
 -- @author Misha Oshkanov
--- @version 1.6
+-- @version 1.7
 -- @about
 --  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. 
 --  If you need more levels or change db values you can edit buttons table.
---  Use Right click to access listen filters
+--  Use right click to change modes between volume control and listen filters
 
 -------------------------- SETTINGS -----------------------------
-floating_window = false -- use floating window to freely place the panel
 
-move_x = 10 -- move panel in x coordinate
-move_y = 20 -- move panel in y coordinate
-
-USE_LISTEN_BANDS = false -- show filters at startup
+USE_LISTEN_BANDS = false -- mode by default
 
 buttons = {-24, -14, -8, -4, 0, 4, 12, 18, 24} -- in dB
 
@@ -25,14 +21,17 @@ listen_buttons = {
   {str = 'Free', l = 0,    h = 22000,col = {161,145,99,0.7}},
 }
 
+move_x = 10 -- move panel in x coordinate
+move_y = 20 -- move panel in y coordinate
 
 POS = 'TOP' -- 'BOTTOM' -- position presets
 
 button_h = 24 -- height default - 24
 button_w = 54 -- width  default - 54
 
-listen_button_h = 22
+listen_button_h = 24
 
+floating_window = false -- use floating window to freely place the panel
 listen_state = false
 
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
@@ -75,7 +74,6 @@ window_flags =  reaper.ImGui_WindowFlags_NoTitleBar() +
                 reaper.ImGui_WindowFlags_NoDocking() +
                 reaper.ImGui_WindowFlags_NoScrollbar() + 
                 reaper.ImGui_WindowFlags_NoResize() 
-
                 -- reaper.ImGui_WindowFlags_NoBackground()-
 local ImGui = {}
 for name, func in pairs(reaper) do
@@ -126,40 +124,22 @@ function set_param_freq(master,param,value)
   listen_index = reaper.TrackFX_AddByName(master, controller_fx, true, 100)
   reaper.TrackFX_SetParam(master, listen_index+mon, param, value)
 end
--- function setup_plugin()
---   track = reaper.GetMasterTrack()
---   reaper.TrackFX_GetCount(track)
---   index = reaper.TrackFX_AddByName(track, controller_fx, true, 0)
---   if index == -1 then 
---     new_index = reaper.TrackFX_AddByName(track, 'JS: Volume Adjustment', true, 10)
 
---   end
-
-
--- end
-
-function Main()
-  master = reaper.GetMasterTrack()
-  state = get_state(master)
-  ext = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'LISTEN'))
-
+function draw_volume_buttons(master)
   for i,b in ipairs(buttons) do
-      if state == b then s = 1 else s = 0 end
-      ImGui.PushID(ctx, i)
-      if s == 0 then
-          -- draw_color(rgba(b.col[1], b.col[2], b.col[3], b.col[4]))
-          -- draw_color_fill(rgba(b.col[1], b.col[2], b.col[3], 0.1))
-          ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive(),  rgba(195,105,105,0.2))
-          ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered(), rgba(195,105,105,0.4))
-          ImGui.PushStyleColor(ctx, ImGui.Col_Text(),  rgba(240,240,240,1))
-          ImGui.PushStyleColor(ctx, ImGui.Col_Button(),rgba(100,100,100,0.8))
-  
-      else
-          ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive(),  rgba(195,105,105,0.9))
-          ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered(),  rgba(205,105,105,0.8))
-          ImGui.PushStyleColor(ctx, ImGui.Col_Button(),        rgba(195,105,105,0.6))
-          ImGui.PushStyleColor(ctx, ImGui.Col_Text(),     rgba(224,224,224,1))
-      end
+    if state == b then s = 1 else s = 0 end
+    ImGui.PushID(ctx, i)
+    if s == 0 then
+        ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive(),   rgba(195,105,105,0.2))
+        ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered(),  rgba(195,105,105,0.4))
+        ImGui.PushStyleColor(ctx, ImGui.Col_Text(),           rgba(240,240,240,1))
+        ImGui.PushStyleColor(ctx, ImGui.Col_Button(),         rgba(100,100,100,0.8))
+    else
+        ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive(),   rgba(195,105,105,0.9))
+        ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered(),  rgba(205,105,105,0.8))
+        ImGui.PushStyleColor(ctx, ImGui.Col_Button(),         rgba(195,105,105,0.6))
+        ImGui.PushStyleColor(ctx, ImGui.Col_Text(),           rgba(224,224,224,1))
+    end
 
     b_button = ImGui.Button(ctx, tostring(b), button_w, button_h)
     
@@ -168,14 +148,15 @@ function Main()
     ImGui.PopID(ctx)
     
     if b_button then
-
-        master_track = reaper.GetMasterTrack()
-        index = reaper.TrackFX_AddByName(reaper.GetMasterTrack(), controller_fx, true, 100)
-        if reaper.TrackFX_GetOpen(master_track, mon+index) then reaper.TrackFX_Show( master_track, mon+index, 2 ) end
-        reaper.TrackFX_SetParam(master_track, index+mon, 2, b )
+        index = reaper.TrackFX_AddByName(master, controller_fx, true, 100)
+        if reaper.TrackFX_GetOpen(master, mon+index) then reaper.TrackFX_Show(master, mon+index, 2 ) end
+        reaper.TrackFX_SetParam(master, index+mon, 2, b )
     end
   end
+end 
 
+
+function draw_listen_buttons(master)
   for i2,lb in ipairs(listen_buttons) do
     ImGui.PushID(ctx, i)
     ImGui.PushFont(ctx, font2)
@@ -189,10 +170,9 @@ function Main()
       ImGui.PushStyleColor(ctx, ImGui.Col_Button(),         rgba(195,105,105,0.6))
     else
       ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive(),   rgba(lb.col[1]+10,lb.col[2]+10,lb.col[3]+10,lb.col[4]))
-      ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered(), rgba(lb.col[1]+20,lb.col[2]+20,lb.col[3]+20,1))
-      ImGui.PushStyleColor(ctx, ImGui.Col_Button(),        rgba(lb.col[1],lb.col[2],lb.col[3],lb.col[4]))
+      ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered(),  rgba(lb.col[1]+20,lb.col[2]+20,lb.col[3]+20,1))
+      ImGui.PushStyleColor(ctx, ImGui.Col_Button(),         rgba(lb.col[1],lb.col[2],lb.col[3],lb.col[4]))
     end
-
 
     listen_button = ImGui.Button(ctx, lb.str, listen_button_w, listen_button_h)
     if i2 < #listen_buttons then ImGui.SameLine(ctx) end
@@ -204,7 +184,6 @@ function Main()
         if ext == 0 or (ext > 0 and ext ~= i2) then 
           reaper.SetExtState('MISHA_MONITOR', 'LISTEN', i2, true)
           set_listen_state(master,1)
-
         elseif ext == i2 then 
           set_listen_state(master,0)
           reaper.SetExtState('MISHA_MONITOR', 'LISTEN', '0', true)
@@ -218,17 +197,27 @@ function Main()
         else 
           set_param_freq(master,0,lb.l)
           set_param_freq(master,1,lb.h)
-        end
-        
+        end 
     end
-
-    if ext == #listen_buttons then 
-      free_mode = true
-    else 
-      free_mode = false 
-    end
-
+    if ext == #listen_buttons then free_mode = true else free_mode = false end
   end
+end 
+
+function Main()
+  master = reaper.GetMasterTrack()
+  state = get_state(master)
+  ext = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'LISTEN'))
+  
+  if USE_LISTEN_BANDS then 
+    draw_listen_buttons(master)
+  else 
+    if ext > 0 then 
+      reaper.SetExtState('MISHA_MONITOR', 'LISTEN', '0', true) 
+      set_listen_state(master,0)
+    end 
+    draw_volume_buttons(master)
+  end
+
   reaper.ImGui_PushItemWidth( ctx, tcp_w-4 )
 
   if free_mode then 
@@ -257,16 +246,11 @@ function Main()
   if highCut > maxFreq then highCut = maxFreq end
 
   if free_mode == true then 
-
     ImGui.PushStyleColor(ctx, ImGui.Col_SliderGrab(),          rgba(195,105,105,0.7))
     ImGui.PushStyleColor(ctx, ImGui.Col_SliderGrabActive(),    rgba(195,105,105,0.9))
     ImGui.PushStyleColor(ctx, ImGui.Col_FrameBg(),             rgba(96,68,68,0.4))
     ImGui.PushStyleColor(ctx, ImGui.Col_FrameBgActive(),       rgba(100,72,72,0.8))
     ImGui.PushStyleColor(ctx, ImGui.Col_FrameBgHovered(),      rgba(100,72,72,0.6))
-  
-
-    
-
 
     range_retval, slider_range = reaper.ImGui_SliderInt( ctx, 'slider_range', slider_range, 20, 20000,  formatIn, reaper.ImGui_SliderFlags_Logarithmic() )
     if range_retval then 
@@ -274,7 +258,6 @@ function Main()
       set_param_freq(master,0,lowCut)
       set_param_freq(master,1,highCut)
     end
-
     
     min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
     max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
@@ -286,19 +269,14 @@ function Main()
     low_cut_x = min_x + (lowCutPos * sliderWidth)
     high_cut_x = min_x + (highCutPos * sliderWidth)
 
-    -- reaper.ImGui_DrawList_AddRect( draw_list, low_cut_x, min_y, high_cut_x, max_y,  rgba(220,220,220,0.7),2,0,2)
     reaper.ImGui_DrawList_AddRectFilled( draw_list, low_cut_x, min_y, high_cut_x, max_y,  rgba(200,200,200,0.2),2,0)
-    -- reaper.ImGui_DrawList_AddRect( draw_list, low_cut_x, min_y, high_cut_x, max_y,  rgba(220,220,220,0.7),2,0,2)
-
     ImGui.PopStyleColor(ctx, 5)
   end
-
   reaper.ImGui_PopItemWidth( ctx )
 
   if reaper.ImGui_IsMouseClicked( ctx, reaper.ImGui_MouseButton_Right() ) then 
     USE_LISTEN_BANDS = not USE_LISTEN_BANDS 
   end
-
 end
 
 function GetClientBounds(hwnd)
@@ -323,7 +301,6 @@ function FindChildByClass(hwnd, classname, occurance)
 end
 
 function loop()  
-
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_WindowBg(),          rgba(36, 37, 38, 1))
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBg(),           rgba(28, 29, 30, 1))
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBgActive(),     rgba(68, 69, 70, 1))
@@ -355,13 +332,15 @@ function loop()
     -- reaper.ImGui_SetNextWindowSize(ctx, tcp_w*(1/scale)-10, (button_h+8)*(1/scale))
 
 
-    if USE_LISTEN_BANDS then 
-      if free_mode then free_offset = 30 else free_offset = 0 end
-    reaper.ImGui_SetNextWindowSize(ctx, tcp_w*(1/scale)+4, ((button_h)+10+listen_button_h)*(1/scale)+free_offset)
-    
-    else
-    reaper.ImGui_SetNextWindowSize(ctx, tcp_w*(1/scale)+4, (button_h+8)*(1/scale))
-    end
+    -- if USE_LISTEN_BANDS then 
+    --   if free_mode then free_offset = 30 else free_offset = 0 end
+    --   reaper.ImGui_SetNextWindowSize(ctx, tcp_w*(1/scale)+4, ((button_h)+10+listen_button_h)*(1/scale)+free_offset)
+    -- else
+    --   reaper.ImGui_SetNextWindowSize(ctx, tcp_w*(1/scale)+4, (button_h+8)*(1/scale))
+    -- end
+
+    if free_mode then free_offset = 24 else free_offset = 0 end
+    reaper.ImGui_SetNextWindowSize(ctx, tcp_w*(1/scale)+4, (button_h+8)*(1/scale)+free_offset)
 
     
     if not floating_window then 
