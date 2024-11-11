@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="112e18bce1cdc5cc6805daf1a456af664164b0d0">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="ac2f8a3eefb1a8984d9c58f7598ca08013d55ec3">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -207,7 +207,7 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. If you need more levels or change db values you can edit buttons table. Use Right click to access listen filters\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. If you need more levels or change db values you can edit buttons table. Use right click to change modes between volume control and listen filters\par}
 }
 ]]></description>
       </metadata>
@@ -216,6 +216,9 @@
       </version>
       <version name="1.6" author="Misha Oshkanov" time="2024-11-11T17:42:26Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/112e18bce1cdc5cc6805daf1a456af664164b0d0/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller.lua</source>
+      </version>
+      <version name="1.7" author="Misha Oshkanov" time="2024-11-11T18:33:40Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ac2f8a3eefb1a8984d9c58f7598ca08013d55ec3/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Scroller.lua" type="script" desc="Scroller">
