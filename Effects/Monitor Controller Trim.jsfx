@@ -25,7 +25,7 @@
 desc:Monitor Volume Controller
 //tags: filter
 //author: Stillwell
-//version: 1.1
+//version: 1.2
 
 slider1:0<0,22000,1>HPF
 slider2:22000<0,22000,1>LPF
