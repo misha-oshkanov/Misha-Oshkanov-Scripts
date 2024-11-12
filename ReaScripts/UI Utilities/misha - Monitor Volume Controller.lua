@@ -1,16 +1,18 @@
 -- @description Monitor Volume Controller
 -- @author Misha Oshkanov
--- @version 1.8
+-- @version 1.9
 -- @about
 --  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. 
 --  If you need more levels or change db values you can edit buttons table.
 --  Use right click to change modes between volume control and listen filters
 
--------------------------- SETTINGS -----------------------------
+------------------------------------- SETTINGS ----------------------------------------
 
 USE_LISTEN_BANDS = false -- mode by default
+floating_window = true -- use floating window to freely place the panel
+POS = 'TOP' -- 'BOTTOM' -- position presets if floating window is false
 
-buttons = {-24, -14, -8, -4, 0, 4, 12, 18, 24} -- in dB
+buttons = {-24, -14, -8, -4, 0, 4, 12, 18, 24} -- presets in dB
 
 listen_buttons = {
   {str = 'Sub',  l = 0,    h = 60   ,col = {81,100,123,0.8}},
@@ -24,30 +26,12 @@ listen_buttons = {
 move_x = 10 -- move panel in x coordinate
 move_y = 20 -- move panel in y coordinate
 
-POS = 'TOP' -- 'BOTTOM' -- position presets
-
 button_h = 24 -- height default - 24
 button_w = 54 -- width  default - 54
-
 listen_button_h = 24
 
-floating_window = true -- use floating window to freely place the panel
-listen_state = false
-
+------------------------------------------------------------------------------------
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
-
-function printt(t, indent)
-    indent = indent or 0
-    for k, v in pairs(t) do
-      if type(v) == "table" then
-        print(string.rep(" ", indent) .. k .. " = {")
-        printt(v, indent + 2)
-        print(string.rep(" ", indent) .. "}")
-      else
-        print(string.rep(" ", indent) .. k .. " = " .. tostring(v))
-      end
-    end
-end
 
 dofile(reaper.GetResourcePath() .. '/Scripts/ReaTeam Extensions/API/imgui.lua')('0.6')
 local ctx = reaper.ImGui_CreateContext('Show/Hide')
@@ -60,15 +44,17 @@ reaper.ImGui_AttachFont(ctx, font2)
 free_l = 0
 free_h = 22000
 width = 2
-slider_range = 1000
 controller_fx = 'Monitor Volume Controller'
+listen_state = false
 
 base_freq_ext  = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'BASE_FREQ'))
 base_width_ext = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'BASE_WIDTH'))
+
+
 if base_width_ext == nil then base_width_ext = 2 end
 
-slider_range = base_freq_ext
 if base_freq_ext == nil then base_freq_ext = 1000 end
+slider_range = base_freq_ext
 
 window_flags =  reaper.ImGui_WindowFlags_NoTitleBar() +  
                 reaper.ImGui_WindowFlags_NoDocking() +
@@ -352,7 +338,7 @@ function loop()
       end 
     end
   
-    local visible, open = reaper.ImGui_Begin(ctx, 'Show/Hide', true, window_flags)
+    local visible, open = reaper.ImGui_Begin(ctx, 'Monitor Controller', true, window_flags)
   
     if visible  then
       Main()     
