@@ -31,7 +31,7 @@ button_w = 54 -- width  default - 54
 
 listen_button_h = 24
 
-floating_window = false -- use floating window to freely place the panel
+floating_window = true -- use floating window to freely place the panel
 listen_state = false
 
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
@@ -60,7 +60,7 @@ reaper.ImGui_AttachFont(ctx, font2)
 free_l = 0
 free_h = 22000
 width = 2
-
+slider_range = 1000
 controller_fx = 'Monitor Volume Controller'
 
 base_freq_ext  = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'BASE_FREQ'))
@@ -207,6 +207,7 @@ function Main()
   master = reaper.GetMasterTrack()
   state = get_state(master)
   ext = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'LISTEN'))
+  if ext == nil then ext = 0 end 
   
   if USE_LISTEN_BANDS then 
     draw_listen_buttons(master)
