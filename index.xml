@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="94fde45ad1d3c449f9b7eb5caa00e5a1919cd587">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="e36803314bddf21a9c4c404319b2c582ae59cd72">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -132,6 +132,20 @@
     </reapack>
   </category>
   <category name="ReaScripts/Track and items">
+    <reapack name="misha - auto gain fx chain for selected track using GainMatch.lua" type="script" desc="Auto gain fx chain for selected track using GainMatch">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 You need GainMatch plugin for this to work. Script will add instance of Gainmatch at the start and at the end of FX chain.\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="Misha Oshkanov" time="2024-11-12T10:46:52Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e36803314bddf21a9c4c404319b2c582ae59cd72/ReaScripts/Track%20and%20items/misha%20-%20auto%20gain%20fx%20chain%20for%20selected%20track%20using%20GainMatch.lua</source>
+      </version>
+    </reapack>
     <reapack name="misha - float next fx on selected track or item.lua" type="script" desc="Float next fx on selected track or item">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
@@ -293,6 +307,20 @@
       </version>
       <version name="1.1" author="Misha Oshkanov" time="2024-10-16T08:44:15Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/915264fbd4d3fd0365f259efbab620f54e8c4d34/ReaScripts/UI%20Utilities/misha%20-%20ShowHide%20Manager.lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - Track Noise Detector.lua" type="script" desc="Track Noise Detector">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Find that one noisy bastard!!!\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.9" author="Misha Oshkanov" time="2024-11-12T10:46:52Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e36803314bddf21a9c4c404319b2c582ae59cd72/ReaScripts/UI%20Utilities/misha%20-%20Track%20Noise%20Detector.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Track Renamer.lua" type="script" desc="Track Renamer">
