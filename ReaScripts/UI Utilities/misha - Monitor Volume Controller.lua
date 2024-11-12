@@ -1,6 +1,6 @@
 -- @description Monitor Volume Controller
 -- @author Misha Oshkanov
--- @version 1.7
+-- @version 1.8
 -- @about
 --  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. 
 --  If you need more levels or change db values you can edit buttons table.
