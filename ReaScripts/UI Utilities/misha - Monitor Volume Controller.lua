@@ -60,9 +60,8 @@ window_flags =  reaper.ImGui_WindowFlags_NoTitleBar() +
                 reaper.ImGui_WindowFlags_NoDocking() +
                 reaper.ImGui_WindowFlags_NoScrollbar() + 
                 reaper.ImGui_WindowFlags_NoResize() +
-                reaper.ImGui_WindowFlags_NoScrollWithMouse() +
-                reaper.ImGui_WindowFlags_NoNavFocus()
-                -- reaper.ImGui_WindowFlags_NoBackground()-
+                reaper.ImGui_WindowFlags_NoScrollWithMouse() 
+                
 local ImGui = {}
 for name, func in pairs(reaper) do
   name = name:match('^ImGui_(.+)$')
@@ -141,6 +140,7 @@ function draw_volume_buttons(master)
       reaper.TrackFX_SetParam(master, index+mon, 2, b )
     end
   end
+  if free_mode then free_mode = false end
 end 
 
 
@@ -193,6 +193,7 @@ function draw_listen_buttons(master)
 end 
 
 function Main()
+
   master = reaper.GetMasterTrack()
   state = get_state(master)
   ext = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'LISTEN'))
@@ -210,7 +211,7 @@ function Main()
     draw_volume_buttons(master)
   end
 
-  reaper.ImGui_PushItemWidth( ctx, tcp_w-4 )
+  reaper.ImGui_PushItemWidth( ctx, tcp_w-2 )
 
   if free_mode then 
     vertical, horizontal = reaper.ImGui_GetMouseWheel( ctx )
@@ -270,9 +271,9 @@ function Main()
     USE_LISTEN_BANDS = not USE_LISTEN_BANDS 
   end
 
-  if reaper.ImGui_IsWindowFocused(ctx) and not reaper.ImGui_IsAnyItemHovered( ctx ) then 
-    reaper.SetCursorContext(1, nil)
-  end
+  if reaper.ImGui_IsMouseReleased( ctx, reaper.ImGui_MouseButton_Left() ) then 
+    if ImGui.IsWindowFocused(ctx) then reaper.SetCursorContext(1, nil) end
+  end 
 end
 
 function GetClientBounds(hwnd)
@@ -322,22 +323,8 @@ function loop()
     button_w = (tcp_w/#buttons)-2
     listen_button_w = (tcp_w/#listen_buttons)-2
 
-    -- reaper.ImGui_SetNextWindowPos(ctx,600,600)
-    -- reaper.ImGui_SetNextWindowSize(ctx, 300, 50)
-    
-    -- reaper.ImGui_SetNextWindowSize(ctx, tcp_w*(1/scale)-10, (button_h+8)*(1/scale))
-
-
-    -- if USE_LISTEN_BANDS then 
-    --   if free_mode then free_offset = 30 else free_offset = 0 end
-    --   reaper.ImGui_SetNextWindowSize(ctx, tcp_w*(1/scale)+4, ((button_h)+10+listen_button_h)*(1/scale)+free_offset)
-    -- else
-    --   reaper.ImGui_SetNextWindowSize(ctx, tcp_w*(1/scale)+4, (button_h+8)*(1/scale))
-    -- end
-
-    if free_mode then free_offset = 24 else free_offset = 0 end
+    if free_mode then free_offset = 25 else free_offset = 0 end
     reaper.ImGui_SetNextWindowSize(ctx, tcp_w*(1/scale)+4, (button_h+8)*(1/scale)+free_offset)
-
     
     if not floating_window then 
       if POS == 'BOTTOM' then 
@@ -347,11 +334,11 @@ function loop()
       end 
     end
 
-
     local visible, open = reaper.ImGui_Begin(ctx, 'Monitor Controller', true, window_flags)
-  
+    
     if visible  then
-      Main()     
+      Main()    
+ 
       reaper.ImGui_End(ctx)
     end
     reaper.ImGui_PopStyleColor(ctx,3)
@@ -360,10 +347,7 @@ function loop()
   
     if open then
       reaper.defer(loop)
-    else
-      reaper.ImGui_DestroyContext(ctx)
     end
-  
 end
 
 reaper.defer(loop)
