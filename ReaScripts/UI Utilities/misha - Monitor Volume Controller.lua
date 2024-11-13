@@ -1,6 +1,6 @@
 -- @description Monitor Volume Controller
 -- @author Misha Oshkanov
--- @version 1.9
+-- @version 2
 -- @about
 --  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. 
 --  If you need more levels or change db values you can edit buttons table.
@@ -59,7 +59,9 @@ slider_range = base_freq_ext
 window_flags =  reaper.ImGui_WindowFlags_NoTitleBar() +  
                 reaper.ImGui_WindowFlags_NoDocking() +
                 reaper.ImGui_WindowFlags_NoScrollbar() + 
-                reaper.ImGui_WindowFlags_NoResize() 
+                reaper.ImGui_WindowFlags_NoResize() +
+                reaper.ImGui_WindowFlags_NoScrollWithMouse() +
+                reaper.ImGui_WindowFlags_NoNavFocus()
                 -- reaper.ImGui_WindowFlags_NoBackground()-
 local ImGui = {}
 for name, func in pairs(reaper) do
@@ -134,9 +136,9 @@ function draw_volume_buttons(master)
     ImGui.PopID(ctx)
     
     if b_button then
-        index = reaper.TrackFX_AddByName(master, controller_fx, true, 100)
-        if reaper.TrackFX_GetOpen(master, mon+index) then reaper.TrackFX_Show(master, mon+index, 2 ) end
-        reaper.TrackFX_SetParam(master, index+mon, 2, b )
+      index = reaper.TrackFX_AddByName(master, controller_fx, true, 100)
+      if reaper.TrackFX_GetOpen(master, mon+index) then reaper.TrackFX_Show(master, mon+index, 2 ) end
+      reaper.TrackFX_SetParam(master, index+mon, 2, b )
     end
   end
 end 
@@ -167,26 +169,27 @@ function draw_listen_buttons(master)
     ImGui.PopID(ctx)
     
     if listen_button then 
-        if ext == 0 or (ext > 0 and ext ~= i2) then 
-          reaper.SetExtState('MISHA_MONITOR', 'LISTEN', i2, true)
-          set_listen_state(master,1)
-        elseif ext == i2 then 
-          set_listen_state(master,0)
-          reaper.SetExtState('MISHA_MONITOR', 'LISTEN', '0', true)
-        end
+      if ext == 0 or (ext > 0 and ext ~= i2) then 
+        reaper.SetExtState('MISHA_MONITOR', 'LISTEN', i2, true)
+        set_listen_state(master,1)
+      elseif ext == i2 then 
+        set_listen_state(master,0)
+        reaper.SetExtState('MISHA_MONITOR', 'LISTEN', '0', true)
+      end
 
-        if lb.str == 'Free' then 
-          lowCut  = slider_range / (2 ^ (base_width_ext / 2))
-          highCut = slider_range * (2 ^ (base_width_ext / 2))
-          set_param_freq(master,0,lowCut)
-          set_param_freq(master,1,highCut)
-        else 
-          set_param_freq(master,0,lb.l)
-          set_param_freq(master,1,lb.h)
-        end 
+      if lb.str == 'Free' then 
+        lowCut  = slider_range / (2 ^ (base_width_ext / 2))
+        highCut = slider_range * (2 ^ (base_width_ext / 2))
+        set_param_freq(master,0,lowCut)
+        set_param_freq(master,1,highCut)
+      else 
+        set_param_freq(master,0,lb.l)
+        set_param_freq(master,1,lb.h)
+      end 
     end
     if ext == #listen_buttons then free_mode = true else free_mode = false end
   end
+  
 end 
 
 function Main()
@@ -194,6 +197,8 @@ function Main()
   state = get_state(master)
   ext = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'LISTEN'))
   if ext == nil then ext = 0 end 
+
+
   
   if USE_LISTEN_BANDS then 
     draw_listen_buttons(master)
@@ -263,6 +268,10 @@ function Main()
 
   if reaper.ImGui_IsMouseClicked( ctx, reaper.ImGui_MouseButton_Right() ) then 
     USE_LISTEN_BANDS = not USE_LISTEN_BANDS 
+  end
+
+  if reaper.ImGui_IsWindowFocused(ctx) and not reaper.ImGui_IsAnyItemHovered( ctx ) then 
+    reaper.SetCursorContext(1, nil)
   end
 end
 
@@ -337,7 +346,8 @@ function loop()
         reaper.ImGui_SetNextWindowPos( ctx,  move_x + (tcp_left+(tcp_right/6))*(1/scale), move_y + (tcp_top+30)*(1/scale), condIn, 0.5, 0.5 )
       end 
     end
-  
+
+
     local visible, open = reaper.ImGui_Begin(ctx, 'Monitor Controller', true, window_flags)
   
     if visible  then
