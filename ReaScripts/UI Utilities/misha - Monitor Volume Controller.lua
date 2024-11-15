@@ -1,6 +1,6 @@
 -- @description Monitor Volume Controller
 -- @author Misha Oshkanov
--- @version 2.1
+-- @version 2.2
 -- @about
 --  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. 
 --  If you need more levels or change db values you can edit buttons table.
@@ -14,7 +14,10 @@ POS = 'TOP' -- 'BOTTOM' -- position presets if floating window is false
 
 buttons = {-24, -14, -8, -4, 0, 4, 12, 18, 24} -- presets in dB
 
-SLOPE = 3 -- 1 = 12db, 2 = 24db, 3 = 36db, 4 = 48db,5 = 60db, 6 = 72db 
+
+SLOPE = 2 -- 1 = 12db, 2 = 24db, 3 = 36db, 4 = 48db,5 = 60db, 6 = 72db 
+
+filters = {1,2,3}
 
 listen_buttons = {
   {str = 'Sub',  l = 20,    h = 60   ,col = {81,100,123,0.8}},
@@ -31,6 +34,8 @@ move_y = 20 -- move panel in y coordinate
 button_h = 24 -- height default - 24
 button_w = 54 -- width  default - 54
 listen_button_h = 24
+
+scroll_accuracy = 1.2 -- lower is faster scroll
 
 ------------------------------------------------------------------------------------
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
@@ -124,7 +129,7 @@ function set_param_freq(master,param,value)
   -- print(value)
   
   value = (math.log(value) - math.log(min_hz)) * (100 - 0) / (math.log(max_hz) - math.log(min_hz)) + 0
-  value = trunc(value,1)
+  -- value = trunc(value,1)
   -- print(value)
 
   -- print(math.exp(value))
@@ -229,24 +234,6 @@ function Main()
 
   reaper.ImGui_PushItemWidth(ctx, tcp_w-2)
 
-  if free_mode then 
-    vertical, horizontal = reaper.ImGui_GetMouseWheel( ctx )
-
-    if vertical ~= 0 then 
-      if vertical > 0 and base_width_ext < 10 then 
-        base_width_ext = base_width_ext + 0.3 
-      elseif vertical < 0 and base_width_ext > 0.4 then
-        base_width_ext = base_width_ext - 0.3 
-      end 
-      reaper.SetExtState('MISHA_MONITOR', 'BASE_WIDTH', base_width_ext, true)
-      -- lowCut  = slider_range / (2 ^ (base_width_ext / 2))
-      -- highCut = slider_range * (2 ^ (base_width_ext / 2))
-      set_param_freq(master,2,lowCut)
-      set_param_freq(master,3,highCut)
-
-    end
-  end
-
   local minFreq = 20     -- minimum frequency in Hz
   local maxFreq = 22000  -- maximum frequency in Hz
 
@@ -257,6 +244,27 @@ function Main()
   if highCut > maxFreq then highCut = maxFreq end
 
   if free_mode == true then 
+
+    vertical, horizontal = reaper.ImGui_GetMouseWheel( ctx )
+
+    if vertical ~= 0 then
+      dir = vertical > 0 and 1 or -1 
+      if reaper.ImGui_IsKeyDown( ctx, reaper.ImGui_Key_LeftCtrl() ) then 
+          base_width_ext = base_width_ext + (0.3*dir)
+          base_width_ext = math.min(math.max(base_width_ext, 0.4),10)
+
+          reaper.SetExtState('MISHA_MONITOR', 'BASE_WIDTH', base_width_ext, true)
+          set_param_freq(master,2,lowCut)
+          set_param_freq(master,3,highCut)
+      else
+        step = math.floor(((math.log(slider_range) - math.log(min_hz)) * (100 - 0) / (math.log(max_hz) - math.log(min_hz)) + 0)/scroll_accuracy)
+        slider_range = slider_range + (step*dir)
+        reaper.SetExtState('MISHA_MONITOR', 'BASE_FREQ', slider_range, true)
+        set_param_freq(master,2,lowCut)
+        set_param_freq(master,3,highCut)
+      end
+    end
+
     ImGui.PushStyleColor(ctx, ImGui.Col_SliderGrab(),          rgba(195,105,105,0.7))
     ImGui.PushStyleColor(ctx, ImGui.Col_SliderGrabActive(),    rgba(195,105,105,0.9))
     ImGui.PushStyleColor(ctx, ImGui.Col_FrameBg(),             rgba(96,68,68,0.4))
@@ -269,7 +277,7 @@ function Main()
       set_param_freq(master,2,lowCut)
       set_param_freq(master,3,highCut)
     end
-    
+
     min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
     max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
     draw_list = reaper.ImGui_GetWindowDrawList(ctx)
@@ -289,9 +297,9 @@ function Main()
     USE_LISTEN_BANDS = not USE_LISTEN_BANDS 
   end
 
-  -- if reaper.ImGui_IsMouseReleased( ctx, reaper.ImGui_MouseButton_Left() ) then 
-  --   if ImGui.IsWindowFocused(ctx) then reaper.SetCursorContext(1, nil) end
-  -- end 
+  if reaper.ImGui_IsMouseReleased( ctx, reaper.ImGui_MouseButton_Left() ) then 
+    if ImGui.IsWindowFocused(ctx) then reaper.SetCursorContext(1, nil) end
+  end 
 end
 
 function GetClientBounds(hwnd)
