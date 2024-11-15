@@ -1,6 +1,6 @@
 -- @description Monitor Volume Controller
 -- @author Misha Oshkanov
--- @version 2.2
+-- @version 2.1.1
 -- @about
 --  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. 
 --  If you need more levels or change db values you can edit buttons table.
@@ -16,8 +16,6 @@ buttons = {-24, -14, -8, -4, 0, 4, 12, 18, 24} -- presets in dB
 
 
 SLOPE = 2 -- 1 = 12db, 2 = 24db, 3 = 36db, 4 = 48db,5 = 60db, 6 = 72db 
-
-filters = {1,2,3}
 
 listen_buttons = {
   {str = 'Sub',  l = 20,    h = 60   ,col = {81,100,123,0.8}},
@@ -249,13 +247,14 @@ function Main()
 
     if vertical ~= 0 then
       dir = vertical > 0 and 1 or -1 
-      if reaper.ImGui_IsKeyDown( ctx, reaper.ImGui_Key_LeftCtrl() ) then 
-          base_width_ext = base_width_ext + (0.3*dir)
-          base_width_ext = math.min(math.max(base_width_ext, 0.4),10)
+      key = reaper.JS_VKeys_GetState(0)
+      if string.byte(key:sub(17,17)) == 1 then 
+        base_width_ext = base_width_ext + (0.3*dir)
+        base_width_ext = math.min(math.max(base_width_ext, 0.4),10)
 
-          reaper.SetExtState('MISHA_MONITOR', 'BASE_WIDTH', base_width_ext, true)
-          set_param_freq(master,2,lowCut)
-          set_param_freq(master,3,highCut)
+        reaper.SetExtState('MISHA_MONITOR', 'BASE_WIDTH', base_width_ext, true)
+        set_param_freq(master,2,lowCut)
+        set_param_freq(master,3,highCut)
       else
         step = math.floor(((math.log(slider_range) - math.log(min_hz)) * (100 - 0) / (math.log(max_hz) - math.log(min_hz)) + 0)/scroll_accuracy)
         slider_range = slider_range + (step*dir)
