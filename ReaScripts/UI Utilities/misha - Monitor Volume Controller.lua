@@ -1,6 +1,6 @@
 -- @description Monitor Volume Controller
 -- @author Misha Oshkanov
--- @version 2
+-- @version 2.1
 -- @about
 --  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. 
 --  If you need more levels or change db values you can edit buttons table.
@@ -14,13 +14,15 @@ POS = 'TOP' -- 'BOTTOM' -- position presets if floating window is false
 
 buttons = {-24, -14, -8, -4, 0, 4, 12, 18, 24} -- presets in dB
 
+SLOPE = 3 -- 1 = 12db, 2 = 24db, 3 = 36db, 4 = 48db,5 = 60db, 6 = 72db 
+
 listen_buttons = {
-  {str = 'Sub',  l = 0,    h = 60   ,col = {81,100,123,0.8}},
-  {str = 'Bass', l = 0,    h = 250  ,col = {86,111,128,0.8}},
-  {str = 'Low',  l = 250,  h = 800  ,col = {90,120,135,0.8}},
-  {str = 'Mid',  l = 800,  h = 3570 ,col = {86,128,98,0.8}},
-  {str = 'High', l = 4000, h = 22000,col = {121,157,107,0.7}},
-  {str = 'Free', l = 0,    h = 22000,col = {161,145,99,0.7}},
+  {str = 'Sub',  l = 20,    h = 60   ,col = {81,100,123,0.8}},
+  {str = 'Bass', l = 20,    h = 250  ,col = {86,111,128,0.8}},
+  {str = 'Low',  l = 250,   h = 800  ,col = {90,120,135,0.8}},
+  {str = 'Mid',  l = 800,   h = 3570 ,col = {86,128,98,0.8}},
+  {str = 'High', l = 4000,  h = 20000,col = {121,157,107,0.7}},
+  {str = 'Free', l = 20,    h = 20000,col = {161,145,99,0.7}},
 }
 
 move_x = 10 -- move panel in x coordinate
@@ -43,17 +45,22 @@ reaper.ImGui_AttachFont(ctx, font2)
 
 free_l = 0
 free_h = 22000
+
+min_hz = 20
+max_hz = 20000
 width = 2
 controller_fx = 'Monitor Volume Controller'
 listen_state = false
 
 base_freq_ext  = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'BASE_FREQ'))
 base_width_ext = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'BASE_WIDTH'))
-
+base_slope_ext = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'BASE_SLOPE'))
 
 if base_width_ext == nil then base_width_ext = 2 end
 
 if base_freq_ext == nil then base_freq_ext = 1000 end
+if base_slope_ext == nil then base_slope_ext = SLOPE end
+
 slider_range = base_freq_ext
 
 window_flags =  reaper.ImGui_WindowFlags_NoTitleBar() +  
@@ -83,32 +90,45 @@ function rgba(r, g, b, a)
 
 function get_state(master)
   index = reaper.TrackFX_AddByName(master, controller_fx, true, 0)
-  retval, minval, maxval = reaper.TrackFX_GetParam(master, index+mon, 2)
+  retval, minval, maxval = reaper.TrackFX_GetParam(master, index+mon, 4)
   return retval
 end
 
 function get_listen_freq(master)
   index = reaper.TrackFX_AddByName(master, controller_fx, true, 0)
-  low_retval,  _, _ = reaper.TrackFX_GetParam(master, index+mon, 0)
-  high_retval, _, _ = reaper.TrackFX_GetParam(master, index+mon, 1)
+  low_retval,  _, _ = reaper.TrackFX_GetParam(master, index+mon, 2)
+  high_retval, _, _ = reaper.TrackFX_GetParam(master, index+mon, 3)
   return low_retval, high_retval
 end 
 
 function get_listen_state(master)
   index = reaper.TrackFX_AddByName(master, controller_fx, true, 0)
   -- enabled = reaper.TrackFX_GetEnabled(master, index+mon)
-  enabled,  _, _ = reaper.TrackFX_GetParam(master, index+mon, 3)
+  enabled,  _, _ = reaper.TrackFX_GetParam(master, index+mon, 0)
   return enabled
 end 
 
 function set_listen_state(master,state)
   index = reaper.TrackFX_AddByName(master, controller_fx, true, 0)
-  reaper.TrackFX_SetParam(master, index+mon, 3, state)
+  reaper.TrackFX_SetParam(master, index+mon, 0, state)
   -- enabled = reaper.TrackFX_SetEnabled(master, index+mon, state)
 end 
 
+function trunc(num, digits)
+  local mult = 10^(digits)
+  return math.modf(num*mult)/mult
+end
+
 function set_param_freq(master,param,value)
   listen_index = reaper.TrackFX_AddByName(master, controller_fx, true, 100)
+  -- print(value)
+  
+  value = (math.log(value) - math.log(min_hz)) * (100 - 0) / (math.log(max_hz) - math.log(min_hz)) + 0
+  value = trunc(value,1)
+  -- print(value)
+
+  -- print(math.exp(value))
+
   reaper.TrackFX_SetParam(master, listen_index+mon, param, value)
 end
 
@@ -136,13 +156,12 @@ function draw_volume_buttons(master)
     
     if b_button then
       index = reaper.TrackFX_AddByName(master, controller_fx, true, 100)
-      if reaper.TrackFX_GetOpen(master, mon+index) then reaper.TrackFX_Show(master, mon+index, 2 ) end
-      reaper.TrackFX_SetParam(master, index+mon, 2, b )
+      if reaper.TrackFX_GetOpen(master, mon+index) then reaper.TrackFX_Show(master, mon+index, 0 ) end
+      reaper.TrackFX_SetParam(master, index+mon, 4, b)
     end
   end
   if free_mode then free_mode = false end
 end 
-
 
 function draw_listen_buttons(master)
   for i2,lb in ipairs(listen_buttons) do
@@ -171,7 +190,7 @@ function draw_listen_buttons(master)
     if listen_button then 
       if ext == 0 or (ext > 0 and ext ~= i2) then 
         reaper.SetExtState('MISHA_MONITOR', 'LISTEN', i2, true)
-        set_listen_state(master,1)
+        set_listen_state(master,base_slope_ext)
       elseif ext == i2 then 
         set_listen_state(master,0)
         reaper.SetExtState('MISHA_MONITOR', 'LISTEN', '0', true)
@@ -180,11 +199,11 @@ function draw_listen_buttons(master)
       if lb.str == 'Free' then 
         lowCut  = slider_range / (2 ^ (base_width_ext / 2))
         highCut = slider_range * (2 ^ (base_width_ext / 2))
-        set_param_freq(master,0,lowCut)
-        set_param_freq(master,1,highCut)
+        set_param_freq(master,2,lowCut)
+        set_param_freq(master,3,highCut)
       else 
-        set_param_freq(master,0,lb.l)
-        set_param_freq(master,1,lb.h)
+        set_param_freq(master,2,lb.l)
+        set_param_freq(master,3,lb.h)
       end 
     end
     if ext == #listen_buttons then free_mode = true else free_mode = false end
@@ -193,13 +212,10 @@ function draw_listen_buttons(master)
 end 
 
 function Main()
-
   master = reaper.GetMasterTrack()
   state = get_state(master)
   ext = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'LISTEN'))
   if ext == nil then ext = 0 end 
-
-
   
   if USE_LISTEN_BANDS then 
     draw_listen_buttons(master)
@@ -211,21 +227,23 @@ function Main()
     draw_volume_buttons(master)
   end
 
-  reaper.ImGui_PushItemWidth( ctx, tcp_w-2 )
+  reaper.ImGui_PushItemWidth(ctx, tcp_w-2)
 
   if free_mode then 
     vertical, horizontal = reaper.ImGui_GetMouseWheel( ctx )
+
     if vertical ~= 0 then 
-      if vertical > 0 then 
+      if vertical > 0 and base_width_ext < 10 then 
         base_width_ext = base_width_ext + 0.3 
-      else 
+      elseif vertical < 0 and base_width_ext > 0.4 then
         base_width_ext = base_width_ext - 0.3 
       end 
       reaper.SetExtState('MISHA_MONITOR', 'BASE_WIDTH', base_width_ext, true)
-      lowCut  = slider_range / (2 ^ (base_width_ext / 2))
-      highCut = slider_range * (2 ^ (base_width_ext / 2))
-      set_param_freq(master,0,lowCut)
-      set_param_freq(master,1,highCut)
+      -- lowCut  = slider_range / (2 ^ (base_width_ext / 2))
+      -- highCut = slider_range * (2 ^ (base_width_ext / 2))
+      set_param_freq(master,2,lowCut)
+      set_param_freq(master,3,highCut)
+
     end
   end
 
@@ -248,8 +266,8 @@ function Main()
     range_retval, slider_range = reaper.ImGui_SliderInt( ctx, 'slider_range', slider_range, 20, 20000,  formatIn, reaper.ImGui_SliderFlags_Logarithmic() )
     if range_retval then 
       reaper.SetExtState('MISHA_MONITOR', 'BASE_FREQ', slider_range, true)
-      set_param_freq(master,0,lowCut)
-      set_param_freq(master,1,highCut)
+      set_param_freq(master,2,lowCut)
+      set_param_freq(master,3,highCut)
     end
     
     min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
@@ -271,9 +289,9 @@ function Main()
     USE_LISTEN_BANDS = not USE_LISTEN_BANDS 
   end
 
-  if reaper.ImGui_IsMouseReleased( ctx, reaper.ImGui_MouseButton_Left() ) then 
-    if ImGui.IsWindowFocused(ctx) then reaper.SetCursorContext(1, nil) end
-  end 
+  -- if reaper.ImGui_IsMouseReleased( ctx, reaper.ImGui_MouseButton_Left() ) then 
+  --   if ImGui.IsWindowFocused(ctx) then reaper.SetCursorContext(1, nil) end
+  -- end 
 end
 
 function GetClientBounds(hwnd)
@@ -338,7 +356,7 @@ function loop()
     
     if visible  then
       Main()    
- 
+
       reaper.ImGui_End(ctx)
     end
     reaper.ImGui_PopStyleColor(ctx,3)
