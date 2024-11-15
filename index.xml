@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="451fd4815b15e102eb005a1eaf819fbdab3ae891">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="5c769ea337604d85968ea6d4ee2ae638aede3ed7">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -251,6 +251,9 @@
       </version>
       <version name="2.1" author="Misha Oshkanov" time="2024-11-15T12:31:09Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/451fd4815b15e102eb005a1eaf819fbdab3ae891/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller.lua</source>
+      </version>
+      <version name="2.2" author="Misha Oshkanov" time="2024-11-15T16:26:51Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/5c769ea337604d85968ea6d4ee2ae638aede3ed7/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Scroller.lua" type="script" desc="Scroller">
