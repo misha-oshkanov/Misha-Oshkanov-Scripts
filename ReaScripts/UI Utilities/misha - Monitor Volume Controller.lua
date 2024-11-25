@@ -1,6 +1,6 @@
 -- @description Monitor Volume Controller
 -- @author Misha Oshkanov
--- @version 2.1.1
+-- @version 2.2
 -- @about
 --  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. 
 --  If you need more levels or change db values you can edit buttons table.
@@ -8,14 +8,15 @@
 
 ------------------------------------- SETTINGS ----------------------------------------
 
-USE_LISTEN_BANDS = false -- mode by default
+USE_LISTEN_BANDS = true -- mode by default
 floating_window = true -- use floating window to freely place the panel
 POS = 'TOP' -- 'BOTTOM' -- position presets if floating window is false
 
 buttons = {-24, -14, -8, -4, 0, 4, 12, 18, 24} -- presets in dB
 
-
 SLOPE = 2 -- 1 = 12db, 2 = 24db, 3 = 36db, 4 = 48db,5 = 60db, 6 = 72db 
+
+filters = {1,2,3}
 
 listen_buttons = {
   {str = 'Sub',  l = 20,    h = 60   ,col = {81,100,123,0.8}},
@@ -26,11 +27,14 @@ listen_buttons = {
   {str = 'Free', l = 20,    h = 20000,col = {161,145,99,0.7}},
 }
 
-move_x = 10 -- move panel in x coordinate
+move_x = 10 -- move panel in x coordinate if floating window is false
 move_y = 20 -- move panel in y coordinate
 
+
+panel_w = 400 -- PANEL SIZE
+
 button_h = 24 -- height default - 24
-button_w = 54 -- width  default - 54
+
 listen_button_h = 24
 
 scroll_accuracy = 1.2 -- lower is faster scroll
@@ -154,8 +158,8 @@ function draw_volume_buttons(master)
     b_button = ImGui.Button(ctx, tostring(b), button_w, button_h)
     
     if i < #buttons then ImGui.SameLine(ctx) end
-    ImGui.PopStyleColor(ctx, 4)
     ImGui.PopID(ctx)
+    ImGui.PopStyleColor(ctx, 4)
     
     if b_button then
       index = reaper.TrackFX_AddByName(master, controller_fx, true, 100)
@@ -186,9 +190,9 @@ function draw_listen_buttons(master)
 
     listen_button = ImGui.Button(ctx, lb.str, listen_button_w, listen_button_h)
     if i2 < #listen_buttons then ImGui.SameLine(ctx) end
-    ImGui.PopStyleColor(ctx, 3)
     ImGui.PopFont(ctx)
     ImGui.PopID(ctx)
+    ImGui.PopStyleColor(ctx, 3)
     
     if listen_button then 
       if ext == 0 or (ext > 0 and ext ~= i2) then 
@@ -229,8 +233,9 @@ function Main()
     end 
     draw_volume_buttons(master)
   end
+  -- ImGui.PopStyleColor(ctx, 3)
 
-  reaper.ImGui_PushItemWidth(ctx, tcp_w-2)
+  reaper.ImGui_PushItemWidth(ctx, panel_w-2)
 
   local minFreq = 20     -- minimum frequency in Hz
   local maxFreq = 22000  -- maximum frequency in Hz
@@ -247,11 +252,10 @@ function Main()
 
     if vertical ~= 0 then
       dir = vertical > 0 and 1 or -1 
-      key = reaper.JS_VKeys_GetState(0)
-      if string.byte(key:sub(17,17)) == 1 then 
+      key = reaper.JS_Mouse_GetState(-1) == 4
+      if key then
         base_width_ext = base_width_ext + (0.3*dir)
         base_width_ext = math.min(math.max(base_width_ext, 0.4),10)
-
         reaper.SetExtState('MISHA_MONITOR', 'BASE_WIDTH', base_width_ext, true)
         set_param_freq(master,2,lowCut)
         set_param_freq(master,3,highCut)
@@ -280,7 +284,7 @@ function Main()
     min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
     max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
     draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-    sliderWidth = (max_x -tcp_w/4) - min_x
+    sliderWidth = (max_x -panel_w/4) - min_x
 
     local lowCutPos =  (math.log(lowCut)  - math.log(20)) / (math.log(20000) - math.log(20))
     local highCutPos = (math.log(highCut) - math.log(20)) / (math.log(20000) - math.log(20))
@@ -323,16 +327,16 @@ function FindChildByClass(hwnd, classname, occurance)
 end
 
 function loop()  
-    reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_WindowBg(),          rgba(36, 37, 38, 1))
-    reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBg(),           rgba(28, 29, 30, 1))
-    reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBgActive(),     rgba(68, 69, 70, 1))
+    -- reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_WindowBg(),          rgba(36, 37, 38, 1))
+    -- reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBg(),           rgba(28, 29, 30, 1))
+    -- reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBgActive(),     rgba(68, 69, 70, 1))
   
-    reaper.ImGui_PushStyleVar( ctx,    reaper.ImGui_StyleVar_WindowPadding(), 3,4) 
-    reaper.ImGui_PushStyleVar( ctx,     reaper.ImGui_StyleVar_ItemSpacing(), 2,2) 
+    reaper.ImGui_PushStyleVar(ctx,    reaper.ImGui_StyleVar_WindowPadding(), 3,4) 
+    reaper.ImGui_PushStyleVar(ctx,    reaper.ImGui_StyleVar_ItemSpacing(), 2,2) 
   
     reaper.ImGui_PushFont(ctx, font)
 
-    scale = reaper.ImGui_GetWindowDpiScale( ctx )
+    scale = reaper.ImGui_GetWindowDpiScale(ctx)
     mainHWND = reaper.GetMainHwnd()
     windowHWND = reaper.JS_Window_FindChildByID(mainHWND, 1000)
     retval, ar_left, ar_top, ar_right, ar_bottom = reaper.JS_Window_GetClientRect( windowHWND )
@@ -345,11 +349,15 @@ function loop()
       retval, tcp_left, tcp_top, tcp_right, tcp_bottom = reaper.JS_Window_GetClientRect( mainHWND )
     end
 
-    button_w = (tcp_w/#buttons)-2
-    listen_button_w = (tcp_w/#listen_buttons)-2
+    -- button_w = (tcp_w/#buttons)-2
+    button_w = (panel_w/#buttons)-2
+
+    listen_button_w = (panel_w/#listen_buttons)-2
+
+    -- ww = button_w * #buttons
 
     if free_mode then free_offset = 25 else free_offset = 0 end
-    reaper.ImGui_SetNextWindowSize(ctx, tcp_w*(1/scale)+4, (button_h+8)*(1/scale)+free_offset)
+    reaper.ImGui_SetNextWindowSize(ctx, panel_w*(1/scale)+4, (button_h+8)*(1/scale)+free_offset)
     
     if not floating_window then 
       if POS == 'BOTTOM' then 
@@ -363,11 +371,10 @@ function loop()
     
     if visible  then
       Main()    
-
+      reaper.ImGui_PopStyleVar( ctx, 2 )
       reaper.ImGui_End(ctx)
     end
-    reaper.ImGui_PopStyleColor(ctx,3)
-    reaper.ImGui_PopStyleVar( ctx, 2 )
+    -- reaper.ImGui_PopStyleColor(ctx,3)
     reaper.ImGui_PopFont(ctx)
   
     if open then
@@ -375,4 +382,4 @@ function loop()
     end
 end
 
-reaper.defer(loop)
+loop()
