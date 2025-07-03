@@ -1,6 +1,6 @@
 -- @description Show master peak lufs readouts in arrange view
 -- @author Misha Oshkanov
--- @version 1.1
+-- @version 1.2
 -- @about
 --  Shows little text readout for master lufs and peak meters
 --  Right click toggle to selected track meter readouts. Track mode adds rectangle around the text
@@ -11,11 +11,10 @@
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
 floating_window = false
-only_master = true
 font_size = 26
 
-offset_x = 40
-offset_y = 25
+offset_x = 58
+offset_y = 40
 
 window_w = 150
 h = 10
@@ -82,6 +81,18 @@ hold2 = -150
 ch1_peak_dB = -150
 ch2_peak_dB = -150
 
+function get_bounds(hwnd)
+    local _, left, top, right, bottom = reaper.JS_Window_GetRect(hwnd)
+    -- Check voor MacOS
+    if reaper.GetOS():match("^OSX") then
+        local screen_height = reaper.ImGui_GetMainViewport(ctx).WorkSize.y
+        top = screen_height - bottom
+        bottom = screen_height - top
+    end
+    -- return left, top, right-left, bottom-top
+    return left, top, right, bottom
+end
+  
 function rgba(r, g, b, a)
     b = b/255
     g = g/255 
@@ -140,7 +151,7 @@ track_mode = false
 function frame()
     master = reaper.GetMasterTrack(0)
     track = reaper.GetSelectedTrack(0, 0)
-    w = reaper.ImGui_GetWindowWidth( ctx )
+    w = reaper.ImGui_GetWindowWidth(ctx)
 
     if track_mode and track then target = track else target = master end
 
@@ -182,10 +193,13 @@ function frame()
     reaper.ImGui_PushStyleVar( ctx,    reaper.ImGui_StyleVar_SeparatorTextBorderSize(), 0) 
 
     if current_lufs < -9 then
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), rgba(lufs_col_1[1],lufs_col_1[2],lufs_col_1[3],lufs_col_1[4]))
+        lufs_color =  rgba(lufs_col_1[1],lufs_col_1[2],lufs_col_1[3],lufs_col_1[4])
     else
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), rgba(lufs_col_2[1],lufs_col_2[2],lufs_col_2[3],lufs_col_2[4]))
+        lufs_color =  rgba(lufs_col_2[1],lufs_col_2[2],lufs_col_2[3],lufs_col_2[4])
     end
+
+
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), lufs_color)
 
     reaper.ImGui_SeparatorText( ctx, lufs )
     if track_mode then 
@@ -203,13 +217,32 @@ function frame()
 
     reaper.ImGui_PopStyleColor(ctx,1)
 
-    if target == master then
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), rgba(peak_col_track[1],peak_col_track[2],peak_col_track[3],peak_col_track[4]))
-    else
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), rgba(peak_col_master[1],peak_col_master[2],peak_col_master[3],peak_col_master[4]))
+    -- if target == master then
+    --     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), rgba(peak_col_track[1],peak_col_track[2],peak_col_track[3],peak_col_track[4]))
+    -- else
+    --     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), rgba(peak_col_master[1],peak_col_master[2],peak_col_master[3],peak_col_master[4]))
+    -- end
+
+    peak_color = rgba(140,140,140,1)
+    
+    if current_peak<-30 then 
+        peak_color = rgba(114,178,255,0.7)
+    elseif current_peak<-18 then 
+        peak_color = rgba(90,219,149,0.7)
+    elseif current_peak<-6 then 
+        peak_color = rgba(220,218,217,1)
+    elseif current_peak<-3 then 
+        peak_color = rgba(232,204,132,0.8)
+    elseif current_peak<-0 then 
+        peak_color = rgba(219,172,90,1)
+    elseif current_peak>-0 then 
+        peak_color = rgba(209,105,105,1)
     end
 
-    reaper.ImGui_SeparatorText( ctx, text1 )
+    
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), peak_color)
+
+    reaper.ImGui_SeparatorText(ctx, text1)
     if track_mode then 
         if track then 
             draw_color_fill(rgba(230, 170, 145, 0.5)) 
@@ -222,7 +255,6 @@ function frame()
     reaper.ImGui_PopStyleVar(ctx,3)
 end
 
-
 function loop()
     reaper.ImGui_PushFont(ctx, font)
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_WindowBg(),          rgba(36, 37, 38, 1))
@@ -233,20 +265,24 @@ function loop()
     reaper.ImGui_PushStyleVar(ctx,    reaper.ImGui_StyleVar_ItemSpacing(),   2,2) 
     reaper.ImGui_PushStyleVar(ctx,    reaper.ImGui_StyleVar_WindowMinSize(), 2,14) 
 
+    -- retval, left, top, right, bottom = reaper.JS_Window_GetClientRect( mainHWND )
+    -- retval, ar_left, ar_top, ar_right, ar_bottom = reaper.JS_Window_GetClientRect(windowHWND)
+    
+    reaper.ImGui_SetNextWindowSize(ctx, 70, 80,  reaper.ImGui_Cond_Always())
+    
     mainHWND = reaper.GetMainHwnd()
     windowHWND = reaper.JS_Window_FindChildByID(mainHWND, 1000)
-    -- retval, left, top, right, bottom = reaper.JS_Window_GetClientRect( mainHWND )
-    retval, ar_left, ar_top, ar_right, ar_bottom = reaper.JS_Window_GetClientRect(windowHWND)
-
-    reaper.ImGui_SetNextWindowSize(ctx, 70, 80,  reaper.ImGui_Cond_Always())
+    left, top, right, bottom = get_bounds(windowHWND)
 
     if not floating_window then 
-        if is_windows then 
-            scale = reaper.ImGui_GetWindowDpiScale(ctx)
-            reaper.ImGui_SetNextWindowPos(ctx, (ar_right-offset_x)*(1/scale), (ar_bottom-offset_y)*(1/scale), condIn, 0.5, 0.5)
-        else 
-            reaper.ImGui_SetNextWindowPos(ctx, ar_right-offset_x, ar_bottom-offset_y, condIn, 0.5, 0.5)
-        end
+            reaper.ImGui_SetNextWindowPos(ctx, right-offset_x, bottom-offset_y, condIn, 0.5, 0.5)
+
+        -- if is_windows then 
+        --     scale = reaper.ImGui_GetWindowDpiScale(ctx)
+        --     reaper.ImGui_SetNextWindowPos(ctx, (ar_right-offset_x)*(1/scale), (ar_bottom-offset_y)*(1/scale), condIn, 0.5, 0.5)
+        -- else 
+        --     reaper.ImGui_SetNextWindowPos(ctx, ar_right-offset_x, ar_bottom-offset_y, condIn, 0.5, 0.5)
+        -- end
     end
     
     local visible, open = reaper.ImGui_Begin(ctx, 'Meter', true, window_flags)

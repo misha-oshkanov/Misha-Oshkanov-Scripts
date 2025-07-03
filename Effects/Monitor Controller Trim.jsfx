@@ -1,7 +1,7 @@
- desc:Monitor Volume Controller
+desc:Monitor Volume Controller
 //tags: listen filters and volume controller for monitor controller script
 //author: Liteon
-//version: 1.2
+//version: 1.3
 
 
 slider1:0<0,6,1{Off,12 dB/oct (2-pole),24 dB/oct (4-pole),36 dB/oct (6-pole),48 dB/oct (8-pole),60 dB/oct (10-pole),72 dB/oct (12-pole)}>Filter
