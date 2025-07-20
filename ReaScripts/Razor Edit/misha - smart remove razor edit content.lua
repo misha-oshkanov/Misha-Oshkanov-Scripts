@@ -1,6 +1,6 @@
 -- @description Smart remove razor edit content
 -- @author Misha Oshkanov
--- @version 1.4
+-- @version 1.5
 -- @about
 --  Use to delete content within razor edit area(items, envelope points, automation items, midi notes)
 
@@ -14,61 +14,66 @@ envs, env_cnt = {}, 0
 
 function check_if_notes()
   for tr = 0, reaper.CountTracks(0) - 1 do
+    -- area = ''
     local track = reaper.GetTrack(0, tr)
     local _, area = reaper.GetSetMediaTrackInfo_String(track, "P_RAZOREDITS", "", false)
-    if area == "" then return end
 
-    local areas = {}
-    local tokens = {}
-    for token in area:gmatch("(%S+)") do  
-        table.insert(tokens, token)
-    end
+    if area ~= "" then
 
-    for i = 1, #tokens - 2, 3 do
-        local start_pos = tonumber(tokens[i])
-        local end_pos = tonumber(tokens[i+1])
-        local zone_type = tokens[i+2]
-
-        if zone_type == '""' then  -- только медиа-зоны
-            table.insert(areas, {start_pos, end_pos})
-        end
-    end
-
-    local item_count = reaper.CountTrackMediaItems(track)
-    for i = 0, item_count - 1 do
-      local item = reaper.GetTrackMediaItem(track, i)
-      local take = reaper.GetActiveTake(item)
-      if take and reaper.TakeIsMIDI(take) then
-        local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-        local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-        local item_end = item_pos + item_len
-
-        for _, area in ipairs(areas) do
-          local r_start = math.max(area[1], item_pos)
-          local r_end = math.min(area[2], item_end)
-          if r_start == item_pos and r_end == item_end then
-            goto continue_area
-          end
-          
-          if r_start < r_end then
-            local qn_start = reaper.TimeMap2_timeToQN(0, r_start)
-            local qn_end = reaper.TimeMap2_timeToQN(0, r_end)
-            local _, note_count = reaper.MIDI_CountEvts(take)
-            for n = note_count - 1, 0, -1 do
-              local _, selected, muted, startppq, endppq, chan, pitch, vel = reaper.MIDI_GetNote(take, n)
-              local start_qn = reaper.MIDI_GetProjQNFromPPQPos(take, startppq)
-              local end_qn = reaper.MIDI_GetProjQNFromPPQPos(take, endppq)
-
-              if start_qn < qn_end and end_qn > qn_start then
-                return true 
-              end 
-            end 
-          end
-          ::continue_area::
-        end
+      local areas = {}
+      local tokens = {}
+      for token in area:gmatch("(%S+)") do  
+          table.insert(tokens, token)
       end
-    end 
+
+      for i = 1, #tokens - 2, 3 do
+          local start_pos = tonumber(tokens[i])
+          local end_pos = tonumber(tokens[i+1])
+          local zone_type = tokens[i+2]
+
+          if zone_type == '""' then  -- только медиа-зоны
+              table.insert(areas, {start_pos, end_pos})
+          end
+      end
+
+      local item_count = reaper.CountTrackMediaItems(track)
+      -- if #areas == 0 then goto continue_track end
+      for i = 0, item_count - 1 do
+        local item = reaper.GetTrackMediaItem(track, i)
+        local take = reaper.GetActiveTake(item)
+        if take and reaper.TakeIsMIDI(take) then
+          local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+          local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+          local item_end = item_pos + item_len
+
+          for _, area in ipairs(areas) do
+            local r_start = math.max(area[1], item_pos)
+            local r_end = math.min(area[2], item_end)
+            if r_start == item_pos and r_end == item_end then
+              goto continue_area
+            end
+            
+            if r_start < r_end then
+              local qn_start = reaper.TimeMap2_timeToQN(0, r_start)
+              local qn_end = reaper.TimeMap2_timeToQN(0, r_end)
+              local _, note_count = reaper.MIDI_CountEvts(take)
+              for n = note_count - 1, 0, -1 do
+                local _, selected, muted, startppq, endppq, chan, pitch, vel = reaper.MIDI_GetNote(take, n)
+                local start_qn = reaper.MIDI_GetProjQNFromPPQPos(take, startppq)
+                local end_qn = reaper.MIDI_GetProjQNFromPPQPos(take, endppq)
+
+                if start_qn < qn_end and end_qn > qn_start then
+                  return true 
+                end 
+              end 
+            end
+            ::continue_area::
+          end
+        end
+      end 
+    end
   end
+  -- ::continue_track::
 end
 
 function delete_midi_notes_in_razor()
@@ -76,34 +81,34 @@ function delete_midi_notes_in_razor()
     local track = reaper.GetTrack(0, tr)
     local _, area = reaper.GetSetMediaTrackInfo_String(track, "P_RAZOREDITS", "", false)
     local _, _    = reaper.GetSetMediaTrackInfo_String(track, "P_RAZOREDITS", "", true)
-    if area == "" then return end
+    if area ~= "" then
 
-    local areas = {}
-    local tokens = {}
-    for token in area:gmatch("(%S+)") do
-        table.insert(tokens, token)
-    end
+      local areas = {}
+      local tokens = {}
+      for token in area:gmatch("(%S+)") do
+          table.insert(tokens, token)
+      end
 
-    for i = 1, #tokens - 2, 3 do
-        local start_pos = tonumber(tokens[i])
-        local end_pos = tonumber(tokens[i+1])
-        local zone_type = tokens[i+2]
+      for i = 1, #tokens - 2, 3 do
+          local start_pos = tonumber(tokens[i])
+          local end_pos = tonumber(tokens[i+1])
+          local zone_type = tokens[i+2]
 
-        if zone_type == '""' then  -- только медиа-зоны
-            table.insert(areas, {start_pos, end_pos})
-        end
-    end
+          if zone_type == '""' then  -- только медиа-зоны
+              table.insert(areas, {start_pos, end_pos})
+          end
+      end
 
-    local item_count = reaper.CountTrackMediaItems(track)
-    for i = 0, item_count - 1 do
-      local item = reaper.GetTrackMediaItem(track, i)
-      local take = reaper.GetActiveTake(item)
-      if take and reaper.TakeIsMIDI(take) then
-        local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-        local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-        local item_end = item_pos + item_len
+      local item_count = reaper.CountTrackMediaItems(track)
+      for i = 0, item_count - 1 do
+        local item = reaper.GetTrackMediaItem(track, i)
+        local take = reaper.GetActiveTake(item)
+        if take and reaper.TakeIsMIDI(take) then
+          local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+          local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+          local item_end = item_pos + item_len
 
-        for _, area in ipairs(areas) do
+          for _, area in ipairs(areas) do
             local r_start = math.max(area[1], item_pos)
             local r_end = math.min(area[2], item_end)
             
@@ -115,41 +120,41 @@ function delete_midi_notes_in_razor()
               reaper.MIDI_DisableSort(take)
               local _, note_count = reaper.MIDI_CountEvts(take)
               for n = note_count - 1, 0, -1 do
-                  local _, selected, muted, startppq, endppq, chan, pitch, vel = reaper.MIDI_GetNote(take, n)
-                  local start_qn = reaper.MIDI_GetProjQNFromPPQPos(take, startppq)
-                  local end_qn = reaper.MIDI_GetProjQNFromPPQPos(take, endppq)
+                local _, selected, muted, startppq, endppq, chan, pitch, vel = reaper.MIDI_GetNote(take, n)
+                local start_qn = reaper.MIDI_GetProjQNFromPPQPos(take, startppq)
+                local end_qn = reaper.MIDI_GetProjQNFromPPQPos(take, endppq)
 
-                  if start_qn < qn_end and end_qn > qn_start then
-                      delete = delete + 1
-                      -- Нота частично или полностью пересекается с Razor Edit
-                      if start_qn >= qn_start and end_qn <= qn_end then
-                          -- Полностью внутри — удалить
-                          reaper.MIDI_DeleteNote(take, n)
-                      elseif start_qn < qn_start and end_qn > qn_start and end_qn <= qn_end then
-                          -- Конец внутри Razor Edit — обрезать конец
-                          local new_end_ppq = reaper.MIDI_GetPPQPosFromProjQN(take, qn_start)
-                          reaper.MIDI_SetNote(take, n, nil, nil, startppq, new_end_ppq, nil, nil, nil, false)
-                      elseif start_qn >= qn_start and start_qn < qn_end and end_qn > qn_end then
-                          -- Начало внутри — обрезать начало
-                          local new_start_ppq = reaper.MIDI_GetPPQPosFromProjQN(take, qn_end)
-                          reaper.MIDI_SetNote(take, n, nil, nil, new_start_ppq, endppq, nil, nil, nil, false)
-                      elseif start_qn < qn_start and end_qn > qn_end then
-                          -- Нота охватывает весь Razor Edit — разрезать на две (или обрезать одну часть)
-                          local new_end_ppq = reaper.MIDI_GetPPQPosFromProjQN(take, qn_start)
-                          local new_start_ppq = reaper.MIDI_GetPPQPosFromProjQN(take, qn_end)
-                          -- Укорачиваем исходную до начала Razor Edit
-                          reaper.MIDI_SetNote(take, n, nil, nil, startppq, new_end_ppq, nil, nil, nil, false)
-                          -- Добавляем новую ноту после Razor Edit (если нужно сохранить обе части)
-                          reaper.MIDI_InsertNote(take, false, false, new_start_ppq, endppq, chan, pitch, vel, false)
-                      end
+                if start_qn < qn_end and end_qn > qn_start then
+                  delete = delete + 1
+                  -- Нота частично или полностью пересекается с Razor Edit
+                  if start_qn >= qn_start and end_qn <= qn_end then
+                      -- Полностью внутри — удалить
+                      reaper.MIDI_DeleteNote(take, n)
+                  elseif start_qn < qn_start and end_qn > qn_start and end_qn <= qn_end then
+                      -- Конец внутри Razor Edit — обрезать конец
+                      local new_end_ppq = reaper.MIDI_GetPPQPosFromProjQN(take, qn_start)
+                      reaper.MIDI_SetNote(take, n, nil, nil, startppq, new_end_ppq, nil, nil, nil, false)
+                  elseif start_qn >= qn_start and start_qn < qn_end and end_qn > qn_end then
+                      -- Начало внутри — обрезать начало
+                      local new_start_ppq = reaper.MIDI_GetPPQPosFromProjQN(take, qn_end)
+                      reaper.MIDI_SetNote(take, n, nil, nil, new_start_ppq, endppq, nil, nil, nil, false)
+                  elseif start_qn < qn_start and end_qn > qn_end then
+                      -- Нота охватывает весь Razor Edit — разрезать на две (или обрезать одну часть)
+                      local new_end_ppq = reaper.MIDI_GetPPQPosFromProjQN(take, qn_start)
+                      local new_start_ppq = reaper.MIDI_GetPPQPosFromProjQN(take, qn_end)
+                      -- Укорачиваем исходную до начала Razor Edit
+                      reaper.MIDI_SetNote(take, n, nil, nil, startppq, new_end_ppq, nil, nil, nil, false)
+                      -- Добавляем новую ноту после Razor Edit (если нужно сохранить обе части)
+                      reaper.MIDI_InsertNote(take, false, false, new_start_ppq, endppq, chan, pitch, vel, false)
                   end
+              end
+              reaper.MIDI_Sort(take)
+              reaper.MarkTrackItemsDirty(track, item)
+              reaper.UpdateItemInProject(item)
 
-                end
-                reaper.MIDI_Sort(take)
-                reaper.MarkTrackItemsDirty(track, item)
-                reaper.UpdateItemInProject(item)
-
+              end
             end
+          end
         end
       end
     end
@@ -223,7 +228,7 @@ if mode == 'envelope' then
 elseif mode == 'midi' then 
   if check_if_notes() == true then 
     delete_midi_notes_in_razor()
-    -- print('da')
+
   else 
     reaper.Main_OnCommand(40312,0)
   end
