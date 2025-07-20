@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="876c48924fd28ee6dbccda3f33c8cd86579adf2e">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="edece5b7c7916ed52a5d9549f8401872667a4f4d">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -38,11 +38,11 @@
     </reapack>
     <reapack name="misha - smart remove razor edit content.lua" type="script" desc="Smart remove razor edit content">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Use to delete content within razor edit area(items, envelope points, automation items)\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Use to delete content within razor edit area(items, envelope points, automation items, midi notes)\par}
 }
 ]]></description>
       </metadata>
@@ -51,6 +51,9 @@
       </version>
       <version name="1.1" author="Misha Oshkanov" time="2024-10-12T06:54:36Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/3b68263c4f3f3a5d475f393509c920c221e11c09/ReaScripts/Razor%20Edit/misha%20-%20smart%20remove%20razor%20edit%20content.lua</source>
+      </version>
+      <version name="1.2" author="Misha Oshkanov" time="2025-07-20T09:44:15Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/edece5b7c7916ed52a5d9549f8401872667a4f4d/ReaScripts/Razor%20Edit/misha%20-%20smart%20remove%20razor%20edit%20content.lua</source>
       </version>
     </reapack>
   </category>
