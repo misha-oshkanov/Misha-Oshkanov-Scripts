@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="2032d7cffd3fb0c90f588c3c1ead8d030a791285">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="e0e50c599dd45dbfdcbda607b3cffa5987fb95ac">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -57,6 +57,9 @@
       </version>
       <version name="1.3" author="Misha Oshkanov" time="2025-07-20T09:55:11Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/2032d7cffd3fb0c90f588c3c1ead8d030a791285/ReaScripts/Razor%20Edit/misha%20-%20smart%20remove%20razor%20edit%20content.lua</source>
+      </version>
+      <version name="1.4" author="Misha Oshkanov" time="2025-07-20T10:01:46Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e0e50c599dd45dbfdcbda607b3cffa5987fb95ac/ReaScripts/Razor%20Edit/misha%20-%20smart%20remove%20razor%20edit%20content.lua</source>
       </version>
     </reapack>
   </category>
