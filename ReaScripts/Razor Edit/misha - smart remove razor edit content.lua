@@ -1,6 +1,6 @@
 -- @description Smart remove razor edit content
 -- @author Misha Oshkanov
--- @version 1.3
+-- @version 1.4
 -- @about
 --  Use to delete content within razor edit area(items, envelope points, automation items, midi notes)
 
@@ -20,7 +20,7 @@ function check_if_notes()
 
     local areas = {}
     local tokens = {}
-    for token in area:gmatch("(%S+)") do
+    for token in area:gmatch("(%S+)") do  
         table.insert(tokens, token)
     end
 
@@ -46,6 +46,9 @@ function check_if_notes()
         for _, area in ipairs(areas) do
           local r_start = math.max(area[1], item_pos)
           local r_end = math.min(area[2], item_end)
+          if r_start == item_pos and r_end == item_end then
+            goto continue_area
+          end
           
           if r_start < r_end then
             local qn_start = reaper.TimeMap2_timeToQN(0, r_start)
@@ -61,6 +64,7 @@ function check_if_notes()
               end 
             end 
           end
+          ::continue_area::
         end
       end
     end 
