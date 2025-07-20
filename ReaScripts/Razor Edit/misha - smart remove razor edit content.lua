@@ -1,6 +1,6 @@
 -- @description Smart remove razor edit content
 -- @author Misha Oshkanov
--- @version 1.2
+-- @version 1.3
 -- @about
 --  Use to delete content within razor edit area(items, envelope points, automation items, midi notes)
 
@@ -142,10 +142,8 @@ function delete_midi_notes_in_razor()
 
                 end
                 reaper.MIDI_Sort(take)
-                -- print()
-                if delete == 0 then 
-                  reaper.Main_OnCommand(40312,0)
-                end
+                reaper.MarkTrackItemsDirty(track, item)
+                reaper.UpdateItemInProject(item)
 
             end
         end
