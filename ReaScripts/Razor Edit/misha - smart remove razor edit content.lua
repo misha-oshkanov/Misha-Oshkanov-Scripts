@@ -1,6 +1,6 @@
 -- @description Smart remove razor edit content
 -- @author Misha Oshkanov
--- @version 1.5
+-- @version 1.6
 -- @about
 --  Use to delete content within razor edit area(items, envelope points, automation items, midi notes)
 
@@ -11,6 +11,30 @@ track_cnt = reaper.CountTracks(0)
 if track_cnt == 0 then return reaper.defer(function() end) end
 
 envs, env_cnt = {}, 0
+slope = 4
+_, samplerate = reaper.GetAudioDeviceInfo('SRATE')
+
+function get_razor_envtrack(track)
+  local _, area = reaper.GetSetMediaTrackInfo_String(track, "P_RAZOREDITS", "", false)
+
+  local tokens = {}
+  for token in area:gmatch("(%S+)") do
+    table.insert(tokens, token)
+  end
+
+  for i = 1, #tokens - 2, 3 do
+    local start_pos = tonumber(tokens[i])
+    local end_pos = tonumber(tokens[i + 1])
+    local env_chunk_name = tokens[i + 2]
+
+    if env_chunk_name ~= '""' then
+      return start_pos, end_pos
+    end
+  end
+
+  return false
+
+end
 
 function check_if_notes()
   for tr = 0, reaper.CountTracks(0) - 1 do
@@ -161,56 +185,90 @@ function delete_midi_notes_in_razor()
   end
 end
 
-
-function get_envs(track)
-    local _, area = reaper.GetSetMediaTrackInfo_String(track, "P_RAZOREDITS", "", false)
-    if area ~= "" then
-      local arStart, arEnv
-      for str in area:gmatch("(%S+)") do
-        if not arStart then arStart = str
-        elseif not arEnv then arEnv = str
-        else
-          if str ~= '""' then
-            env_cnt = env_cnt + 1
-            envs[env_cnt] = { reaper.GetTrackEnvelopeByChunkName( track, str:sub(2,-1) ),
-                          tonumber(arStart), tonumber(arEnv) }
-          end
-          arStart, arEnv = nil, nil
-        end
+function check_if_envelope_points_in_razor(envelope,start_pos,end_pos)
+    local point_count = reaper.CountEnvelopePoints(envelope)
+    for pt = 0, point_count - 1 do
+      local retval, time, _, _, _, _ = reaper.GetEnvelopePoint(envelope, pt)
+      if retval and time >= start_pos and time <= end_pos then
+        return true
       end
     end
-    return envs, env_cnt
+end
+
+function get_envs(track)
+  local _, area = reaper.GetSetMediaTrackInfo_String(track, "P_RAZOREDITS", "", false)
+  if area ~= "" then
+    local arStart, arEnv
+    for str in area:gmatch("(%S+)") do
+      if not arStart then arStart = str
+      elseif not arEnv then arEnv = str
+      else
+        if str ~= '""' then
+          env_cnt = env_cnt + 1
+          envs[env_cnt] = { reaper.GetTrackEnvelopeByChunkName( track, str:sub(2,-1) ),
+                        tonumber(arStart), tonumber(arEnv) }
+        end
+        arStart, arEnv = nil, nil
+      end
+    end
   end
+  return envs, env_cnt
+end
   
 
 function main()
-    master = reaper.GetMasterTrack(0)
-    local _, master_area = reaper.GetSetMediaTrackInfo_String(master, "P_RAZOREDITS", "", false)
-    master_envs,master_env_cnt = get_envs(master)
+  master = reaper.GetMasterTrack(0)
+  local _, master_area = reaper.GetSetMediaTrackInfo_String(master, "P_RAZOREDITS", "", false)
+  master_envs,master_env_cnt = get_envs(master)
 
-    for tr = 0, track_cnt - 1 do
-        local track = reaper.GetTrack(0, tr)
-        envs, env_cnt = get_envs(track)
+  for tr = 0, track_cnt - 1 do
+      local track = reaper.GetTrack(0, tr)
+      envs, env_cnt = get_envs(track)
+  end
+
+  if env_cnt == 0 then return reaper.defer(function() end) end
+
+  for e = 1, env_cnt do
+    local envelope   = envs[e][1]
+    local env_start  = envs[e][2]
+    local env_end    = envs[e][3]
+    -- local _, start_value = reaper.Envelope_Evaluate( envelope, env_start, tonumber(samplerate), 0 )
+    -- local _, end_value = reaper.Envelope_Evaluate( envelope, env_end, tonumber(samplerate), 0 )
+    br_env = reaper.BR_EnvAlloc(envelope, true)
+    _, _, _, _, _, _, minValue, maxValue, centerValue, type, scaling, ai = reaper.BR_EnvGetProperties(br_env)
+    start_value = reaper.BR_EnvValueAtPos(br_env, env_start)
+    end_value   = reaper.BR_EnvValueAtPos(br_env, env_end)
+    offset = 60/(reaper.TimeMap_GetDividedBpmAtTime(env_start))/(4+slope)
+    if type == 0 or type == 1 then 
+      new_value = minValue
+    elseif type >= 2 and type <=5 then 
+      new_value = centerValue 
+    else
+      if start_value > centerValue then new_value = minValue else new_value = maxValue end 
     end
 
-    if env_cnt == 0 then return reaper.defer(function() end) end
-
-    for e = 1, env_cnt do
-        reaper.DeleteEnvelopePointRange( envs[e][1] , envs[e][2] , envs[e][3]  )
-        a_items = reaper.CountAutomationItems(envs[e][1])
-        if a_items > 0 then 
-            for i=1, a_items do 
-                a_st = reaper.GetSetAutomationItemInfo( envs[e][1], i-1, 'D_POSITION', 0, false )
-                a_len = reaper.GetSetAutomationItemInfo( envs[e][1], i-1, 'D_LENGTH'  , 0, false )
-                a_end = a_st + a_len
-                if envs[e][2] >= a_st and envs[e][2] <= a_end or envs[e][3] >= a_st and envs[e][2] <= a_end then 
-                    reaper.Main_OnCommand(40312,0)
-                end 
-            end 
+    if not check_if_envelope_points_in_razor(envs[e][1],envs[e][2],envs[e][3]) then 
+      reaper.BR_EnvSetPoint( br_env, -1, env_start,        new_value, 0, 0, 1)
+      reaper.BR_EnvSetPoint( br_env, -1, env_start-offset, start_value, 0, 0, 1)
+      reaper.BR_EnvSetPoint( br_env, -1, env_end,          new_value, 0, 0, 1)
+      reaper.BR_EnvSetPoint( br_env, -1, env_end+offset,   end_value, 0, 0, 1)
+      reaper.BR_EnvSortPoints( br_env )
+      reaper.BR_EnvFree( br_env, true )
+    else
+      reaper.DeleteEnvelopePointRange( envs[e][1] , envs[e][2] , envs[e][3]  )
+      a_items = reaper.CountAutomationItems(envs[e][1])
+      if a_items > 0 then 
+        for i=1, a_items do 
+          a_st = reaper.GetSetAutomationItemInfo( envs[e][1], i-1, 'D_POSITION', 0, false )
+          a_len = reaper.GetSetAutomationItemInfo( envs[e][1], i-1, 'D_LENGTH'  , 0, false )
+          a_end = a_st + a_len
+          if envs[e][2] >= a_st and envs[e][2] <= a_end or envs[e][3] >= a_st and envs[e][2] <= a_end then 
+            reaper.Main_OnCommand(40312,0)
+          end 
         end 
-
+      end 
     end
-
+  end
 end
 reaper.Undo_BeginBlock()
 reaper.PreventUIRefresh( 1 )
@@ -228,7 +286,6 @@ if mode == 'envelope' then
 elseif mode == 'midi' then 
   if check_if_notes() == true then 
     delete_midi_notes_in_razor()
-
   else 
     reaper.Main_OnCommand(40312,0)
   end
