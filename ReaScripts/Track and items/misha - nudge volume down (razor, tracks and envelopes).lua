@@ -2,13 +2,23 @@
 -- @author Misha Oshkanov
 -- @version 1.2
 -- @about
--- 
+----    Smart nudge volume down.
+----    Via selection:
+----        1. track volume (track volume changes are in priority)
+----        2. envelope items
+----        3. envelope points
+----    Via razor edit:
+----        1. item volume
+-----       2. envelope segments
 
-add = -0.5
-fx_env_steps = 60
-samplerate = 44100
+
+add = -0.5 --amount to nudge
+fx_env_steps = 60 -- divide fx range in this amount of steps, one press is one step
 
 function print(msg) if msg == nil then msg = 'da' end reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
+
+retval, desc = reaper.GetAudioDeviceInfo( 'SRATE' )
+samplerate = tonumber(desc)
 
 function printt(t, indent)
     indent = indent or 0
