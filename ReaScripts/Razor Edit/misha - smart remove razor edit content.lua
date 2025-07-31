@@ -1,6 +1,6 @@
 -- @description Smart remove razor edit content
 -- @author Misha Oshkanov
--- @version 1.6
+-- @version 1.7
 -- @about
 --  Use to delete content within razor edit area(items, envelope points, automation items, midi notes)
 
@@ -275,7 +275,8 @@ reaper.PreventUIRefresh( 1 )
 
 local window, segment, details = reaper.BR_GetMouseCursorContext()
 if details == 'item' then 
-  if reaper.TakeIsMIDI(reaper.BR_GetMouseCursorContext_Take()) then mode = 'midi' end 
+  local tk = reaper.BR_GetMouseCursorContext_Take()
+  if tk and reaper.TakeIsMIDI(tk) then mode = 'midi' end
 end
 if segment == 'envelope' then mode = 'envelope' end
 
