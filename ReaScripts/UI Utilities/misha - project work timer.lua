@@ -1,6 +1,6 @@
 -- @description Project Time Tracker with Multi-Project Support and Efficient Saving
 -- @author Misha Oshkanov
--- @version 1.0
+-- @version 1.1
 -- @about
 --  Tracks active work time per project tab in REAPER.
 --  Switches timers between tabs automatically.
@@ -8,8 +8,6 @@
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
-
-
 
 floating_window = true
 font_size = 26
@@ -52,7 +50,7 @@ local is_macos = os:match('OSX') or os:match('macOS')
 local is_linux = os:match('Other')
 
 local ctx = reaper.ImGui_CreateContext('Timer')
-local font = reaper.ImGui_CreateFont('sans-serif', font_size,reaper.ImGui_FontFlags_Bold())
+local font = reaper.ImGui_CreateFont('sans-serif', font_size)
 reaper.ImGui_Attach(ctx, font)
 
 window_flags =  reaper.ImGui_WindowFlags_NoScrollbar() +
@@ -226,7 +224,9 @@ function init()
   end
 end 
 
+text_color = rgba(128,128,128,1)
 local prev_dirty = reaper.IsProjectDirty(0) == 1
+
 function frame()
   local now = reaper.time_precise()
   local delta = now - last_check
@@ -286,7 +286,6 @@ function frame()
     reaper.ImGui_TextColored( ctx, text_color, FormatTime(session.total))
   end
 end
-
 
 function atexit()
     -- SaveTime()
