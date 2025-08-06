@@ -1,6 +1,6 @@
 -- @description Smart nudge volume up. Works on tracks and automation items via selection, items and envelopes via razor or selection
 -- @author Misha Oshkanov
--- @version 1.2
+-- @version 1.3
 -- @about
 ----    Smart nudge volume up.
 ----    Via selection:

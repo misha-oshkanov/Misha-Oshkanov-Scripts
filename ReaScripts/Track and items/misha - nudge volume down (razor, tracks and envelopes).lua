@@ -1,6 +1,6 @@
 -- @description Smart nudge volume up. Works on tracks and automation items via selection, items and envelopes via razor/
 -- @author Misha Oshkanov
--- @version 1.2
+-- @version 1.3
 -- @about
 ----    Smart nudge volume down.
 ----    Via selection:
@@ -15,10 +15,13 @@
 add = -0.5 --amount to nudge
 fx_env_steps = 60 -- divide fx range in this amount of steps, one press is one step
 
-function print(msg) if msg == nil then msg = 'da' end reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
+----------------------------------------------------------------
+----------------------------------------------------------------
 
 retval, desc = reaper.GetAudioDeviceInfo( 'SRATE' )
 samplerate = tonumber(desc)
+
+function print(msg) if msg == nil then msg = 'da' end reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
 
 function printt(t, indent)
     indent = indent or 0
