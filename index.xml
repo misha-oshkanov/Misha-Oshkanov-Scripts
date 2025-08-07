@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="21de310028a513fcc842e3bd96c5f7b8cecb416c">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="59bae5bb25ea89ecedaf0f99f1f08eb92258a28a">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -245,6 +245,9 @@
       <version name="1.4" author="Misha Oshkanov" time="2025-08-07T08:49:27Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/9b39ff4f5307b168f2dff75f7bc7451a93ce5f16/ReaScripts/UI%20Utilities/misha%20-%20Item%20counter%20panel%20for%20selected%20tracks.lua</source>
       </version>
+      <version name="1.5" author="Misha Oshkanov" time="2025-08-07T15:41:07Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/59bae5bb25ea89ecedaf0f99f1f08eb92258a28a/ReaScripts/UI%20Utilities/misha%20-%20Item%20counter%20panel%20for%20selected%20tracks.lua</source>
+      </version>
     </reapack>
     <reapack name="misha - Master FX Inverter - OFF.lua" type="script" desc="Master FX Inverter - OFF">
       <metadata>
@@ -289,6 +292,9 @@
       </version>
       <version name="1.5" author="Misha Oshkanov" time="2025-08-07T14:53:51Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/21de310028a513fcc842e3bd96c5f7b8cecb416c/ReaScripts/UI%20Utilities/misha%20-%20Master%20FX%20Inverter%20Panel.lua</source>
+      </version>
+      <version name="1.6" author="Misha Oshkanov" time="2025-08-07T15:41:07Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/59bae5bb25ea89ecedaf0f99f1f08eb92258a28a/ReaScripts/UI%20Utilities/misha%20-%20Master%20FX%20Inverter%20Panel.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Monitor Volume Controller Shortcut - Listen Bass.lua" type="script" desc="Monitor Volume Controller Shortcut - Listen Bass">
@@ -415,6 +421,9 @@
       <version name="3.1" author="Misha Oshkanov" time="2025-08-07T14:53:51Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/21de310028a513fcc842e3bd96c5f7b8cecb416c/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller.lua</source>
       </version>
+      <version name="3.2" author="Misha Oshkanov" time="2025-08-07T15:41:07Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/59bae5bb25ea89ecedaf0f99f1f08eb92258a28a/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller.lua</source>
+      </version>
     </reapack>
     <reapack name="misha - project work timer.lua" type="script" desc="Project Time Tracker with Multi-Project Support and Efficient Saving">
       <metadata>
@@ -431,6 +440,9 @@
       </version>
       <version name="1.1" author="Misha Oshkanov" time="2025-08-06T18:20:36Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/f1efeb349d81147782e59f795d18ef71c74736d3/ReaScripts/UI%20Utilities/misha%20-%20project%20work%20timer.lua</source>
+      </version>
+      <version name="1.2" author="Misha Oshkanov" time="2025-08-07T15:41:07Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/59bae5bb25ea89ecedaf0f99f1f08eb92258a28a/ReaScripts/UI%20Utilities/misha%20-%20project%20work%20timer.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Scroller.lua" type="script" desc="Scroller">
@@ -472,10 +484,25 @@
       <version name="0.7.6" author="Misha Oshkanov" time="2025-08-07T14:53:51Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/21de310028a513fcc842e3bd96c5f7b8cecb416c/ReaScripts/UI%20Utilities/misha%20-%20Scroller.lua</source>
       </version>
+      <version name="0.7.7" author="Misha Oshkanov" time="2025-08-07T15:41:07Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/59bae5bb25ea89ecedaf0f99f1f08eb92258a28a/ReaScripts/UI%20Utilities/misha%20-%20Scroller.lua</source>
+      </version>
     </reapack>
     <reapack name="misha - Sender.lua" type="script" desc="UI send manager for selected track">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Ui panel for controlling sends for selected track You should create folder for sends in the project (Name in Sends, Rhythm Sends, Special FX and etc.) You can change send_folders table to add your own send folders\par}
+}
+]]></description>
+      </metadata>
       <version name="1.2" author="Misha Oshkanov" time="2025-07-14T11:34:33Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/876c48924fd28ee6dbccda3f33c8cd86579adf2e/ReaScripts/UI%20Utilities/misha%20-%20Sender.lua</source>
+      </version>
+      <version name="1.3" author="Misha Oshkanov" time="2025-08-07T15:41:07Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/59bae5bb25ea89ecedaf0f99f1f08eb92258a28a/ReaScripts/UI%20Utilities/misha%20-%20Sender.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Show peak LUFS readouts in arrange view.lua" type="script" desc="Show master peak lufs readouts in arrange view">
@@ -500,6 +527,9 @@
       <version name="1.3" author="Misha Oshkanov" time="2025-08-07T14:53:51Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/21de310028a513fcc842e3bd96c5f7b8cecb416c/ReaScripts/UI%20Utilities/misha%20-%20Show%20peak%20LUFS%20readouts%20in%20arrange%20view.lua</source>
       </version>
+      <version name="1.4" author="Misha Oshkanov" time="2025-08-07T15:41:07Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/59bae5bb25ea89ecedaf0f99f1f08eb92258a28a/ReaScripts/UI%20Utilities/misha%20-%20Show%20peak%20LUFS%20readouts%20in%20arrange%20view.lua</source>
+      </version>
     </reapack>
     <reapack name="misha - ShowHide Manager.lua" type="script" desc="ShowHide Manager">
       <metadata>
@@ -520,7 +550,7 @@
     </reapack>
     <reapack name="misha - Track Noise Detector.lua" type="script" desc="Track Noise Detector">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -531,10 +561,13 @@
       <version name="0.9" author="Misha Oshkanov" time="2024-11-12T10:46:52Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e36803314bddf21a9c4c404319b2c582ae59cd72/ReaScripts/UI%20Utilities/misha%20-%20Track%20Noise%20Detector.lua</source>
       </version>
+      <version name="0.10" author="Misha Oshkanov" time="2025-08-07T15:41:07Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/59bae5bb25ea89ecedaf0f99f1f08eb92258a28a/ReaScripts/UI%20Utilities/misha%20-%20Track%20Noise%20Detector.lua</source>
+      </version>
     </reapack>
     <reapack name="misha - Track Renamer.lua" type="script" desc="Track Renamer">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -544,6 +577,9 @@
       </metadata>
       <version name="1.4" author="Misha Oshkanov" time="2024-09-05T07:56:03Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e031d4a19fa5133813a5928c36d85420dc06f840/ReaScripts/UI%20Utilities/misha%20-%20Track%20Renamer.lua</source>
+      </version>
+      <version name="1.5" author="Misha Oshkanov" time="2025-08-07T15:41:07Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/59bae5bb25ea89ecedaf0f99f1f08eb92258a28a/ReaScripts/UI%20Utilities/misha%20-%20Track%20Renamer.lua</source>
       </version>
     </reapack>
   </category>
