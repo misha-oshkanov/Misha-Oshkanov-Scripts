@@ -1,6 +1,6 @@
 -- @description Monitor Volume Controller
 -- @author Misha Oshkanov
--- @version 3.2
+-- @version 3.2_1
 -- @about
 --  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. 
 --  If you need more levels or change db values you can edit buttons table.
@@ -71,7 +71,7 @@ local is_windows = os:match('Win')
 local is_macos = os:match('OSX') or os:match('macOS')
 local is_linux = os:match('Other')
 
-local font_size1 = 18
+local font_size1 = 14
 local font_size2 = 14
 
 -- dofile(reaper.GetResourcePath() .. '/Scripts/ReaTeam Extensions/API/imgui.lua')('0.6')
