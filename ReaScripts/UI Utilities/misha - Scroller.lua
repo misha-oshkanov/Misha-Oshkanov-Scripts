@@ -1,6 +1,6 @@
 -- @description Scroller
 -- @author Misha Oshkanov
--- @version 0.7.5
+-- @version 0.7.6
 -- @about
 --  Panel to select and scroll to desired track or folder. In midi editor panel can show notes of selected tracks.--
 --  Uses first-order folder as buttons
@@ -33,7 +33,7 @@ button_h  = 26           -- main button heigth
 child_button_h  = 28     -- child button height
 folder_padding = 10      -- reduce width of child tracks
 folder_level = 0         -- target depth of folder tracks used to generate buttons (default is 0). Use this if you have one premaster folder which contains all other folders
-scroll_offset = 0        -- this will offset scroll position by x pixels, can be used to place scrolled track at the middle of arrange
+scroll_offset = 700      -- this will offset scroll position by x pixels, can be used to place scrolled track at the middle of arrange
 
 -- Panel padding
 bottom_padding = -10       -- padding in bottom mode
@@ -49,12 +49,12 @@ child_font_size  = 14    -- font for tracklist
 
 -- Other settings
 show_only_tracks_with_midi_in_editor =  false   -- children tracklist will contain all tracks in folder if false, otherwise will contain only tracks with midi items
-use_custom_color_for_folder_names = true        -- folders in children tracklist will have red labels
+use_custom_color_for_folder_names = false        -- folders in children tracklist will have red labels
 custom_color = {255,132,132}                    -- set custom color here (rgb)
 
 BLOCKED_TRACK_LAYOUTS = {'Separator', 'M - VCA'}                        -- tracks with this names will be hidden
 BLOCKED_CHILD_TRACK_NAMES  = {'VCA'}                                    -- tracks with this names will be hidden
-BLOCKED_FOLDER_TRACK_NAMES = {'VCA'}                                    -- tracks with this names will be hidden
+BLOCKED_FOLDER_TRACK_NAMES = {'VCA','Sends','Special FX'}                                    -- tracks with this names will be hidden
 arch_prefix = "_" -- tracks with this prefix will be hidden
 
 -----------------------------------------------------------------------
@@ -923,13 +923,13 @@ function frame()
             --     i_clicked_button_x, i_clicked_button_y = reaper.ImGui_GetItemRectMin(ctx)
             --     i_t = children_list[t]
             -- end 
-
-            if ct.depth - folder_level > 1  then
-                reaper.ImGui_Dummy(ctx, (ct.depth-1-folder_level)*folder_padding,child_button_h)
-                reaper.ImGui_SameLine(ctx)
-            end
-
             cb = reaper.ImGui_Button(ctx, ct.name, child_button_w+(dw*folder_padding), child_button_h)
+
+            -- if ct.depth - folder_level > 1  then
+            --     reaper.ImGui_SameLine(ctx)
+            --     reaper.ImGui_Dummy(ctx, (ct.depth-1-folder_level)*folder_padding,child_button_h)
+            -- end
+
 
             if todb(peak) > -40 then
                 -- reaper.ImGui_SameLine( ctx, 0, 0 )

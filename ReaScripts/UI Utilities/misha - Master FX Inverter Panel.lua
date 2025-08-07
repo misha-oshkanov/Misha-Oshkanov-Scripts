@@ -1,6 +1,6 @@
 -- @description Master FX Inverter Panel
 -- @author Misha Oshkanov
--- @version 1.3
+-- @version 1.5
 -- @about
 --  Manages bypass states of effects in master fx chain
 --  use activate and deactivate toggle scripts to switch bypass states 
@@ -246,8 +246,10 @@ function frame()
             end
 
             retval, val = reaper.GetProjExtState(0, 'INEED_BYPASS_MANAGER', fx.guid)
+            -- print(val:find('1'))
             if val:find('1') then mark = true  else mark = false end
             fx_state = fx.active == false and 'b' or 'a'
+
 
             b = reaper.ImGui_RadioButton(ctx, fx.name, mark)
 
@@ -274,28 +276,25 @@ function frame()
         end
 
         width = reaper.ImGui_GetWindowWidth(ctx)
-        if not b_toggle then 
-            toggle_text = 'Invert State' 
-        else 
-            toggle_text = 'Inverted'
-         end
+        if not b_toggle then toggle_text = 'Invert State' end
 
         reaper.ImGui_Dummy( ctx, width, 5 )
+
         b_all = reaper.ImGui_Button(ctx, 'All', (width-23)/2, 26)
         reaper.ImGui_SameLine(ctx)
         b_none = reaper.ImGui_Button(ctx, 'None', (width-23)/2, 26)
         b_toggle = reaper.ImGui_Button(ctx, toggle_text, width-15, 26)
+
 
         if b_all then 
             set_all = true 
         elseif b_none then 
             set_none = true 
         elseif b_toggle then  
-            if toggle_state == "" or toggle_state == '0' then 
-                reaper.SetProjExtState(0, 'INEED_BYPASS_STATE', 'STATE', '1')
-            elseif toggle_state == "1" then 
-                reaper.SetProjExtState(0, 'INEED_BYPASS_STATE', 'STATE', '0')
-            end
+            toggle_text = 'Inverted'   
+
+            reaper.Undo_BeginBlock()
+
             i=-1
             enum, key, val = reaper.EnumProjExtState(0, "INEED_BYPASS_MANAGER", 0)
             while enum ~= false do
@@ -307,13 +306,19 @@ function frame()
                         if val:find('1') then 
                             if val:find('b') then 
                                 reaper.TrackFX_SetEnabled(track, i-1, toggle_state == '0' and true or false)
+                            
                             elseif val:find('a') then 
+                                -- print(toggle_state)
                                 reaper.TrackFX_SetEnabled(track, i-1, toggle_state == '1' and true or false)
                             end
                         end
+                            -- enabled = reaper.TrackFX_GetEnabled(track, i-1)
+                            -- reaper.TrackFX_SetEnabled(track, i-1, not enabled)
+
                     end
                 end
             end
+            reaper.Undo_EndBlock("Master FX Invert", -1)
         end
     end
 

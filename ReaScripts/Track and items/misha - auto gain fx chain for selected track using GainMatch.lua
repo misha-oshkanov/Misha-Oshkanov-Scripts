@@ -1,10 +1,12 @@
 -- @description Auto gain fx chain for selected track using GainMatch
 -- @author Misha Oshkanov
--- @version 1.0
+-- @version 1.1
 -- @about
 --  You need GainMatch plugin for this to work. Script will add instance of Gainmatch at the start and at the end of FX chain.
 
+
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
+
 
 function set_fx_name(track, fx, new_name)
     if not new_name then return end
@@ -54,23 +56,20 @@ end
 fxname = 'VST3: GainMatch (LetiMix)'
 
 count_tracks = reaper.CountSelectedTracks(0)
+reaper.Undo_BeginBlock()
 
 for i=1, count_tracks do 
     track = reaper.GetSelectedTrack(0, i-1)
 
-    _, buf = reaper.TrackFX_GetFXName(track, 0)
 
-    reaper.Undo_BeginBlock()
+    first_id = reaper.TrackFX_AddByName(track, fxname, false, -1000)
+    reaper.TrackFX_Show(track, first_id, 2)
+    set_fx_name(track,first_id,'- - -')
+    count = reaper.TrackFX_GetCount(track)
+    reaper.TrackFX_CopyToTrack(track, first_id, track, count, false)
+    set_fx_name(track,count,'- GM -')
+    reaper.TrackFX_Show(track, count, 3)
 
-    if buf ~= '- - -' then 
-        first_id = reaper.TrackFX_AddByName(track, fxname, false, -1000)
-        reaper.TrackFX_Show(track, first_id, 2)
-        set_fx_name(track,first_id,'- - -')
-        count = reaper.TrackFX_GetCount(track)
-        reaper.TrackFX_CopyToTrack(track, first_id, track, count, false)
-        set_fx_name(track,count,'-------- Match --------')
-        reaper.TrackFX_Show(track, count, 3)
-    end 
 end
 
 reaper.Undo_EndBlock('Gain Match', -1)

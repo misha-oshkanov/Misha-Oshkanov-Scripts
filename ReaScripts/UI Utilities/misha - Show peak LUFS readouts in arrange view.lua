@@ -1,20 +1,21 @@
 -- @description Show master peak lufs readouts in arrange view
 -- @author Misha Oshkanov
--- @version 1.2
+-- @version 1.3
 -- @about
 --  Shows little text readout for master lufs and peak meters
 --  Right click toggle to selected track meter readouts. Track mode adds rectangle around the text
 
 --  Показывает текстовые значения LUFS и пика на мастер канале в углу окна аранжировки
---  Правый клик по значению вкючает режим трека, в этом режиме паказаны значеня выбранного трека. В этом режиме вокруг значений появляется прямоугольник 
+--  Правый клик по значению вкючает режим трека, в этом режиме паказаны значеня выбранного трека. В этом режиме вокруг значений появляется прямоугольник
 
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
 floating_window = false
+only_master = true
 font_size = 26
 
-offset_x = 58
-offset_y = 40
+offset_x = 54
+offset_y = 50
 
 window_w = 150
 h = 10
@@ -91,8 +92,12 @@ function get_bounds(hwnd)
     end
     -- return left, top, right-left, bottom-top
     return left, top, right, bottom
+
+    -- local _, left, top, right, bottom = reaper.JS_Window_GetRect(hwnd)
+    -- x, y = reaper.ImGui_PointConvertNative(ctx, x, y, false)
 end
   
+
 function rgba(r, g, b, a)
     b = b/255
     g = g/255 
@@ -217,12 +222,6 @@ function frame()
 
     reaper.ImGui_PopStyleColor(ctx,1)
 
-    -- if target == master then
-    --     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), rgba(peak_col_track[1],peak_col_track[2],peak_col_track[3],peak_col_track[4]))
-    -- else
-    --     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), rgba(peak_col_master[1],peak_col_master[2],peak_col_master[3],peak_col_master[4]))
-    -- end
-
     peak_color = rgba(140,140,140,1)
     
     if current_peak<-30 then 
@@ -268,11 +267,15 @@ function loop()
     -- retval, left, top, right, bottom = reaper.JS_Window_GetClientRect( mainHWND )
     -- retval, ar_left, ar_top, ar_right, ar_bottom = reaper.JS_Window_GetClientRect(windowHWND)
     
-    reaper.ImGui_SetNextWindowSize(ctx, 70, 80,  reaper.ImGui_Cond_Always())
+    reaper.ImGui_SetNextWindowSize(ctx, 70, 60,  reaper.ImGui_Cond_Always())
     
     mainHWND = reaper.GetMainHwnd()
     windowHWND = reaper.JS_Window_FindChildByID(mainHWND, 1000)
     left, top, right, bottom = get_bounds(windowHWND)
+
+
+
+    -- x, y = reaper.ImGui_PointConvertNative(ctx, x, y, false)
 
     if not floating_window then 
             reaper.ImGui_SetNextWindowPos(ctx, right-offset_x, bottom-offset_y, condIn, 0.5, 0.5)
