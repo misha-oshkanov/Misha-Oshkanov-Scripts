@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="59bae5bb25ea89ecedaf0f99f1f08eb92258a28a">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="24bddd0a878e4d2c835e85f113407af5f44d6a28">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -546,6 +546,9 @@
       </version>
       <version name="1.1" author="Misha Oshkanov" time="2024-10-16T08:44:15Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/915264fbd4d3fd0365f259efbab620f54e8c4d34/ReaScripts/UI%20Utilities/misha%20-%20ShowHide%20Manager.lua</source>
+      </version>
+      <version name="1.2" author="Misha Oshkanov" time="2025-08-07T15:53:17Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/24bddd0a878e4d2c835e85f113407af5f44d6a28/ReaScripts/UI%20Utilities/misha%20-%20ShowHide%20Manager.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Track Noise Detector.lua" type="script" desc="Track Noise Detector">
