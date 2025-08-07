@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="9b39ff4f5307b168f2dff75f7bc7451a93ce5f16">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="6e644aae8d4608e4552cc69306ce1ac45509ccab">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -285,9 +285,9 @@
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54/ReaScripts/UI%20Utilities/misha%20-%20Master%20FX%20Inverter%20Panel.lua</source>
       </version>
     </reapack>
-    <reapack name="misha - Monitor Volume Contoller Shortcut - Listen Bass.lua" type="script" desc="Monitor Volume Controller Shortcut - Listen Bass">
+    <reapack name="misha - Monitor Volume Controller Shortcut - Listen Bass.lua" type="script" desc="Monitor Volume Controller Shortcut - Listen Bass">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -295,13 +295,13 @@
 }
 ]]></description>
       </metadata>
-      <version name="0.1" author="Misha Oshkanov" time="2024-11-25T15:59:48Z">
-        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/9dbbb1d54018c0cf9d4ae06c142d6e85b69ed32f/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Contoller%20Shortcut%20-%20Listen%20Bass.lua</source>
+      <version name="0.2" author="Misha Oshkanov" time="2025-08-07T08:56:37Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/6e644aae8d4608e4552cc69306ce1ac45509ccab/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller%20Shortcut%20-%20Listen%20Bass.lua</source>
       </version>
     </reapack>
-    <reapack name="misha - Monitor Volume Contoller Shortcut - Listen Free.lua" type="script" desc="Monitor Volume Controller Shortcut - Listen Free">
+    <reapack name="misha - Monitor Volume Controller Shortcut - Listen Free.lua" type="script" desc="Monitor Volume Controller Shortcut - Listen Free">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -309,13 +309,13 @@
 }
 ]]></description>
       </metadata>
-      <version name="0.1" author="Misha Oshkanov" time="2024-11-25T15:59:48Z">
-        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/9dbbb1d54018c0cf9d4ae06c142d6e85b69ed32f/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Contoller%20Shortcut%20-%20Listen%20Free.lua</source>
+      <version name="0.2" author="Misha Oshkanov" time="2025-08-07T08:56:37Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/6e644aae8d4608e4552cc69306ce1ac45509ccab/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller%20Shortcut%20-%20Listen%20Free.lua</source>
       </version>
     </reapack>
-    <reapack name="misha - Monitor Volume Contoller Shortcut - Listen High.lua" type="script" desc="Monitor Volume Controller Shortcut - Listen High">
+    <reapack name="misha - Monitor Volume Controller Shortcut - Listen High.lua" type="script" desc="Monitor Volume Controller Shortcut - Listen High">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -323,13 +323,13 @@
 }
 ]]></description>
       </metadata>
-      <version name="0.1" author="Misha Oshkanov" time="2024-11-25T15:59:48Z">
-        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/9dbbb1d54018c0cf9d4ae06c142d6e85b69ed32f/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Contoller%20Shortcut%20-%20Listen%20High.lua</source>
+      <version name="0.2" author="Misha Oshkanov" time="2025-08-07T08:56:37Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/6e644aae8d4608e4552cc69306ce1ac45509ccab/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller%20Shortcut%20-%20Listen%20High.lua</source>
       </version>
     </reapack>
-    <reapack name="misha - Monitor Volume Contoller Shortcut - Listen Low.lua" type="script" desc="Monitor Volume Controller Shortcut - Listen Low">
+    <reapack name="misha - Monitor Volume Controller Shortcut - Listen Low.lua" type="script" desc="Monitor Volume Controller Shortcut - Listen Low">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -337,13 +337,13 @@
 }
 ]]></description>
       </metadata>
-      <version name="0.1" author="Misha Oshkanov" time="2024-11-25T15:59:48Z">
-        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/9dbbb1d54018c0cf9d4ae06c142d6e85b69ed32f/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Contoller%20Shortcut%20-%20Listen%20Low.lua</source>
+      <version name="0.2" author="Misha Oshkanov" time="2025-08-07T08:56:37Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/6e644aae8d4608e4552cc69306ce1ac45509ccab/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller%20Shortcut%20-%20Listen%20Low.lua</source>
       </version>
     </reapack>
-    <reapack name="misha - Monitor Volume Contoller Shortcut - Listen Mid.lua" type="script" desc="Monitor Volume Controller Shortcut - Listen Mid">
+    <reapack name="misha - Monitor Volume Controller Shortcut - Listen Mid.lua" type="script" desc="Monitor Volume Controller Shortcut - Listen Mid">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -351,13 +351,13 @@
 }
 ]]></description>
       </metadata>
-      <version name="0.1" author="Misha Oshkanov" time="2024-11-25T15:59:48Z">
-        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/9dbbb1d54018c0cf9d4ae06c142d6e85b69ed32f/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Contoller%20Shortcut%20-%20Listen%20Mid.lua</source>
+      <version name="0.2" author="Misha Oshkanov" time="2025-08-07T08:56:37Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/6e644aae8d4608e4552cc69306ce1ac45509ccab/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller%20Shortcut%20-%20Listen%20Mid.lua</source>
       </version>
     </reapack>
-    <reapack name="misha - Monitor Volume Contoller Shortcut - Listen Sub.lua" type="script" desc="Monitor Volume Controller Shortcut - Listen Sub">
+    <reapack name="misha - Monitor Volume Controller Shortcut - Listen Sub.lua" type="script" desc="Monitor Volume Controller Shortcut - Listen Sub">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -365,8 +365,8 @@
 }
 ]]></description>
       </metadata>
-      <version name="0.1" author="Misha Oshkanov" time="2024-11-25T15:59:48Z">
-        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/9dbbb1d54018c0cf9d4ae06c142d6e85b69ed32f/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Contoller%20Shortcut%20-%20Listen%20Sub.lua</source>
+      <version name="0.2" author="Misha Oshkanov" time="2025-08-07T08:56:37Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/6e644aae8d4608e4552cc69306ce1ac45509ccab/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller%20Shortcut%20-%20Listen%20Sub.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Monitor Volume Controller.lua" type="script" desc="Monitor Volume Controller">
