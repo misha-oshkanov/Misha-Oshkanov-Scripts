@@ -1,6 +1,6 @@
 -- @description ShowHide Manager
 -- @author Misha Oshkanov
--- @version 1.2
+-- @version 1.3
 -- @about
 --  UI panel for showind and hiding different types of tracks in project
 --  Types: sends, selected tracks, muted tracks, empty tracks, track within region, offline tracks
@@ -39,7 +39,7 @@ button_w = 54 -- width  default - 54
 
 -- Additional panel position adjustments. Use negative or positive numbers:
 move_x = 0
-move_y = -5
+move_y = 200
 
 panel_position = 'TOP' -- 'BOTTOM'
 
@@ -52,7 +52,7 @@ font_size = 15
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
 function pname(track)  retval, buf = reaper.GetTrackName(track) print(buf) end
 
-dofile(reaper.GetResourcePath() .. '/Scripts/ReaTeam Extensions/API/imgui.lua')('0.6')
+-- dofile(reaper.GetResourcePath() .. '/Scripts/ReaTeam Extensions/API/imgui.lua')('0.6')
 
 extname = 'INEED_TRACKS_STATE'
 tracklist_extname = 'INEED_HIDE_TCP' 
@@ -545,7 +545,9 @@ function loop()
     -- print(right-ar_right)
     if not floating_window then 
       -- reaper.ImGui_SetNextWindowPos( ctx, move_x + (ar_right-(cw/2.3))*os_scale, move_y + (ar_bottom-(ch/9.8))*os_scale, condIn, 0.5, 0.5 )
-      reaper.ImGui_SetNextWindowPos( ctx,  move_x + (tcp_right-(tcp_right-right)-(tcp_w/2))*os_scale, move_y + (ar_bottom-(ch))*os_scale, condIn, 0.5, 0.5 )
+      -- reaper.ImGui_SetNextWindowPos( ctx,  move_x + (tcp_right-(tcp_right-right)-(tcp_w/2))*os_scale, move_y + (ar_bottom-(ch))*os_scale, condIn, 0.5, 0.5 )
+      reaper.ImGui_SetNextWindowPos( ctx,  move_x + (ar_right-(ar_right-right)-(tcp_w/2))*os_scale, move_y + (ar_bottom-(ch))*os_scale, condIn, 0.5, 0.5 )
+      
     end
 
   elseif MOD == 'VERTLINE' then 
