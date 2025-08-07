@@ -1,6 +1,6 @@
 -- @description Track Noise Detector
 -- @author Misha Oshkanov
--- @version 0.9
+-- @version 0.10
 -- @about
 --  Find that one noisy bastard!!!
 
@@ -22,9 +22,11 @@ function trunc(num, digits)
     return math.modf(num*mult)/mult
 end
 
+font_size = 20
+
 local ctx = reaper.ImGui_CreateContext('Track Renamer')
-local font = reaper.ImGui_CreateFont('sans-serif', 20)
-reaper.ImGui_Attach(ctx, font)
+local font = reaper.ImGui_CreateFont('sans-serif', 0)
+-- reaper.ImGui_Attach(ctx, font)
 
 active_type = {}
 decode = {}
@@ -273,7 +275,7 @@ function frame()
 end 
 
 function loop()
-    reaper.ImGui_PushFont(ctx, font)
+    reaper.ImGui_PushFont(ctx, nil, font_size)
 
     reaper.ImGui_PushStyleVar  (ctx,  reaper.ImGui_StyleVar_WindowTitleAlign(),  0.5, 0.5)
     reaper.ImGui_PushStyleVar  (ctx,   reaper.ImGui_StyleVar_SeparatorTextAlign(),  0.5,0.5)

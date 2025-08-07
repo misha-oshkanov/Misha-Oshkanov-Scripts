@@ -1,6 +1,6 @@
 -- @description Monitor Volume Controller
 -- @author Misha Oshkanov
--- @version 3.1
+-- @version 3.2
 -- @about
 --  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. 
 --  If you need more levels or change db values you can edit buttons table.
@@ -71,14 +71,16 @@ local is_windows = os:match('Win')
 local is_macos = os:match('OSX') or os:match('macOS')
 local is_linux = os:match('Other')
 
+local font_size1 = 18
+local font_size2 = 14
 
-dofile(reaper.GetResourcePath() .. '/Scripts/ReaTeam Extensions/API/imgui.lua')('0.6')
+-- dofile(reaper.GetResourcePath() .. '/Scripts/ReaTeam Extensions/API/imgui.lua')('0.6')
 local ctx = reaper.ImGui_CreateContext('Show/Hide')
-local font = reaper.ImGui_CreateFont('sans-serif', 18)
-local font2 = reaper.ImGui_CreateFont('sans-serif', 14)
+local font = reaper.ImGui_CreateFont('sans-serif', 0)
+-- local font2 = reaper.ImGui_CreateFont('sans-serif', 14)
 
-reaper.ImGui_AttachFont(ctx, font)
-reaper.ImGui_AttachFont(ctx, font2)
+-- reaper.ImGui_AttachFont(ctx, font)
+-- reaper.ImGui_AttachFont(ctx, font2)
 
 free_l = 0
 free_h = 22000
@@ -265,7 +267,7 @@ end
 function draw_listen_buttons(master)
   for i2,lb in ipairs(listen_buttons) do
     ImGui.PushID(ctx, i)
-    ImGui.PushFont(ctx, font2)
+    ImGui.PushFont(ctx, nil, font_size2)
 
     listen_low, listen_high = get_listen_freq(master)
     listen_state = get_listen_state(master)
@@ -618,7 +620,7 @@ function loop()
     reaper.ImGui_PushStyleVar(ctx,    reaper.ImGui_StyleVar_WindowPadding(), 3,4) 
     reaper.ImGui_PushStyleVar(ctx,    reaper.ImGui_StyleVar_ItemSpacing(), 2,2) 
   
-    reaper.ImGui_PushFont(ctx, font)
+    reaper.ImGui_PushFont(ctx, nil, font_size1)
 
     if USE_REFS and USE_LISTEN_BANDS then 
       ref_offset = (28 * #ref_data)

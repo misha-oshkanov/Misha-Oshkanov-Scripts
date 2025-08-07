@@ -1,6 +1,6 @@
 -- @description Show master peak lufs readouts in arrange view
 -- @author Misha Oshkanov
--- @version 1.3
+-- @version 1.4
 -- @about
 --  Shows little text readout for master lufs and peak meters
 --  Right click toggle to selected track meter readouts. Track mode adds rectangle around the text
@@ -12,10 +12,10 @@
 ---------------------------------------------------------------------
 floating_window = false
 only_master = true
-font_size = 26
+font_size = 24
 
 offset_x = 54
-offset_y = 50
+offset_y = 55
 
 window_w = 150
 h = 10
@@ -51,8 +51,8 @@ local is_macos = os:match('OSX') or os:match('macOS')
 local is_linux = os:match('Other')
 
 local ctx = reaper.ImGui_CreateContext('Meter')
-local font = reaper.ImGui_CreateFont('sans-serif', font_size,reaper.ImGui_FontFlags_Bold())
-reaper.ImGui_Attach(ctx, font)
+local font = reaper.ImGui_CreateFont('sans-serif',reaper.ImGui_FontFlags_Bold())
+-- reaper.ImGui_Attach(ctx, font)
 
 proj = 0
 active = 0
@@ -255,19 +255,19 @@ function frame()
 end
 
 function loop()
-    reaper.ImGui_PushFont(ctx, font)
+    reaper.ImGui_PushFont(ctx, font, font_size)
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_WindowBg(),          rgba(36, 37, 38, 1))
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBg(),           rgba(28, 29, 30, 1))
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBgActive(),     rgba(52, 66, 54, 1))
 
     reaper.ImGui_PushStyleVar(ctx,    reaper.ImGui_StyleVar_WindowPadding(), 3,4) 
-    reaper.ImGui_PushStyleVar(ctx,    reaper.ImGui_StyleVar_ItemSpacing(),   2,2) 
+    reaper.ImGui_PushStyleVar(ctx,    reaper.ImGui_StyleVar_ItemSpacing(),   0,0) 
     reaper.ImGui_PushStyleVar(ctx,    reaper.ImGui_StyleVar_WindowMinSize(), 2,14) 
 
     -- retval, left, top, right, bottom = reaper.JS_Window_GetClientRect( mainHWND )
     -- retval, ar_left, ar_top, ar_right, ar_bottom = reaper.JS_Window_GetClientRect(windowHWND)
     
-    reaper.ImGui_SetNextWindowSize(ctx, 70, 60,  reaper.ImGui_Cond_Always())
+    reaper.ImGui_SetNextWindowSize(ctx, 70, 70,  reaper.ImGui_Cond_Always())
     
     mainHWND = reaper.GetMainHwnd()
     windowHWND = reaper.JS_Window_FindChildByID(mainHWND, 1000)

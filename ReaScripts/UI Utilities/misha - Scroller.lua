@@ -1,6 +1,6 @@
 -- @description Scroller
 -- @author Misha Oshkanov
--- @version 0.7.6
+-- @version 0.7.7
 -- @about
 --  Panel to select and scroll to desired track or folder. In midi editor panel can show notes of selected tracks.--
 --  Uses first-order folder as buttons
@@ -43,7 +43,7 @@ use_arr_bottom = true    -- if true use bottom of arrange view for panel positio
 use_arr_middle = false
 
 -- Fonts
-folder_font_size = 16    -- font for main buttons
+folder_font_size = 17    -- font for main buttons
 child_font_size  = 14    -- font for tracklist
 
 
@@ -78,9 +78,11 @@ end
 
 local ctx   = reaper.ImGui_CreateContext('Scroller')
 
-local font       = reaper.ImGui_CreateFont('sans-serif', folder_font_size)
-local font2      = reaper.ImGui_CreateFont('sans-serif', child_font_size)
-local font_bold  = reaper.ImGui_CreateFont('sans-serif', folder_font_size, reaper.ImGui_FontFlags_Bold())
+-- local font       = reaper.ImGui_CreateFont('sans-serif', folder_font_size)
+-- local font2      = reaper.ImGui_CreateFont('sans-serif', child_font_size)
+-- local font_bold  = reaper.ImGui_CreateFont('sans-serif', folder_font_size, reaper.ImGui_FontFlags_Bold())
+
+local font = reaper.ImGui_CreateFont('sans-serif', 0)
 
 -- Detect operating system
 local os = reaper.GetOS()
@@ -88,9 +90,9 @@ local is_windows = os:match('Win')
 local is_macos = os:match('OSX') or os:match('macOS')
 local is_linux = os:match('Other')
 
-reaper.ImGui_Attach(ctx, font)
-reaper.ImGui_Attach(ctx, font2)
-reaper.ImGui_Attach(ctx, font_bold)
+-- reaper.ImGui_Attach(ctx, font)
+-- reaper.ImGui_Attach(ctx, font2)
+-- reaper.ImGui_Attach(ctx, font_bold)
 
 collapse_action = reaper.NamedCommandLookup('_RS1e92997967aa4e08ac529e9e3b83120b26f55fce')
 scale = reaper.ImGui_GetWindowDpiScale( ctx )
@@ -904,7 +906,7 @@ function frame()
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),       col_vib(ct.col,0.70))
             reaper.ImGui_PushStyleVar( ctx,   reaper.ImGui_StyleVar_WindowPadding(), 0,0) 
             reaper.ImGui_PushStyleVar( ctx,   reaper.ImGui_StyleVar_ItemSpacing(), 0,0)
-            reaper.ImGui_PushFont( ctx, font2 )
+            reaper.ImGui_PushFont(ctx, nil, child_font_size)
 
             if #children_list > max_list then  
             child_button_w = (name_w-4)-(ct.depth-1-folder_level)*folder_padding - 14
@@ -1108,7 +1110,9 @@ end
 
 function loop()
 
-    reaper.ImGui_PushFont(ctx, font)
+    -- reaper.ImGui_PushFont(ctx, font)
+    reaper.ImGui_PushFont(ctx, nil, folder_font_size)
+    
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_WindowBg(),          rgba(36, 37, 38, 1))
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBg(),           rgba(28, 29, 30, 1))
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBgActive(),     rgba(68, 69, 70, 1))

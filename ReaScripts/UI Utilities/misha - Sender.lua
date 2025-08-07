@@ -1,7 +1,10 @@
 -- @description UI send manager for selected track
 -- @author Misha Oshkanov
--- @version 1.2
-
+-- @version 1.3
+-- @about
+--   Ui panel for controlling sends for selected track
+--   You should create folder for sends in the project (Name in Sends, Rhythm Sends, Special FX and etc.)
+--   You can change send_folders table to add your own send folders
 
 function print(...)
     local values = {...}
@@ -43,14 +46,13 @@ send_folders = {
     {name = 'Special FX',     open=1}
 }
 package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
-local ImGui = require 'imgui' '0.9.3'
+local ImGui = require 'imgui' '0.10'
 r = reaper
-
+font_size = 16
 local ctx = reaper.ImGui_CreateContext('Sender')
-local font = reaper.ImGui_CreateFont('sans-serif', 16)
+local font = reaper.ImGui_CreateFont('sans-serif', 0)
 -- local font = reaper.ImGui_CreateFont('Microsoft Sans Serif', 16)
-
-reaper.ImGui_Attach(ctx, font)
+-- reaper.ImGui_Attach(ctx, font)
 
 local isMac = reaper.GetOS():match('OSX') or reaper.GetOS():match('macOS')
 
@@ -1249,7 +1251,7 @@ function remove_preset(preset)
 end 
 
 function loop()
-    reaper.ImGui_PushFont(ctx, font)
+    reaper.ImGui_PushFont(ctx, nil, font_size)
 
     reaper.ImGui_PushStyleVar  (ctx,  reaper.ImGui_StyleVar_WindowTitleAlign(),  0.5, 0.5)
     reaper.ImGui_PushStyleVar  (ctx,   reaper.ImGui_StyleVar_SeparatorTextAlign(),  0.5,0.5)

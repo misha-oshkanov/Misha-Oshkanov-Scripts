@@ -1,6 +1,6 @@
 -- @description Track Renamer
 -- @author Misha Oshkanov
--- @version 1.4
+-- @version 1.5
 -- @about
 --  UI panel to quickly rename track with sliders. Work in progress
 
@@ -20,9 +20,11 @@ function printt(t, indent)
     end
 end
 
+font_size = 20
+
 local ctx = reaper.ImGui_CreateContext('MIDI Ghost Manager')
-local font = reaper.ImGui_CreateFont('sans-serif', 20)
-reaper.ImGui_Attach(ctx, font)
+local font = reaper.ImGui_CreateFont('sans-serif', 0)
+-- reaper.ImGui_Attach(ctx, font)
 
 active_type = {}
 decode = {}
@@ -389,7 +391,7 @@ function frame()
 end 
 
 function loop()
-    reaper.ImGui_PushFont(ctx, font)
+    reaper.ImGui_PushFont(ctx, nil, font_size)
 
     reaper.ImGui_PushStyleVar  (ctx,  reaper.ImGui_StyleVar_WindowTitleAlign(),  0.5, 0.5)
     reaper.ImGui_PushStyleVar  (ctx,   reaper.ImGui_StyleVar_SeparatorTextAlign(),  0.5,0.5)

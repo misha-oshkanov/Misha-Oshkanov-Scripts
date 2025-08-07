@@ -1,6 +1,6 @@
 -- @description Item counter panel for selected track
 -- @author Misha Oshkanov
--- @version 1.4
+-- @version 1.5
 -- @about
 --  Small Ui panel with digits. Shows amount of items on first selected track(first number)
 --  and number of items on other selected track and their child tracks(second number)
@@ -42,10 +42,11 @@ function get_children(parent)
     end
 end
     
+local font_size = 30
 
-local ctx = reaper.ImGui_CreateContext('MIDI Ghost Manager')
-local font = reaper.ImGui_CreateFont('sans-serif', 30)
-reaper.ImGui_Attach(ctx, font)
+local ctx = reaper.ImGui_CreateContext('Item Counter')
+local font = reaper.ImGui_CreateFont('sans-serif', 0)
+-- reaper.ImGui_Attach(ctx, font)
 
 title_colors = {r=30,g=30,b=30}
 
@@ -226,7 +227,7 @@ function frame()
 end 
 
 function loop()
-    reaper.ImGui_PushFont(ctx, font)
+    reaper.ImGui_PushFont(ctx, nil, font_size)
 
     reaper.ImGui_PushStyleVar  (ctx,  reaper.ImGui_StyleVar_WindowTitleAlign(),  0.5, 0.5)
     reaper.ImGui_PushStyleVar  (ctx,   reaper.ImGui_StyleVar_SeparatorTextAlign(),  0.5,0.5)
@@ -240,7 +241,7 @@ function loop()
     reaper.ImGui_SetNextWindowSize(ctx, total_width, total_height, reaper.ImGui_Cond_Always())
 
 
-    local visible, open = reaper.ImGui_Begin(ctx, 'ReaReaRea', true,  window_flags)
+    local visible, open = reaper.ImGui_Begin(ctx, 'Item Counter', true,  window_flags)
     if visible then
         frame()
         reaper.ImGui_End(ctx)

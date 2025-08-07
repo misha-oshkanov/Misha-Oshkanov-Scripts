@@ -1,6 +1,6 @@
 -- @description Master FX Inverter Panel
 -- @author Misha Oshkanov
--- @version 1.5
+-- @version 1.6
 -- @about
 --  Manages bypass states of effects in master fx chain
 --  use activate and deactivate toggle scripts to switch bypass states 
@@ -21,9 +21,10 @@ function printt(t, indent)
 end
 
 
+font_size = 20
 local ctx = reaper.ImGui_CreateContext('BM')
-local font = reaper.ImGui_CreateFont('sans-serif', 20)
-reaper.ImGui_Attach(ctx, font)
+local font = reaper.ImGui_CreateFont('sans-serif', 0)
+-- reaper.ImGui_Attach(ctx, font)
 
 active_type = {}
 decode = {}
@@ -327,7 +328,7 @@ function frame()
 end 
 
 function loop()
-    reaper.ImGui_PushFont(ctx, font)
+    reaper.ImGui_PushFont(ctx, nil, font_size)
 
     _, toggle_state = reaper.GetProjExtState(proj, 'INEED_BYPASS_STATE', "STATE" )
 

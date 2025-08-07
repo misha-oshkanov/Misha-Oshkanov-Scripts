@@ -43,6 +43,8 @@ move_y = -5
 
 panel_position = 'TOP' -- 'BOTTOM'
 
+font_size = 15
+
 ----------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------
@@ -61,8 +63,8 @@ local is_macos = os:match('OSX') or os:match('macOS')
 local is_linux = os:match('Other')
 
 local ctx = reaper.ImGui_CreateContext('Show/Hide')
-local font = reaper.ImGui_CreateFont('sans-serif', 15)
-reaper.ImGui_AttachFont(ctx, font)
+local font = reaper.ImGui_CreateFont('sans-serif', 0)
+-- reaper.ImGui_AttachFont(ctx, font)
 
 window_flags =  reaper.ImGui_WindowFlags_NoTitleBar() +  
                 reaper.ImGui_WindowFlags_NoDocking() +
@@ -498,7 +500,7 @@ function loop()
   reaper.ImGui_PushStyleVar( ctx,    reaper.ImGui_StyleVar_WindowPadding(), 3,4) 
   reaper.ImGui_PushStyleVar( ctx,     reaper.ImGui_StyleVar_ItemSpacing(), 2,2) 
 
-  reaper.ImGui_PushFont(ctx, font)
+  reaper.ImGui_PushFont(ctx, nil, font_size)
 
   mainHWND = reaper.GetMainHwnd()
   windowHWND = reaper.JS_Window_FindChildByID(mainHWND, 1000)
