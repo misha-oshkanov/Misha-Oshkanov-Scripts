@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="f1efeb349d81147782e59f795d18ef71c74736d3">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="9b39ff4f5307b168f2dff75f7bc7451a93ce5f16">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -229,6 +229,20 @@
     </reapack>
   </category>
   <category name="ReaScripts/UI Utilities">
+    <reapack name="misha - Item counter panel for selected tracks.lua" type="script" desc="Item counter panel for selected track">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Small Ui panel with digits. Shows amount of items on first selected track(first number) and number of items on other selected track and their child tracks(second number) Blue dot os send indicator. Brown dot is receive indicator.\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.4" author="Misha Oshkanov" time="2025-08-07T08:49:27Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/9b39ff4f5307b168f2dff75f7bc7451a93ce5f16/ReaScripts/UI%20Utilities/misha%20-%20Item%20counter%20panel%20for%20selected%20tracks.lua</source>
+      </version>
+    </reapack>
     <reapack name="misha - Master FX Inverter - OFF.lua" type="script" desc="Master FX Inverter - OFF">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
