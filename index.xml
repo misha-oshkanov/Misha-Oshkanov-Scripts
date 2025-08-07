@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="6e644aae8d4608e4552cc69306ce1ac45509ccab">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="21de310028a513fcc842e3bd96c5f7b8cecb416c">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -187,7 +187,7 @@
   <category name="ReaScripts/Track and items">
     <reapack name="misha - auto gain fx chain for selected track using GainMatch.lua" type="script" desc="Auto gain fx chain for selected track using GainMatch">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -197,6 +197,9 @@
       </metadata>
       <version name="1.0" author="Misha Oshkanov" time="2024-11-12T10:46:52Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e36803314bddf21a9c4c404319b2c582ae59cd72/ReaScripts/Track%20and%20items/misha%20-%20auto%20gain%20fx%20chain%20for%20selected%20track%20using%20GainMatch.lua</source>
+      </version>
+      <version name="1.1" author="Misha Oshkanov" time="2025-08-07T14:53:51Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/21de310028a513fcc842e3bd96c5f7b8cecb416c/ReaScripts/Track%20and%20items/misha%20-%20auto%20gain%20fx%20chain%20for%20selected%20track%20using%20GainMatch.lua</source>
       </version>
     </reapack>
     <reapack name="misha - float next fx on selected track or item.lua" type="script" desc="Float next fx on selected track or item">
@@ -273,7 +276,7 @@
     </reapack>
     <reapack name="misha - Master FX Inverter Panel.lua" type="script" desc="Master FX Inverter Panel">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -283,6 +286,9 @@
       </metadata>
       <version name="1.3" author="Misha Oshkanov" time="2024-09-05T07:26:38Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ebf9698f78b7ba48c93d2eb01f8f60dbb7e00e54/ReaScripts/UI%20Utilities/misha%20-%20Master%20FX%20Inverter%20Panel.lua</source>
+      </version>
+      <version name="1.5" author="Misha Oshkanov" time="2025-08-07T14:53:51Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/21de310028a513fcc842e3bd96c5f7b8cecb416c/ReaScripts/UI%20Utilities/misha%20-%20Master%20FX%20Inverter%20Panel.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Monitor Volume Controller Shortcut - Listen Bass.lua" type="script" desc="Monitor Volume Controller Shortcut - Listen Bass">
@@ -371,7 +377,7 @@
     </reapack>
     <reapack name="misha - Monitor Volume Controller.lua" type="script" desc="Monitor Volume Controller">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -405,6 +411,9 @@
       </version>
       <version name="2.1.1" author="Misha Oshkanov" time="2024-11-15T16:35:41Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ddd65df391756545dd522ac07de4edd2906ae64b/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller.lua</source>
+      </version>
+      <version name="3.1" author="Misha Oshkanov" time="2025-08-07T14:53:51Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/21de310028a513fcc842e3bd96c5f7b8cecb416c/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller.lua</source>
       </version>
     </reapack>
     <reapack name="misha - project work timer.lua" type="script" desc="Project Time Tracker with Multi-Project Support and Efficient Saving">
@@ -460,6 +469,9 @@
       <version name="0.7.5" author="Misha Oshkanov" time="2024-10-15T16:58:51Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/d9fa95fbd7c61781e4d8c440432313912c0acac5/ReaScripts/UI%20Utilities/misha%20-%20Scroller.lua</source>
       </version>
+      <version name="0.7.6" author="Misha Oshkanov" time="2025-08-07T14:53:51Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/21de310028a513fcc842e3bd96c5f7b8cecb416c/ReaScripts/UI%20Utilities/misha%20-%20Scroller.lua</source>
+      </version>
     </reapack>
     <reapack name="misha - Sender.lua" type="script" desc="UI send manager for selected track">
       <version name="1.2" author="Misha Oshkanov" time="2025-07-14T11:34:33Z">
@@ -484,6 +496,9 @@
       </version>
       <version name="1.2" author="Misha Oshkanov" time="2025-07-03T09:33:46Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ba5117c4b8b4e149da3ae1ee6e0985f77139af36/ReaScripts/UI%20Utilities/misha%20-%20Show%20peak%20LUFS%20readouts%20in%20arrange%20view.lua</source>
+      </version>
+      <version name="1.3" author="Misha Oshkanov" time="2025-08-07T14:53:51Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/21de310028a513fcc842e3bd96c5f7b8cecb416c/ReaScripts/UI%20Utilities/misha%20-%20Show%20peak%20LUFS%20readouts%20in%20arrange%20view.lua</source>
       </version>
     </reapack>
     <reapack name="misha - ShowHide Manager.lua" type="script" desc="ShowHide Manager">
