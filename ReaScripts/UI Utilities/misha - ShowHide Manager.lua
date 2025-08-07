@@ -1,6 +1,6 @@
 -- @description ShowHide Manager
 -- @author Misha Oshkanov
--- @version 1.1
+-- @version 1.2
 -- @about
 --  UI panel for showind and hiding different types of tracks in project
 --  Types: sends, selected tracks, muted tracks, empty tracks, track within region, offline tracks
