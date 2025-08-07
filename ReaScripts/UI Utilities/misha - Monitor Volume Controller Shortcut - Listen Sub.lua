@@ -1,14 +1,14 @@
--- @description Monitor Volume Controller Shortcut - Listen Low
+-- @description Monitor Volume Controller Shortcut - Listen Sub
 -- @author Misha Oshkanov
--- @version 0.1
+-- @version 0.2
 -- @about
 --  Action to solo certain frequency in monitor controller script
 
 
 
-l = 250
-h = 800 
-button_index = 3
+l = 20
+h = 60
+button_index = 1
 
 SLOPE = 2 -- 1 = 12db, 2 = 24db, 3 = 36db, 4 = 48db,5 = 60db, 6 = 72db 
 

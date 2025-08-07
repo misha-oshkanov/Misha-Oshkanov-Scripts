@@ -1,6 +1,6 @@
 -- @description Monitor Volume Controller Shortcut - Listen High
 -- @author Misha Oshkanov
--- @version 0.1
+-- @version 0.2
 -- @about
 --  Action to solo certain frequency in monitor controller script
 
