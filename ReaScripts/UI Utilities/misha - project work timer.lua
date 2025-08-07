@@ -1,6 +1,6 @@
 -- @description Project Time Tracker with Multi-Project Support and Efficient Saving
 -- @author Misha Oshkanov
--- @version 1.2
+-- @version 1.2.1
 -- @about
 --  Tracks active work time per project tab in REAPER.
 --  Switches timers between tabs automatically.
@@ -199,7 +199,10 @@ function GetProjectTitle()
   local _,title = reaper.GetSetProjectInfo_String(proj, "PROJECT_TITLE", "", false)
   if title == "" then
     local _,name = reaper.GetSetProjectInfo_String(proj, "PROJECT_NAME", "", false)
-    name = name:gsub(".rpp","")
+    if name:find('.rpp') then 
+      name = name:gsub(".rpp","")
+    elseif name:find('.RPP') then 
+      name = name:gsub(".RPP","")
     if name ~= "" then return name end
   else
     return title 
