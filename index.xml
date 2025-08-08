@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="dc901333de2c146554d2963963589b73847fc17c">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="e6d0af0390e1a736e243e483268004aa3e0b4967">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -285,6 +285,9 @@
       </version>
       <version name="1.5" author="Misha Oshkanov" time="2025-08-07T15:41:07Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/59bae5bb25ea89ecedaf0f99f1f08eb92258a28a/ReaScripts/UI%20Utilities/misha%20-%20Item%20counter%20panel%20for%20selected%20tracks.lua</source>
+      </version>
+      <version name="1.6" author="Misha Oshkanov" time="2025-08-08T09:13:11Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e6d0af0390e1a736e243e483268004aa3e0b4967/ReaScripts/UI%20Utilities/misha%20-%20Item%20counter%20panel%20for%20selected%20tracks.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Master FX Inverter - OFF.lua" type="script" desc="Master FX Inverter - OFF">
