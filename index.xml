@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="13c92c0cdaa82c1dbc83a45f7f05bca98ad4f6f0">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="dc901333de2c146554d2963963589b73847fc17c">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -228,6 +228,44 @@
       </metadata>
       <version name="1.0" author="Misha Oshkanov" time="2024-09-05T07:33:45Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/a627eaabb77f19be61043b5b8831aac21c4c287e/ReaScripts/Track%20and%20items/misha%20-%20float%20previous%20fx%20on%20selected%20track%20or%20item.lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - nudge volume down (tracks, razor, and envelopes).lua" type="script" desc="Smart nudge volume up. Works on tracks and automation items via selecting, items and envelopes via razor or selecting">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Smart nudge volume down. Via selection:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab track volume (track volume changes are in priority)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab envelope items\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 3.\tx360\tab envelope points Via razor edit:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 4.\tx360\tab item volume\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 5.\tx360\tab envelope segments\sa180\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.3.1" author="Misha Oshkanov" time="2025-08-08T08:11:09Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/dc901333de2c146554d2963963589b73847fc17c/ReaScripts/Track%20and%20items/misha%20-%20nudge%20volume%20down%20(tracks,%20razor,%20and%20envelopes).lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - nudge volume up (tracks, razor, and envelopes).lua" type="script" desc="Smart nudge volume up. Works on tracks and automation items via selecting, items and envelopes via razor or selecting">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Smart nudge volume down. Via selection:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab track volume (track volume changes are in priority)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab envelope items\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 3.\tx360\tab envelope points Via razor edit:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 4.\tx360\tab item volume\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 5.\tx360\tab envelope segments\sa180\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.3.1" author="Misha Oshkanov" time="2025-08-08T08:11:09Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/dc901333de2c146554d2963963589b73847fc17c/ReaScripts/Track%20and%20items/misha%20-%20nudge%20volume%20up%20(tracks,%20razor,%20and%20envelopes).lua</source>
       </version>
     </reapack>
   </category>
