@@ -1,15 +1,15 @@
--- @description Smart nudge volume up. Works on tracks and automation items via selection, items and envelopes via razor or selection
+-- @description Smart nudge volume up. Works on tracks and automation items via selecting, items and envelopes via razor or selecting
 -- @author Misha Oshkanov
--- @version 1.3
+-- @version 1.3.1
 -- @about
-----    Smart nudge volume up.
-----    Via selection:
-----    1. track volume (track volume changes are in priority)
-----    2. envelope items
-----    3. envelope points
-----    Via razor edit:
-----    1. item volume
-----    2. envelope segments
+--  Smart nudge volume down.
+--  Via selection:
+--    1. track volume (track volume changes are in priority)
+--    2. envelope items
+--    3. envelope points
+--  Via razor edit:
+--    1. item volume
+--    2. envelope segments
 ---------------------------------------------------------------
 
 add = 0.5 --amount to nudge
