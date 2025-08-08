@@ -1,6 +1,6 @@
 -- @description Item counter panel for selected track
 -- @author Misha Oshkanov
--- @version 1.6
+-- @version 1.7
 -- @about
 --  Small Ui panel with digits. Shows amount of items on first selected track(first number)
 --  and number of items on other selected track and their child tracks(second number)
@@ -79,7 +79,6 @@ function count_child_items(track)
 end
 
 function count_playing_items_in_lanes(track)
-    local count_lanes = reaper.GetMediaTrackInfo_Value(track, 'I_NUMFIXEDLANES')
     local items = reaper.CountTrackMediaItems(track)
     num = 0
     not_playing_num = 0
@@ -87,13 +86,10 @@ function count_playing_items_in_lanes(track)
         local item = reaper.GetTrackMediaItem(track, i)
         is_mute = reaper.GetMediaItemInfo_Value(item, 'B_MUTE') == 1
         local lane_plays = reaper.GetMediaItemInfo_Value(item, 'C_LANEPLAYS') > 0 
-        if lane_plays then 
-            if not is_mute then num = num + 1 end
-        else 
-            not_playing_num = not_playing_num + 1 
-        end 
+        if not is_mute then 
+            if lane_plays then num = num + 1 else not_playing_num = not_playing_num + 1 end
+        else not_playing_num = not_playing_num + 1 end
     end
-
     return num, not_playing_num
 end 
 
@@ -127,6 +123,7 @@ function frame()
     local num2_lanes_found  = false
     local color = '28290987' 
     local track_name = 'da'
+    -- local num1_playing, num2_not_playing, num3_playing, num4_not_playing = 0, 0, 0, 0
     -- local dummy_spacing1 = 0
     -- local dummy_spacing2 = 0
 
@@ -156,8 +153,8 @@ function frame()
         -- num1_lanes_found = true
         num1 = num1 + playing
         num2 = num2 + not_playing
-        num3 = num3 + child_playing
-        num4 = num4 + child_not_playing
+        num3 = num1 + num3 + child_playing
+        num4 = num2 + num4 + child_not_playing
 
     end
     local count = reaper.CountSelectedTracks(0)
@@ -206,6 +203,9 @@ function frame()
         local y2 = y1 + size
         reaper.ImGui_DrawList_AddRectFilled(draw_list, x1, y1, x2, y2, rgba(194, 134, 111, 1))
     end
+
+    -- if num1 == 0 then num1 = '' end
+    -- if num3 == 0 then num3 = '' end
 
     -- local dummy_name = 10
     -- reaper.ImGui_TextColored(ctx, col(color,1), track_name)
@@ -256,10 +256,10 @@ function frame()
     dummy_spacing1 +
     width3 +
     width4 +
-    spacing_x * 4 
-    -10           
+    spacing_x * 4  -- запас между элементами
+    -10           -- немного дополнительного отступа
     
-    total_height = height1 + 16 
+    total_height = height1 + 16 -- с запасом  
 end 
 
 function loop()
