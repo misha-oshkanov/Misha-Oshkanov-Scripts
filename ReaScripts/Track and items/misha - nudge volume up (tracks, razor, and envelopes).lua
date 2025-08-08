@@ -4,12 +4,13 @@
 -- @about
 ----    Smart nudge volume up.
 ----    Via selection:
-----        1. track volume (track volume changes are in priority)
-----        2. envelope items
-----        3. envelope points
+----    1. track volume (track volume changes are in priority)
+----    2. envelope items
+----    3. envelope points
 ----    Via razor edit:
-----        1. item volume
------       2. envelope segments
+----    1. item volume
+----    2. envelope segments
+---------------------------------------------------------------
 
 add = 0.5 --amount to nudge
 fx_env_steps = 60 -- divide fx range in this amount of steps, one press is one step
