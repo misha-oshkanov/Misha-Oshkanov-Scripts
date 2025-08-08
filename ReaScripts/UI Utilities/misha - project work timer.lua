@@ -1,6 +1,6 @@
 -- @description Project Time Tracker with Multi-Project Support and Efficient Saving
 -- @author Misha Oshkanov
--- @version 1.2.1
+-- @version 1.2.2
 -- @about
 --  Tracks active work time per project tab in REAPER.
 --  Switches timers between tabs automatically.
@@ -203,6 +203,7 @@ function GetProjectTitle()
       name = name:gsub(".rpp","")
     elseif name:find('.RPP') then 
       name = name:gsub(".RPP","")
+    end
     if name ~= "" then return name end
   else
     return title 
