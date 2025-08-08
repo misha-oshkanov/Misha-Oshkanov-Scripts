@@ -1,6 +1,6 @@
 -- @description Item counter panel for selected track
 -- @author Misha Oshkanov
--- @version 1.5
+-- @version 1.6
 -- @about
 --  Small Ui panel with digits. Shows amount of items on first selected track(first number)
 --  and number of items on other selected track and their child tracks(second number)
@@ -24,6 +24,12 @@ function printt(t, indent)
     end
 end
 
+function col(col,a)
+    r, g, b = reaper.ColorFromNative(col)
+    result = rgba(r,g,b,a)
+    return result
+end
+
 function get_children(parent)
     if parent then 
         local parentdepth = reaper.GetTrackDepth(parent)
@@ -42,11 +48,10 @@ function get_children(parent)
     end
 end
     
-local font_size = 30
+font_size = 26
 
-local ctx = reaper.ImGui_CreateContext('Item Counter')
-local font = reaper.ImGui_CreateFont('sans-serif', 0)
--- reaper.ImGui_Attach(ctx, font)
+local ctx = reaper.ImGui_CreateContext('MIDI Ghost Manager')
+local font = reaper.ImGui_CreateFont('sans-serif')
 
 title_colors = {r=30,g=30,b=30}
 
@@ -80,28 +85,56 @@ function count_playing_items_in_lanes(track)
     not_playing_num = 0
     for i=0,items-1 do 
         local item = reaper.GetTrackMediaItem(track, i)
+        is_mute = reaper.GetMediaItemInfo_Value(item, 'B_MUTE') == 1
         local lane_plays = reaper.GetMediaItemInfo_Value(item, 'C_LANEPLAYS') > 0 
         if lane_plays then 
-            num = num + 1
+            if not is_mute then num = num + 1 end
         else 
             not_playing_num = not_playing_num + 1 
         end 
     end
+
     return num, not_playing_num
 end 
+
+function count_child_playing_items(track)
+    local is_folder = reaper.GetMediaTrackInfo_Value(track, 'I_FOLDERDEPTH')==1
+    local num = 0
+    local not_playing_num = 0
+    if is_folder then 
+        local children = get_children(track)
+        for c=1,#children do 
+            local child = children[c]
+            if not reaper.IsTrackSelected(child) then 
+                child_playing, child_not_playing = count_playing_items_in_lanes(child)
+                num = num + child_playing
+                not_playing_num = not_playing_num + child_not_playing
+            end
+        end 
+    end
+    return num, not_playing_num
+end
 
 function frame()
     local first_track = reaper.GetSelectedTrack(0, 0)
     local num1 = 0
     local num2 = 0
+    local num3 = 0
+    local num4 = 0
     local send_mark    = false
     local receive_mark = false
     local num1_lanes_found  = false
     local num2_lanes_found  = false
+    local color = '28290987' 
+    local track_name = 'da'
+    -- local dummy_spacing1 = 0
+    -- local dummy_spacing2 = 0
 
 
     if first_track then 
-        local is_folder = reaper.GetMediaTrackInfo_Value(first_track, 'I_FOLDERDEPTH')==1
+        _, track_name = reaper.GetTrackName(first_track)
+        color = reaper.GetTrackColor(first_track)
+        if color == 0 then color = '28290987' end
         local has_sends =reaper.GetTrackNumSends(first_track, 0)
         if has_sends > 0 then 
             for s=0, has_sends-1 do 
@@ -118,115 +151,119 @@ function frame()
             end
         end
 
-        if is_folder then num2 = num2 + count_child_items(first_track) end
-        local count_lanes = reaper.GetMediaTrackInfo_Value(first_track, 'I_NUMFIXEDLANES')
-        local items = reaper.CountTrackMediaItems(first_track)
-        if count_lanes > 1 then 
-            num1_lanes_found = true
-            playing, not_playing = count_playing_items_in_lanes(first_track)
-            num1 = num1 + playing
-            num3 = num3 + not_playing
-        else
-            num1 = items
-        end
-    else
-        num1 = ""
+        local child_playing, child_not_playing = count_child_playing_items(first_track)
+        local playing, not_playing = count_playing_items_in_lanes(first_track)
+        -- num1_lanes_found = true
+        num1 = num1 + playing
+        num2 = num2 + not_playing
+        num3 = num3 + child_playing
+        num4 = num4 + child_not_playing
+
     end
     local count = reaper.CountSelectedTracks(0)
     if count > 1 then 
         local folder_found = false
         for i2=0,count-2 do 
             local track = reaper.GetSelectedTrack(0, i2+1)
-            local count_lanes = reaper.GetMediaTrackInfo_Value(track, 'I_NUMFIXEDLANES')
-            if count_lanes > 1 then 
-                num2_lanes_found = true
-                playing, not_playing = count_playing_items_in_lanes(track)
-                num2 = num2 + playing
-                num4 = num4 + not_playing
-            else
-                num2 = num2 + reaper.CountTrackMediaItems(track)
-            end
-            local is_folder = reaper.GetMediaTrackInfo_Value(track, 'I_FOLDERDEPTH')==1
-
-            if is_folder then 
-                local folder_found = true
-                local children = get_children(track)
-                for c=1,#children do 
-                    local child = children[c]
-                    if not reaper.IsTrackSelected(child) then 
-                        local count_lanes = reaper.GetMediaTrackInfo_Value(first_track, 'I_NUMFIXEDLANES')
-                        if count_lanes > 1 then 
-                            num2_lanes_found = true
-                            playing, not_playing = count_playing_items_in_lanes(track)
-                            num2 = num2 + playing
-                            num4 = num4 + not_playing
-                        else
-                            num2 = num2 + reaper.CountTrackMediaItems(track)
-                        end
-                    end
-                end 
-            end
+            local other_playing, other_not_playing = count_playing_items_in_lanes(track)
+            local other_child_playing, other_child_not_playing = count_child_playing_items(track)
+            
+            num3 = num3 + other_playing + other_child_playing
+            num4 = num4 + other_not_playing + other_child_not_playing
         end
     end
 
     w, h = reaper.ImGui_GetWindowSize( ctx )
+    reaper.ImGui_PushStyleVar( ctx, reaper.ImGui_StyleVar_ItemSpacing(),0,2)
 
-    reaper.ImGui_Dummy(ctx, 1, 1 )
-    reaper.ImGui_SameLine(ctx)
+    -- reaper.ImGui_Dummy(ctx, 1, 1 )
+    -- reaper.ImGui_SameLine(ctx)
 
-    if send_mark or receive_mark then 
+    if send_mark then
         local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
         local win_x, win_y = reaper.ImGui_GetWindowPos(ctx)
         local win_w, win_h = reaper.ImGui_GetWindowSize(ctx)
-
         local size = 10 -- размер квадрата
         local padding = 0 -- отступ от краёв окна
-    end 
 
-    if send_mark then
-        local x1 = win_x -4
-        local y1 = win_y + win_h - size -28
+        local x1 = win_x + win_w/6 - size
+        local y1 = win_y - size/3
         local x2 = x1 + size
         local y2 = y1 + size
         reaper.ImGui_DrawList_AddRectFilled(draw_list, x1, y1, x2, y2, rgba(111, 161, 194, 1))
     end
 
-    if num2 == 0 then num2 = '' end
-    reaper.ImGui_TextColored(ctx, rgba(220, 220, 220, 1), num1)
-    reaper.ImGui_SameLine(ctx)
-    if num1_lanes_found then 
-        reaper.ImGui_TextColored(ctx, rgba(180, 180, 180, 1), num3)
-        reaper.ImGui_SameLine(ctx)
-    end
-    reaper.ImGui_TextColored(ctx, rgba(180, 180, 180, 1), num2)
-    if num2_lanes_found then 
-        reaper.ImGui_TextColored(ctx, rgba(180, 180, 180, 1), num4)
-        reaper.ImGui_SameLine(ctx)
-    end
-
     if receive_mark then 
-        local x1 = win_x -4
-        local y1 = win_y + win_h  -18
+        local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+        local win_x, win_y = reaper.ImGui_GetWindowPos(ctx)
+        local win_w, win_h = reaper.ImGui_GetWindowSize(ctx)
+        local size = 10 -- размер квадрата
+        local padding = 0 -- отступ от краёв окна
+
+        local x1 = win_x + win_w/6 - size +18
+        local y1 = win_y - size/3 
         local x2 = x1 + size
         local y2 = y1 + size
         reaper.ImGui_DrawList_AddRectFilled(draw_list, x1, y1, x2, y2, rgba(194, 134, 111, 1))
     end
 
-    local num1_str = tostring(num1)
-    local num2_str = tostring(num2)
-    local num3_str = tostring(num3)
-    local num4_str = tostring(num4)
+    -- local dummy_name = 10
+    -- reaper.ImGui_TextColored(ctx, col(color,1), track_name)
+    -- reaper.ImGui_SameLine(ctx)
+    --     reaper.ImGui_Dummy(ctx, dummy_name, 1 )
+    -- reaper.ImGui_SameLine(ctx)
+
+
+    reaper.ImGui_TextColored(ctx, rgba(220, 220, 220, 1), num1)
+    reaper.ImGui_SameLine(ctx)
+    local dummy_spacing1 = 10  -- после num1
+
+    if 1 then 
+        reaper.ImGui_TextColored(ctx, rgba(120, 120, 120, 1), '('..num2..')')
+        reaper.ImGui_SameLine(ctx)
+    end
+
+    if num3 ~= '' then 
+        dummy_spacing1 = 10  -- между группами
+        reaper.ImGui_Dummy(ctx, dummy_spacing1, 1 )
+        reaper.ImGui_SameLine(ctx)
+    end 
+
+    reaper.ImGui_TextColored(ctx, rgba(180, 180, 180, 1), num3)
+    if 1 then 
+        reaper.ImGui_SameLine(ctx)
+        reaper.ImGui_TextColored(ctx, rgba(120, 120, 120, 1), '('..num4..')')
+    end
+    
+    reaper.ImGui_PopStyleVar( ctx, 1 )
+
+    local num1_str = tostring(num1 or "")
+    local num2_str = '('..tostring(num3)..')'
+    local num3_str = tostring(num2 or "")
+    local num4_str = '('..tostring(num4)..')'
+
     local width1, height1 = reaper.ImGui_CalcTextSize(ctx, num1_str)
     local width2, height2 = reaper.ImGui_CalcTextSize(ctx, num2_str)
-    local width3, height3 = reaper.ImGui_CalcTextSize(ctx, num2_str)
-    local width4, height4 = reaper.ImGui_CalcTextSize(ctx, num2_str)
+    local width3, height3 = reaper.ImGui_CalcTextSize(ctx, num3_str)
+    local width4, height4 = reaper.ImGui_CalcTextSize(ctx, num4_str)
+    local width_name, height_name = reaper.ImGui_CalcTextSize(ctx, track_name)
 
+    
     local spacing_x, spacing_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
-    total_width = width1 + spacing_x + width2 + width3 + spacing_x + width4 + 25  -- с запасом
-    total_height = height1 + 16 -- с запасом  
+    total_width =
+    width1 +
+    width2 +
+    dummy_spacing1 +
+    width3 +
+    width4 +
+    spacing_x * 4 
+    -10           
+    
+    total_height = height1 + 16 
 end 
 
 function loop()
+    
     reaper.ImGui_PushFont(ctx, nil, font_size)
 
     reaper.ImGui_PushStyleVar  (ctx,  reaper.ImGui_StyleVar_WindowTitleAlign(),  0.5, 0.5)
@@ -241,7 +278,7 @@ function loop()
     reaper.ImGui_SetNextWindowSize(ctx, total_width, total_height, reaper.ImGui_Cond_Always())
 
 
-    local visible, open = reaper.ImGui_Begin(ctx, 'Item Counter', true,  window_flags)
+    local visible, open = reaper.ImGui_Begin(ctx, 'ReaReaRea', true,  window_flags)
     if visible then
         frame()
         reaper.ImGui_End(ctx)
@@ -252,8 +289,6 @@ function loop()
     
     if open then
         reaper.defer(loop)
-    else
-        reaper.ImGui_DestroyContext(ctx)
     end
 
 end
