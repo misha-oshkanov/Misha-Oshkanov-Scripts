@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="03d22f6729b08f62d9022365431bfd772caa5c6f">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="0e16b535c32bdffd555d5a3557bbfa178a26c7f4">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -153,6 +153,9 @@
       </metadata>
       <version name="1.0" author="Misha Oshkanov" time="2025-07-03T09:33:46Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ba5117c4b8b4e149da3ae1ee6e0985f77139af36/ReaScripts/Rendering/misha%20-%20Create%20master%20fade-in%20and%20fade-out%20from%20regions.lua</source>
+      </version>
+      <version name="1.1" author="Misha Oshkanov" time="2025-08-25T10:44:02Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/0e16b535c32bdffd555d5a3557bbfa178a26c7f4/ReaScripts/Rendering/misha%20-%20Create%20master%20fade-in%20and%20fade-out%20from%20regions.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Dimmer Trim - Turn off.lua" type="script" desc="Dimmer Trim - Turn off">
