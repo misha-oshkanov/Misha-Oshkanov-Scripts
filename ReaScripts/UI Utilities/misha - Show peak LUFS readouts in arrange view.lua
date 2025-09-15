@@ -1,6 +1,6 @@
 -- @description Show master peak lufs readouts in arrange view
 -- @author Misha Oshkanov
--- @version 1.4
+-- @version 1.5
 -- @about
 --  Shows little text readout for master lufs and peak meters
 --  Right click toggle to selected track meter readouts. Track mode adds rectangle around the text
@@ -15,7 +15,7 @@ only_master = true
 font_size = 24
 
 offset_x = 54
-offset_y = 55
+offset_y = 55 
 
 window_w = 150
 h = 10
@@ -83,18 +83,20 @@ ch1_peak_dB = -150
 ch2_peak_dB = -150
 
 function get_bounds(hwnd)
-    local _, left, top, right, bottom = reaper.JS_Window_GetRect(hwnd)
-    -- Check voor MacOS
-    if reaper.GetOS():match("^OSX") then
-        local screen_height = reaper.ImGui_GetMainViewport(ctx).WorkSize.y
-        top = screen_height - bottom
-        bottom = screen_height - top
-    end
-    -- return left, top, right-left, bottom-top
-    return left, top, right, bottom
-
     -- local _, left, top, right, bottom = reaper.JS_Window_GetRect(hwnd)
-    -- x, y = reaper.ImGui_PointConvertNative(ctx, x, y, false)
+    -- -- Check voor MacOS
+    -- if reaper.GetOS():match("^OSX") then
+    --     local screen_height = reaper.ImGui_GetMainViewport(ctx).WorkSize.y
+    --     top = screen_height - bottom
+    --     bottom = screen_height - top
+    -- end
+    -- -- return left, top, right-left, bottom-top
+    -- return left, top, right, bottom
+
+    local _, l, t, r, b = reaper.JS_Window_GetRect(hwnd)
+    l, t = reaper.ImGui_PointConvertNative(ctx, l, t, false)
+    r, b = reaper.ImGui_PointConvertNative(ctx, r, b, false)
+    return l,t,r,b
 end
   
 
@@ -215,6 +217,7 @@ function frame()
         end
     end
 
+
     clicked = reaper.ImGui_IsItemClicked(ctx, reaper.ImGui_ButtonFlags_MouseButtonLeft())
     if clicked then 
         track_mode = not track_mode
@@ -266,16 +269,14 @@ function loop()
 
     -- retval, left, top, right, bottom = reaper.JS_Window_GetClientRect( mainHWND )
     -- retval, ar_left, ar_top, ar_right, ar_bottom = reaper.JS_Window_GetClientRect(windowHWND)
+    dpi = reaper.ImGui_GetWindowDpiScale(ctx)
     
     reaper.ImGui_SetNextWindowSize(ctx, 70, 70,  reaper.ImGui_Cond_Always())
     
     mainHWND = reaper.GetMainHwnd()
     windowHWND = reaper.JS_Window_FindChildByID(mainHWND, 1000)
     left, top, right, bottom = get_bounds(windowHWND)
-
-
-
-    -- x, y = reaper.ImGui_PointConvertNative(ctx, x, y, false)
+    -- left, top, right, bottom= reaper.JS_Window_GetViewportFromRect(0, 0, 0, 0, false )
 
     if not floating_window then 
             reaper.ImGui_SetNextWindowPos(ctx, right-offset_x, bottom-offset_y, condIn, 0.5, 0.5)
@@ -303,5 +304,4 @@ function loop()
     end
 
 end
-
 loop()
