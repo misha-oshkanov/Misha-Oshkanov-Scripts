@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="6cc0aaaec54bfab03b3c85533e09219df684f385">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="37f8e67590c39844a25579a488c432d3fe9ac025">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -18,6 +18,150 @@
       </version>
       <version name="1.3" author="Liteon" time="2025-07-03T09:33:46Z">
         <source>https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ba5117c4b8b4e149da3ae1ee6e0985f77139af36/Effects/Monitor%20Controller%20Trim.jsfx</source>
+      </version>
+    </reapack>
+  </category>
+  <category name="ReaScripts/Arrange">
+    <reapack name="misha - adjust grid (mousewheel).lua" type="script" desc="Change grid in arrange view with mousewheel">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Change grid in arrange view with mousewheel\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="misha" time="2026-01-12T19:37:43Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/37f8e67590c39844a25579a488c432d3fe9ac025/ReaScripts/Arrange/misha%20-%20adjust%20grid%20(mousewheel).lua</source>
+      </version>
+    </reapack>
+  </category>
+  <category name="ReaScripts/MIDI Editor">
+    <reapack name="misha - adjust grid or nudge selected notes (mousewheel).lua" type="script" desc="Change grid in midi view with mousewheel or change notes pitch if selected">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Change grid in midi view with mousewheel or change notes pitch if selected\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="misha" time="2026-01-12T19:37:43Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/37f8e67590c39844a25579a488c432d3fe9ac025/ReaScripts/MIDI%20Editor/misha%20-%20adjust%20grid%20or%20nudge%20selected%20notes%20(mousewheel).lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - adjust velocity note (mousewheel).lua" type="script" desc="Adjust midi notes of selected notes with mousewheel">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Adjust midi notes of selected notes with mousewheel\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="mpl, misha" time="2026-01-12T19:37:43Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/37f8e67590c39844a25579a488c432d3fe9ac025/ReaScripts/MIDI%20Editor/misha%20-%20adjust%20velocity%20note%20(mousewheel).lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - change note length (mousewheel).lua" type="script" desc="Adjust note lenght with mousewheel">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Adjust note lenght with mousewheel\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="misha" time="2026-01-12T19:37:43Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/37f8e67590c39844a25579a488c432d3fe9ac025/ReaScripts/MIDI%20Editor/misha%20-%20change%20note%20length%20(mousewheel).lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - change note length by grid (mousewheel).lua" type="script" desc="Adjust note lenght by grid with mousewheel">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Adjust note lenght by grid with mousewheel\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="misha" time="2026-01-12T19:37:43Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/37f8e67590c39844a25579a488c432d3fe9ac025/ReaScripts/MIDI%20Editor/misha%20-%20change%20note%20length%20by%20grid%20(mousewheel).lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - nudge selected notes a bit (mousewheel).lua" type="script" desc="Nudge selected notes a bit with mousewheel">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Nudge selected notes a bit with mousewheel\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="misha" time="2026-01-12T19:37:43Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/37f8e67590c39844a25579a488c432d3fe9ac025/ReaScripts/MIDI%20Editor/misha%20-%20nudge%20selected%20notes%20a%20bit%20(mousewheel).lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - select all midi items in project at edit cursor.lua" type="script" desc="Select all midi items in project at edit cursor">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Select all midi items in project at edit cursor\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="misha" time="2026-01-12T19:37:43Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/37f8e67590c39844a25579a488c432d3fe9ac025/ReaScripts/MIDI%20Editor/misha%20-%20select%20all%20midi%20items%20in%20project%20at%20edit%20cursor.lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - split notes at mouse (MIDI) - no snap.lua" type="script" desc="Split notes at mouse cursor in selected takes (no snap)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Split notes at mouse cursor in selected takes\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="misha" time="2026-01-12T19:37:43Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/37f8e67590c39844a25579a488c432d3fe9ac025/ReaScripts/MIDI%20Editor/misha%20-%20split%20notes%20at%20mouse%20(MIDI)%20-%20no%20snap.lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - split notes at mouse (MIDI).lua" type="script" desc="Split notes at mouse cursor in selected takes">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Split notes at mouse cursor in selected takes\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="misha" time="2026-01-12T19:37:43Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/37f8e67590c39844a25579a488c432d3fe9ac025/ReaScripts/MIDI%20Editor/misha%20-%20split%20notes%20at%20mouse%20(MIDI).lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - zoom vertically or transpose selected notes.lua" type="script" desc="Zoom vertically or transpose selected notes with mousewheel">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Nudge selected notes a bit with mousewheel\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="misha" time="2026-01-12T19:37:43Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/37f8e67590c39844a25579a488c432d3fe9ac025/ReaScripts/MIDI%20Editor/misha%20-%20zoom%20vertically%20or%20transpose%20selected%20notes.lua</source>
       </version>
     </reapack>
   </category>
