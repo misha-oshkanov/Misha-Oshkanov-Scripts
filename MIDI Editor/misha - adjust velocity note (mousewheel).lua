@@ -1,7 +1,6 @@
 -- @description Adjust midi notes of selected notes with mousewheel
 -- @author mpl, misha
 -- @version 1.0
--- @provides [midi_editor]
 -- @about Adjust midi notes of selected notes with mousewheel
 
 

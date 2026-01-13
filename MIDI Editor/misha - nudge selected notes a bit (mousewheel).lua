@@ -1,7 +1,6 @@
 -- @description Nudge selected notes a bit with mousewheel
 -- @author misha
 -- @version 1.0
--- @provides [midi_editor]
 -- @about Nudge selected notes a bit with mousewheel
 
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end

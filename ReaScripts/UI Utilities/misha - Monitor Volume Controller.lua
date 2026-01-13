@@ -1,6 +1,6 @@
 -- @description Monitor Volume Controller
 -- @author Misha Oshkanov
--- @version 3.2_1
+-- @version 3.3
 -- @about
 --  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. 
 --  If you need more levels or change db values you can edit buttons table.
@@ -9,17 +9,21 @@
 ------------------------------------- SETTINGS ----------------------------------------
 
 USE_LISTEN_BANDS = false -- mode by default
-USE_REFS = true
 REF_FOLDER_NAME = 'Refs'
 
 USE_METRICAB = true
 USE_METRICAB_SWITCH = false
 USE_METRIC_IN_MONITORINGFX = true
 
+USE_CORRECTON = true
+USE_REFS = true
+USE_REFS_SWITCH = true
+
 floating_window = true -- use floating window to freely place the panel
 POS = 'TOP' -- 'BOTTOM' -- position presets if floating window is false
 
 METRIC_AB = 'ADPTR MetricAB'
+CORRECTION_CONTAINER_NAME = "Corrections"
 
 buttons = {-32,-24, -14, -8, -4, 0, 4, 12, 18, 24} -- presets in dB
 
@@ -36,10 +40,12 @@ listen_buttons = {
   {str = 'Free', l = 20,    h = 20000,col = {161,145,99,0.7}},
 }
 
+correction_buttons = {}
+
 move_x = 10 -- move panel in x coordinate if floating window is false
 move_y = 20 -- move panel in y coordinate
 
-panel_w = 400 -- PANEL SIZE
+panel_w = 340 -- PANEL SIZE
 button_h = 24 -- height default - 24
 
 listen_button_h = 24
@@ -71,12 +77,12 @@ local is_windows = os:match('Win')
 local is_macos = os:match('OSX') or os:match('macOS')
 local is_linux = os:match('Other')
 
-local font_size1 = 14
+local font_size1 = 15
 local font_size2 = 14
 
 -- dofile(reaper.GetResourcePath() .. '/Scripts/ReaTeam Extensions/API/imgui.lua')('0.6')
 local ctx = reaper.ImGui_CreateContext('Show/Hide')
-local font = reaper.ImGui_CreateFont('sans-serif', 0)
+font = reaper.ImGui_CreateFont('arial', 0)
 -- local font2 = reaper.ImGui_CreateFont('sans-serif', 14)
 
 -- reaper.ImGui_AttachFont(ctx, font)
@@ -90,10 +96,15 @@ max_hz = 20000
 width = 2
 controller_fx = 'Monitor Volume Controller'
 listen_state = false
+correction = false
 
 base_freq_ext  = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'BASE_FREQ'))
 base_width_ext = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'BASE_WIDTH'))
 base_slope_ext = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'BASE_SLOPE'))
+ext_folder_name = reaper.GetExtState( 'MISHA_MONITOR', 'REF_FOLDER')
+if ext_folder_name ~= REF_FOLDER_NAME then 
+  reaper.SetExtState( 'MISHA_MONITOR', 'REF_FOLDER', REF_FOLDER_NAME, true)
+end
 
 if base_width_ext == nil then base_width_ext = 2 end
 
@@ -138,6 +149,13 @@ function draw_color(color,px)
     max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
     draw_list = reaper.ImGui_GetWindowDrawList(ctx)
     reaper.ImGui_DrawList_AddRect( draw_list, min_x, min_y, max_x, max_y,  color,0,0,px)
+end
+
+function draw_text(text,color,x_offset,y_offset)
+    min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
+    max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
+    draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+    reaper.ImGui_DrawList_AddText(draw_list, min_x+x_offset, max_y+y_offset, color, text)
 end
 
 function get_state(master)
@@ -260,14 +278,85 @@ function draw_volume_buttons(master)
   if free_mode then free_mode = false end
 
   if reaper.ImGui_IsMouseClicked( ctx, reaper.ImGui_MouseButton_Right() ) then 
-    USE_LISTEN_BANDS = not USE_LISTEN_BANDS 
+    if USE_CORRECTON then 
+      if not USE_LISTEN_BANDS and not correction then
+        correction = true 
+      end 
+    else
+      USE_LISTEN_BANDS = not USE_LISTEN_BANDS 
+    end
   end
 end 
+
+function set_correction(master, name, state)
+  local fx = reaper.TrackFX_AddByName(master, CORRECTION_CONTAINER_NAME, true, 0)
+  local _, container_count = reaper.TrackFX_GetNamedConfigParm(master, fx+(0x1000000), "container_count" )
+  for i=0,container_count-1 do
+    local _, item = reaper.TrackFX_GetNamedConfigParm(master, fx+(0x1000000), "container_item."..i)
+    local _, fxname = reaper.TrackFX_GetFXName(master, item)
+    local enabled = reaper.TrackFX_GetEnabled(master, item)
+    if fxname == name then 
+      reaper.TrackFX_SetEnabled(master, item, state)
+    else
+      reaper.TrackFX_SetEnabled(master, item, not state)
+    end
+  end
+end
+
+function draw_correction_buttons(master)
+  local fx = reaper.TrackFX_AddByName(master, CORRECTION_CONTAINER_NAME, true, 0)
+  if fx ~= -1 then 
+    local _, container_count = reaper.TrackFX_GetNamedConfigParm(master, fx+(0x1000000), "container_count" )
+
+    correction_button_w = (panel_w/(container_count))-2
+
+    for i=0,container_count-1 do
+      local _, item = reaper.TrackFX_GetNamedConfigParm(master, fx+(0x1000000), "container_item."..i)
+      local enabled = reaper.TrackFX_GetEnabled(master, item)
+      local _, fxname = reaper.TrackFX_GetFXName(master, item)
+      ImGui.PushID(ctx, i)
+
+      if enabled then 
+          ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive(),   rgba(195,145,105,0.9))
+          ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered(),  rgba(195,145,105,0.8))
+          ImGui.PushStyleColor(ctx, ImGui.Col_Button(),         rgba(211,161,85,0.6))
+          ImGui.PushStyleColor(ctx, ImGui.Col_Text(),           rgba(224,224,224,1))
+      else 
+          ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive(),   rgba(195,105,105,0.2))
+          ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered(),  rgba(195,105,105,0.4))
+          ImGui.PushStyleColor(ctx, ImGui.Col_Text(),           rgba(240,240,240,1))
+          ImGui.PushStyleColor(ctx, ImGui.Col_Button(),         rgba(110,90,90,0.8))
+      end
+
+      correction_button = ImGui.Button(ctx, fxname, correction_button_w, listen_button_h)
+
+      if correction_button then 
+        set_correction(master, fxname, true)
+        correction = false 
+        USE_LISTEN_BANDS = false
+      end 
+
+      if reaper.ImGui_IsMouseClicked( ctx, reaper.ImGui_MouseButton_Right() ) then 
+        correction = false 
+        USE_LISTEN_BANDS = true
+      end 
+
+      reaper.ImGui_SameLine(ctx)
+
+
+      ImGui.PopStyleColor(ctx, 4)
+      ImGui.PopID(ctx)
+    end
+  else 
+    correction = false 
+    USE_LISTEN_BANDS = true
+  end
+end
 
 function draw_listen_buttons(master)
   for i2,lb in ipairs(listen_buttons) do
     ImGui.PushID(ctx, i)
-    ImGui.PushFont(ctx, nil, font_size2)
+    ImGui.PushFont(ctx, font2, font_size2)
 
     listen_low, listen_high = get_listen_freq(master)
     listen_state = get_listen_state(master)
@@ -341,6 +430,15 @@ function draw_listen_buttons(master)
     ab_hovered = reaper.ImGui_IsItemHovered(ctx)
   end
 
+  if USE_REFS_SWITCH then 
+    ImGui.SameLine(ctx) 
+    ref_button = ImGui.Button(ctx, 'Refs', listen_button_w, listen_button_h)
+
+    if ref_button then 
+      USE_REFS = not USE_REFS
+    end
+  end
+
   if reaper.ImGui_IsMouseClicked( ctx, reaper.ImGui_MouseButton_Right() ) then 
     if ab_hovered then 
       local index = reaper.TrackFX_AddByName(master, METRIC_AB, USE_METRIC_IN_MONITORINGFX, 0)
@@ -352,6 +450,25 @@ function draw_listen_buttons(master)
   end
 end 
 
+function solo_children(parent,state)
+  if parent then 
+      local parentdepth = reaper.GetTrackDepth(parent)
+      local parentnumber = reaper.GetMediaTrackInfo_Value(parent, "IP_TRACKNUMBER")
+      local children = {}
+      for i=parentnumber, reaper.CountTracks(0)-1 do
+        local track = reaper.GetTrack(0,i)
+        local depth = reaper.GetTrackDepth(track)
+        local solo = reaper.GetMediaTrackInfo_Value(track, 'I_SOLO') ~= 0
+
+        if depth > parentdepth then
+          reaper.SetMediaTrackInfo_Value(track, "I_SOLO", state == true and 2 or 0)
+        else
+          break
+        end
+      end
+    end
+end
+
 function get_children_refs(parent)
     if parent then 
       local parentdepth = reaper.GetTrackDepth(parent)
@@ -359,21 +476,31 @@ function get_children_refs(parent)
       local children = {}
       for i=parentnumber, reaper.CountTracks(0)-1 do
         local data = {}
+        donotmute = false
         local track = reaper.GetTrack(0,i)
         local depth = reaper.GetTrackDepth(track)
         local color = reaper.GetTrackColor(track)
         local solo = reaper.GetMediaTrackInfo_Value(track, 'I_SOLO') ~= 0
         local mute = reaper.GetMediaTrackInfo_Value(track, 'B_MUTE')
-
         local _, name = reaper.GetTrackName(track)
+        local is_folder = reaper.GetMediaTrackInfo_Value(track, "I_FOLDERDEPTH" ) == 1
+        if is_folder and reaper.CountTrackMediaItems(track) == 0 then 
+          donotmute = true
+          name = name ..' (folder)'
+        end
 
         data.track = track
         data.color = color 
         data.solo = solo 
-        data.name = name 
+        data.name = name
+        data.donotmute = donotmute
         
         if depth > parentdepth then
+          if donotmute then 
+            if mute == 1 then reaper.SetMediaTrackInfo_Value(track, 'B_MUTE', 0) end
+          else
             if mute == 0 then reaper.SetMediaTrackInfo_Value(track, 'B_MUTE', 1) end
+          end
             table.insert(children, data)
         else
             break
@@ -382,8 +509,6 @@ function get_children_refs(parent)
       return children
     end
 end
-    
-
 
 ref_data = {}
 solos = {}
@@ -418,7 +543,18 @@ function save_solos()
       end 
     end
   end 
+  write_solos_to_ext()
 end 
+
+function write_solos_to_ext()
+  local parts = {}
+  for i, v in ipairs(solos) do
+    local guid = reaper.GetTrackGUID(v.track)
+    parts[#parts+1] = string.format("%d:%s:%.1f", i, guid, v.solo)
+  end
+  local str = table.concat(parts, "|")
+  reaper.SetProjExtState(0, "MISHA_MONITOR", "SOLOS", str)
+end
 
 function unsolo_all_tracks()
   local count = reaper.CountTracks(0)
@@ -433,13 +569,16 @@ end
 
 function restore_solos()
   unsolo_all_tracks()
-  -- print(#solos)
   if #solos < 0 then return end  
   for k,v in ipairs(solos) do 
       reaper.SetMediaTrackInfo_Value(v.track, 'I_SOLO',v.solo)
   end
+  reaper.SetProjExtState(0, "MISHA_MONITOR", "SOLOS", "")
 end 
 
+function save_last_ref_solo(value)
+  reaper.SetProjExtState(0, 'MISHA_MONITOR', 'LAST_SOLO', value)
+end
 
 function draw_refs(master)
   local count = reaper.CountTracks(0)
@@ -448,6 +587,27 @@ function draw_refs(master)
     local _, name = reaper.GetTrackName(track)
     if name == REF_FOLDER_NAME then 
       local main_send = reaper.GetMediaTrackInfo_Value(track, 'B_MAINSEND') == 1
+      local ref_folder_mute = reaper.GetMediaTrackInfo_Value(track, 'B_MUTE') == 1
+      if ref_folder_mute then 
+        reaper.SetMediaTrackInfo_Value(track, "B_MUTE", 0)
+      end
+
+      local fx = reaper.TrackFX_AddByName(track, 'Loudness Meter', false, 1)
+      if reaper.GetPlayState() == 1 then 
+        local meter_lufs,  _, _ = reaper.TrackFX_GetParam(track, fx, 19) -- lufs s
+        if meter_lufs > -40 then
+          lufs_string = tostring(trunc(meter_lufs,1))
+        else
+        lufs_string = ''
+        end
+      else 
+        lufs_string = ''
+      end
+       
+      tw, th = reaper.ImGui_CalcTextSize(ctx, lufs_string, w, h)
+
+      if reaper.TrackFX_GetOpen(track, fx) then reaper.TrackFX_SetOpen(track, fx, false) end
+
       if main_send then 
         reaper.CreateTrackSend(track, 'NULL')
         reaper.SetMediaTrackInfo_Value(track, 'B_MAINSEND', 0 )
@@ -457,38 +617,61 @@ function draw_refs(master)
     end 
   end
 
-
   if ref_data == nil then return end 
   for k,ref in ipairs(ref_data) do 
+    children_solo = false
     reaper.ImGui_PushID(ctx, k)
 
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_Button(),        col(ref.color,0.3))
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_ButtonHovered(), col(ref.color,0.5))
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_ButtonActive(),  col(ref.color,0.5))
 
+    rc = rgba(255, 255, 255, 1)
+    
     button = reaper.ImGui_Button(ctx, ref.name, panel_w-2, 26)
     -- reaper.ImGui_SameLine(ctx,1,1)
     -- b_solostate = reaper.ImGui_RadioButton(ctx, '', ref.solo)
 
     if button then 
+      local parent = reaper.GetParentTrack(ref.track)
+      for k2,ref2 in ipairs(ref_data) do 
+        if parent == ref2.track and ref2.solo and ref2.donotmute then
+          children_solo = true
+          break
+        end
+      end
       if ref.solo then
-        reaper.SetMediaTrackInfo_Value(ref.track, 'I_SOLO',0)
-        restore_solos()
+        if children_solo then 
+          reaper.SetMediaTrackInfo_Value(ref.track, 'I_SOLO',0)
+        else
+          if ref.donotmute and not children_solo then 
+            solo_children(ref.track,false)
+          end
+          restore_solos()
+        end 
+
       else 
+        save_last_ref_solo(reaper.GetTrackGUID(ref.track))
         save_solos()
         unsolo_all_tracks()
         reaper.SetMediaTrackInfo_Value(ref.track, 'I_SOLO',2)
+        if ref.donotmute then 
+          solo_children(ref.track,true)
+        end
+
       end
     end
-
+    
     if ref.solo then 
-        draw_color(rgba(229,201,112,1),1)
+      draw_color(rgba(229,201,112,1),1)
+      draw_text(lufs_string,rgba(244, 234, 123,1),8,-24)
     end 
 
     reaper.ImGui_PopStyleColor(ctx,3)
     reaper.ImGui_PopID(ctx)
   end 
 end
+
 
 function Main()
   master = reaper.GetMasterTrack()
@@ -501,7 +684,9 @@ function Main()
     -- if USE_REFS then 
     --   draw_refs()
     -- end
-  else 
+  elseif correction then 
+    draw_correction_buttons(master)
+  else  
     if ext > 0 then 
       reaper.SetExtState('MISHA_MONITOR', 'LISTEN', '0', true) 
       set_listen_state(master,0)
@@ -611,11 +796,13 @@ function get_bounds(hwnd)
   return left, top, right, bottom
 end
 
-
 function loop()  
     -- reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_WindowBg(),          rgba(36, 37, 38, 1))
     -- reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBg(),           rgba(28, 29, 30, 1))
     -- reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBgActive(),     rgba(68, 69, 70, 1))
+
+    pw, ph = reaper.ImGui_GetWindowSize(ctx)
+    px, py = reaper.ImGui_GetWindowPos(ctx)
   
     reaper.ImGui_PushStyleVar(ctx,    reaper.ImGui_StyleVar_WindowPadding(), 3,4) 
     reaper.ImGui_PushStyleVar(ctx,    reaper.ImGui_StyleVar_ItemSpacing(), 2,2) 
@@ -629,9 +816,12 @@ function loop()
 
     
     if USE_METRICAB_SWITCH then ab_swith = 1 else ab_swith = 0 end
+    if USE_REFS_SWITCH then ref_switch = 1 else ref_switch = 0 end
+
 
     button_w = (panel_w/#buttons)-2
-    listen_button_w = (panel_w/(#listen_buttons+ab_swith))-2
+    -- correction_button_w = (panel_w/(#listen_buttons+ab_swith))-2
+    listen_button_w = (panel_w/(#listen_buttons+ab_swith+ref_switch))-2
     if free_mode then free_offset = 25 else free_offset = 0 end
 
     -- scale = reaper.ImGui_GetWindowDpiScale(ctx)

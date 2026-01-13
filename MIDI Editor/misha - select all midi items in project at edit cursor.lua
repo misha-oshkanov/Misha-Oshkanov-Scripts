@@ -1,7 +1,6 @@
 -- @description Select all midi items in project at edit cursor
 -- @author misha
 -- @version 1.0
--- @provides [midi_editor]
 -- @about Select all midi items in project at edit cursor
 
 
