@@ -1,6 +1,7 @@
 -- @description Split notes at mouse cursor in selected takes
 -- @author misha
 -- @version 1.0
+-- @provides [midi_editor]
 -- @about Split notes at mouse cursor in selected takes
 ---------------------------------------------------------------------------
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end

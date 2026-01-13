@@ -1,6 +1,7 @@
 -- @description Change grid in midi view with mousewheel or change notes pitch if selected
 -- @author misha
 -- @version 1.0
+-- @provides [midi_editor]
 -- @about Change grid in midi view with mousewheel or change notes pitch if selected
 
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end

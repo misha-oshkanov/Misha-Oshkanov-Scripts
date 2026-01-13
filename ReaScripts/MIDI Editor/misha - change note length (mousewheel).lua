@@ -1,6 +1,7 @@
 -- @description Adjust note lenght with mousewheel
 -- @author misha
 -- @version 1.0
+-- @provides [midi_editor]
 -- @about Adjust note lenght with mousewheel
   
 

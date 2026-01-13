@@ -1,6 +1,7 @@
 -- @description Adjust note lenght by grid with mousewheel
 -- @author misha
 -- @version 1.0
+-- @provides [midi_editor]
 -- @about Adjust note lenght by grid with mousewheel
   
 
@@ -26,7 +27,6 @@ for i = 0, notes - 1 do
         -- reaper.MIDI_SetNote(cur_take,i,sel,mute,startppqpos+VAL,endppqpos+VAL,chan,pitch,vel,true)
     end
 end
-
 
 if found then 
     if wheel > 0 then 

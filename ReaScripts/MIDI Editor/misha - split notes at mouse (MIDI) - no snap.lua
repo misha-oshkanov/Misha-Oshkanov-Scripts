@@ -1,6 +1,7 @@
 -- @description Split notes at mouse cursor in selected takes (no snap)
 -- @author misha
 -- @version 1.0
+-- @provides [midi_editor]
 -- @about Split notes at mouse cursor in selected takes
 
 ---------------------------------------------------------------------------
@@ -83,9 +84,6 @@ function main()
   if segment == "piano" then return end
 
   local _, _, mouse_pitch, _, _, _ = reaper.BR_GetMouseCursorContext_MIDI()
-  -- local take = reaper.MIDIEditor_GetTake(editor)
-  
-  
   
   local mouse_time = reaper.BR_GetMouseCursorContext_Position()
   local mouse_pos
