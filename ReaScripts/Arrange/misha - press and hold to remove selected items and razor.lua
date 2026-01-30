@@ -1,6 +1,6 @@
 -- @description press key to remove selected items and razor
 -- @author Misha Oshkanov
--- @version 1.1
+-- @version 1.2
 -- @about
 --    It deletes all selected items and razor when you press and hold script key button
 --    Ruler, peaks and item names change color if script is active
@@ -108,11 +108,13 @@ selected_items = {}
 
 if UNSELECT_AT_START then 
   local count = reaper.CountMediaItems(0)
-  for i=0, count-1 do 
-    local item = reaper.GetMediaItem(0, i)
-    if reaper.IsMediaItemSelected(item) then table.insert(selected_items, item) end
+  if count > 0 then 
+    for i=0, count-1 do 
+      local item = reaper.GetMediaItem(0, i)
+      if reaper.IsMediaItemSelected(item) then table.insert(selected_items, item) end
+    end
+    reaper.SelectAllMediaItems(0, 0)
   end
-  reaper.SelectAllMediaItems(0, 0)
 end 
 
 if RAZOR_ON_RIGHT_MB then 
