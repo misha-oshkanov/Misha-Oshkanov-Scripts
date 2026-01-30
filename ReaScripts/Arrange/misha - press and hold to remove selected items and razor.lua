@@ -1,12 +1,13 @@
 -- @description press key to remove selected items and razor
 -- @author Misha Oshkanov
--- @version 1.5
+-- @version 1.6
 -- @about
 --    It deletes all selected items and razor when you press and hold script key button
 --    Ruler, peaks and item names change color if script is active
 --    you can swap right mouse buttom modifier when script is active
 -- @changelog
 --   # boolean to disable color change added
+--   # removed spare color variable
 
 CHANGE_COLOR = true -- apply color change
 color = "##4E1414" -- color
@@ -30,8 +31,6 @@ function print(...)
     if #values == 0 then values[1] = 'nil' end
     reaper.ShowConsoleMsg(table.concat(values, ' ') .. '\n')
 end
-
-color = "##4E1414" -- Ruler color
 
 theme_elements_by_modes = {
   {"col_tr1_bg", "col_tr2_bg", "selcol_tr1_bg", "selcol_tr2_bg", "ts_lane_bg" }, 
