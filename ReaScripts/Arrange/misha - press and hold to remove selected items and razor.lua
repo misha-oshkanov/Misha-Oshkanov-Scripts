@@ -1,6 +1,6 @@
 -- @description press key to remove selected items and razor
 -- @author Misha Oshkanov
--- @version 1.2
+-- @version 1.3
 -- @about
 --    It deletes all selected items and razor when you press and hold script key button
 --    Ruler, peaks and item names change color if script is active
@@ -8,10 +8,12 @@
 
 UNSELECT_AT_START = true -- script unselects all items during key press and selects it again after key release
 RAZOR_ON_RIGHT_MB = true -- script changes right mouse button modifier during key press for quick razor editing
-action = 'Add to razor edit area ignoring snap' -- name of action for right mouse button modifier 
+action = 'Add to razor edit area ignoring snap' -- name of altered action for right mouse button modifier 
 -- 'Add to razor edit area ignoring snap' by default
 -- 'Add to razor edit area' if you need snap
 
+MANUAL_RIGHT_MB_RESET = false -- very rarely script fails to reset mouse modifier (don't know why) but you can use this to make sure that it alway resets
+manual_action = 'Hand scroll' -- name of the defaul action for right mouse button modifier 
 -----------------------------------------------------------------
 -----------------------------------------------------------------
 function print(...)
@@ -84,11 +86,26 @@ function exit()
     for k, v in ipairs( theme_elements_mode ) do reaper.SetThemeColor( v, -1,  0) end
   end
 
-  if UNSELECT_AT_START then 
-    for k,item in ipairs(selected_items) do reaper.SetMediaItemSelected(item, 1) end
-  end
   if RAZOR_ON_RIGHT_MB then 
     reaper.SetMouseModifier('MM_CTX_ARRANGE_RMOUSE', 0, mouse_action)
+  end
+
+  if UNSELECT_AT_START then 
+    local count = reaper.CountMediaItems(0)
+    if count > 0 then 
+      for k,item2 in ipairs(selected_items) do 
+        for i=0, count-1 do 
+          local item = reaper.GetMediaItem(0, i)
+          if item == item2 then
+            reaper.SetMediaItemSelected(item, 1) 
+          end
+        end
+      end
+    end
+  end
+
+  if MANUAL_RIGHT_MB_RESET then 
+    reaper.SetMouseModifier('MM_CTX_ARRANGE_RMOUSE', 0, manual_action)
   end
 
   reaper.UpdateTimeline()
