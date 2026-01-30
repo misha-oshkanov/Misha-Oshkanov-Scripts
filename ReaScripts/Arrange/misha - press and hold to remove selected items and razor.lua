@@ -1,10 +1,12 @@
 -- @description press key to remove selected items and razor
 -- @author Misha Oshkanov
--- @version 1.3
+-- @version 1.4
 -- @about
 --    It deletes all selected items and razor when you press and hold script key button
 --    Ruler, peaks and item names change color if script is active
 --    you can swap right mouse buttom modifier when script is active
+-- @changelog
+--   # prevent edit cursor move on click
 
 UNSELECT_AT_START = true -- script unselects all items during key press and selects it again after key release
 RAZOR_ON_RIGHT_MB = true -- script changes right mouse button modifier during key press for quick razor editing
@@ -14,6 +16,9 @@ action = 'Add to razor edit area ignoring snap' -- name of altered action for ri
 
 MANUAL_RIGHT_MB_RESET = false -- very rarely script fails to reset mouse modifier (don't know why) but you can use this to make sure that it alway resets
 manual_action = 'Hand scroll' -- name of the defaul action for right mouse button modifier 
+
+MANUAL_LEFT_MB_RESET = false 
+manual_action_left = 'Select item and move edit cursor'
 -----------------------------------------------------------------
 -----------------------------------------------------------------
 function print(...)
@@ -30,6 +35,8 @@ theme_elements_by_modes = {
 }
 
 local mouse_action = nil
+local mouse_action_left = nil
+
 local start_time = reaper.time_precise()
 local key_state, KEY = reaper.JS_VKeys_GetState(start_time - 2), nil
 for i = 1, 255 do
@@ -107,7 +114,11 @@ function exit()
   if MANUAL_RIGHT_MB_RESET then 
     reaper.SetMouseModifier('MM_CTX_ARRANGE_RMOUSE', 0, manual_action)
   end
-
+  
+  reaper.SetMouseModifier('MM_CTX_ITEM_CLK', 0, mouse_action_left)
+  if MANUAL_LEFT_MB_RESET then 
+    reaper.SetMouseModifier('MM_CTX_ITEM_CLK', 0, manual_action_left)
+  end
   reaper.UpdateTimeline()
   reaper.UpdateArrange()
 end
@@ -133,6 +144,9 @@ if UNSELECT_AT_START then
     reaper.SelectAllMediaItems(0, 0)
   end
 end 
+
+mouse_action_left = reaper.GetMouseModifier('MM_CTX_ITEM_CLK', 0)
+reaper.SetMouseModifier('MM_CTX_ITEM_CLK', 0, '3 m')
 
 if RAZOR_ON_RIGHT_MB then 
   mouse_action = reaper.GetMouseModifier(  'MM_CTX_ARRANGE_RMOUSE', 0)
