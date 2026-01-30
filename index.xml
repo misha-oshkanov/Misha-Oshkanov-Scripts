@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="a06f05fb9538224865a121d7e41256d53ba3adcb">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="53c878c6d377d864a18e6675470f04728a4a199c">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -178,6 +178,64 @@
       </metadata>
       <version name="1.0" author="misha" time="2026-01-12T19:37:43Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/37f8e67590c39844a25579a488c432d3fe9ac025/ReaScripts/Arrange/misha%20-%20adjust%20grid%20(mousewheel).lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - cycle folder state or lane state.lua" type="script" desc="cycle folder state or lane state">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 cycle folder state or lane state\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="misha" time="2026-01-30T08:21:59Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/53c878c6d377d864a18e6675470f04728a4a199c/ReaScripts/Arrange/misha%20-%20cycle%20folder%20state%20or%20lane%20state.lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - press and hold to remove selected items and razor.lua" type="script" desc="press key to remove selected items and razor">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 It deletes all selected items and razor when you press and hold script key button Ruler, peaks and item names change color if script is active you can swap right mouse buttom modifier when script is active\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="Misha Oshkanov" time="2026-01-30T08:21:59Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/53c878c6d377d864a18e6675470f04728a4a199c/ReaScripts/Arrange/misha%20-%20press%20and%20hold%20to%20remove%20selected%20items%20and%20razor.lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - set project start to =START marker.lua" type="script" desc="Set project start to =START marker">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Set project start to =START marker\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="misha" time="2026-01-30T08:21:59Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/53c878c6d377d864a18e6675470f04728a4a199c/ReaScripts/Arrange/misha%20-%20set%20project%20start%20to%20=START%20marker.lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - smart duplicate.lua" type="script" desc="Reaper Blog Smart Duplicate MODDED">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel0 \b \fs36 Script request from Jon @ Reaper Blog\par}
+}
+]]></description>
+        <link rel="website">https://ko-fi.com/acendan_</link>
+      </metadata>
+      <version name="1.4" author="Aaron Cendan, misha" time="2026-01-30T08:21:59Z">
+        <changelog><![CDATA[# Update LuaUtils path with case sensitivity for Linux]]></changelog>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/53c878c6d377d864a18e6675470f04728a4a199c/ReaScripts/Arrange/misha%20-%20smart%20duplicate.lua</source>
       </version>
     </reapack>
   </category>
