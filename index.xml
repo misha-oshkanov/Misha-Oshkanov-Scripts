@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="1e115244cb7991724c49ccd42fec3ad887e85681">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="62dbdde32bbade8dc17f91fb0242ff007bdcc6c4">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -223,6 +223,11 @@
       <version name="1.5" author="Misha Oshkanov" time="2026-01-30T13:06:30Z">
         <changelog><![CDATA[# boolean to disable color change added]]></changelog>
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/1e115244cb7991724c49ccd42fec3ad887e85681/ReaScripts/Arrange/misha%20-%20press%20and%20hold%20to%20remove%20selected%20items%20and%20razor.lua</source>
+      </version>
+      <version name="1.6" author="Misha Oshkanov" time="2026-01-30T13:23:34Z">
+        <changelog><![CDATA[# boolean to disable color change added
+# removed spare color variable]]></changelog>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/62dbdde32bbade8dc17f91fb0242ff007bdcc6c4/ReaScripts/Arrange/misha%20-%20press%20and%20hold%20to%20remove%20selected%20items%20and%20razor.lua</source>
       </version>
     </reapack>
     <reapack name="misha - set project start to =START marker.lua" type="script" desc="Set project start to =START marker">
