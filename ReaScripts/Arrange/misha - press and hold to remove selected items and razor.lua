@@ -1,12 +1,15 @@
 -- @description press key to remove selected items and razor
 -- @author Misha Oshkanov
--- @version 1.4
+-- @version 1.5
 -- @about
 --    It deletes all selected items and razor when you press and hold script key button
 --    Ruler, peaks and item names change color if script is active
 --    you can swap right mouse buttom modifier when script is active
 -- @changelog
---   # prevent edit cursor move on click
+--   # boolean to disable color change added
+
+CHANGE_COLOR = true -- apply color change
+color = "##4E1414" -- color
 
 UNSELECT_AT_START = true -- script unselects all items during key press and selects it again after key release
 RAZOR_ON_RIGHT_MB = true -- script changes right mouse button modifier during key press for quick razor editing
@@ -89,8 +92,10 @@ end
 
 function exit()
 --   SetButtonState()
-  for i, theme_elements_mode in ipairs( theme_elements_by_modes ) do
-    for k, v in ipairs( theme_elements_mode ) do reaper.SetThemeColor( v, -1,  0) end
+  if CHANGE_COLOR then 
+    for i, theme_elements_mode in ipairs( theme_elements_by_modes ) do
+      for k, v in ipairs( theme_elements_mode ) do reaper.SetThemeColor( v, -1,  0) end
+    end
   end
 
   if RAZOR_ON_RIGHT_MB then 
@@ -153,8 +158,10 @@ if RAZOR_ON_RIGHT_MB then
   reaper.SetMouseModifier('MM_CTX_ARRANGE_RMOUSE', 0, action)
 end
 
-for i, v in ipairs(theme_elements_by_modes[1]) do
-  reaper.SetThemeColor(v, HexToInt(color),  0)
+if CHANGE_COLOR then 
+  for i, v in ipairs(theme_elements_by_modes[1]) do
+    reaper.SetThemeColor(v, HexToInt(color),  0)
+  end
 end
 
 reaper.UpdateTimeline()
