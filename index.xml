@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="8c72f26b43183c6371052e6bd685daf760d7dde2">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="a06f05fb9538224865a121d7e41256d53ba3adcb">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -146,6 +146,22 @@
       </metadata>
       <version name="1.0" author="misha" time="2026-01-13T14:24:22Z">
         <source main="midi_editor">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/8c72f26b43183c6371052e6bd685daf760d7dde2/MIDI%20Editor/misha%20-%20zoom%20vertically%20or%20transpose%20selected%20notes.lua</source>
+      </version>
+    </reapack>
+  </category>
+  <category name="ReaScripts">
+    <reapack name="misha - show last touched fx parameter or track envelope of element under mouse.lua" type="script" desc="Show last touched fx parameter or track envelope of element under mouse (volume, pan, width, send volume, fx wet)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Show last touched fx parameter or track envelope of element under mouse\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="Misha Oshkanov" time="2026-01-15T09:37:10Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/a06f05fb9538224865a121d7e41256d53ba3adcb/ReaScripts/misha%20-%20show%20last%20touched%20fx%20parameter%20or%20track%20envelope%20of%20element%20under%20mouse.lua</source>
       </version>
     </reapack>
   </category>
