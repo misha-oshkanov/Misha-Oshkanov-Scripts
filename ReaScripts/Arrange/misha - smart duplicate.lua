@@ -1,6 +1,6 @@
--- @description Reaper Blog Smart Duplicate MODDED
--- @author Aaron Cendan, misha
--- @version 1.4
+-- @description Reaper Blog Smart Duplicate
+-- @author Aaron Cendan
+-- @version 1.5
 -- @metapackage
 -- @provides
 --   [main] .
@@ -49,7 +49,7 @@ function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
 
 function main()
   local context = reaper.GetCursorContext()
-  
+
   -- TRACKS
   if context == 0 then
     if duplicate_tracks_alternating then
@@ -103,9 +103,25 @@ function main()
     end
   -- ENVELOPES
   elseif context == 2 then
+    local env = reaper.GetSelectedEnvelope(0)
+    if env and find_selected_ai(env) then 
+      reaper.Main_OnCommand(42085, 0) -- Envelope: Duplicate and pool automation items
+    end
     reaper.Main_OnCommand(41296, 0) -- Item: Duplicate selected area of items
 
     -- reaper.Main_OnCommand(42085, 0) -- Envelope: Duplicate and pool automation items
+  end
+end
+
+function find_selected_ai(env)
+  local count_ai = reaper.CountAutomationItems(env)
+  if count_ai > 0 then 
+    for i=0,count_ai-1 do 
+      is_ai_sel = reaper.GetSetAutomationItemInfo(env, i, 'D_UISEL', 0, false) == 1
+      if is_ai_sel then 
+        return true 
+      end
+    end
   end
 end
 
