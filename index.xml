@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="2fc7414a8f2b84a762ac25fa8f58ced4eb5b70b5">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="b6ddc8b8c852053483ef342000ce4ca652304588">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -242,6 +242,10 @@
       </metadata>
       <version name="1.0" author="misha" time="2026-02-05T17:46:50Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/2fc7414a8f2b84a762ac25fa8f58ced4eb5b70b5/ReaScripts/Arrange/misha%20-%20razor%20quantize.lua</source>
+      </version>
+      <version name="1.1" author="misha" time="2026-02-15T09:32:45Z">
+        <changelog><![CDATA[# fix track group offset]]></changelog>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/b6ddc8b8c852053483ef342000ce4ca652304588/ReaScripts/Arrange/misha%20-%20razor%20quantize.lua</source>
       </version>
     </reapack>
     <reapack name="misha - set project start to =START marker.lua" type="script" desc="Set project start to =START marker">
