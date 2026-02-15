@@ -1,8 +1,9 @@
 -- @description quantize audio transient to nearest grid in razor area
 -- @author misha
--- @version 1.0
+-- @version 1.1
 -- @about quantize audio transient to nearest grid in razor area
-
+-- @changelog
+--   # fix track group offset
 
 function print(...)
     local values = {...}
@@ -33,43 +34,77 @@ function table_contains(table, element)
     return false
 end
 
-function quantize(new_item,pos)
-    reaper.Main_OnCommand(40375, 0) -- move cursor to next transient 
-    local transient = reaper.GetCursorPosition()
-    startoffs = reaper.GetMediaItemTakeInfo_Value( reaper.GetActiveTake(new_item),  'D_STARTOFFS' )
-    if startoffs == nil then startoffs = 0 end
+local group_offsets = {} 
 
-    -- pos = rz.st
-    local grid_duration = 0
-    if reaper.GetToggleCommandState( 41885 ) == 1 then -- Toggle framerate grid
-        grid_duration = 0.4/reaper.TimeMap_curFrameRate( 0 )
-    else
-        local _, division = reaper.GetSetProjectGrid( 0, 0, 0, 0, 0 )
-        local tmsgn_cnt = reaper.CountTempoTimeSigMarkers( 0 )
-        local _, tempo
-        if tmsgn_cnt == 0 then
-            tempo = reaper.Master_GetTempo()
-        else
-            local active_tmsgn = reaper.FindTempoTimeSigMarker( 0, pos )
-            _, _, _, _, tempo = reaper.GetTempoTimeSigMarker( 0, active_tmsgn )
-        end
-        grid_duration = 60/tempo * division
-    end
+function get_track_group_offset(tr)
+    local lead1_32 = reaper.GetSetTrackGroupMembership(tr, "MEDIA_EDIT_LEAD", 0, 0)
+    local follow1_32 = reaper.GetSetTrackGroupMembership(tr, "MEDIA_EDIT_FOLLOW", 0, 0)
+    local lead33_64 = reaper.GetSetTrackGroupMembershipHigh(tr, "MEDIA_EDIT_LEAD", 0, 0)
+    local follow33_64 = reaper.GetSetTrackGroupMembershipHigh(tr, "MEDIA_EDIT_FOLLOW", 0, 0)
 
-    local snapped, grid = reaper.SnapToGrid(0, pos)
-    if snapped > pos then
-        grid = snapped
-    else
-        grid = pos
-        while (grid <= pos) do
-            pos = pos + grid_duration
-            grid = reaper.SnapToGrid(0, pos)
+    local mask1_32 = lead1_32 | follow1_32
+    local mask33_64 = lead33_64 | follow33_64
+
+    -- Проверяем 1-32
+    for i = 0, 31 do
+        if (mask1_32 & (1 << i)) ~= 0 then
+            local gid = i + 1
+            if group_offsets[gid] then return group_offsets[gid], gid end
+            return nil, gid
         end
     end
-    reaper.SetMediaItemTakeInfo_Value(reaper.GetActiveTake(new_item), 'D_STARTOFFS',  startoffs + (transient-grid) )
-    grid = 0
-    reaper.SelectAllMediaItems( 0, false )
+    -- Проверяем 33-64
+    for i = 0, 31 do
+        if (mask33_64 & (1 << i)) ~= 0 then
+            local gid = i + 33
+            if group_offsets[gid] then return group_offsets[gid], gid end
+            return nil, gid
+        end
+    end
+    return nil, nil
 end
+
+function quantize(new_item, pos, track)
+    local take = reaper.GetActiveTake(new_item)
+    if not take or reaper.TakeIsMIDI(take) then return end
+
+    local saved_offset, group_id = get_track_group_offset(track)
+    local final_offset = 0
+
+    if saved_offset then
+        final_offset = saved_offset
+    else
+        reaper.SetEditCurPos(pos, false, false)
+        reaper.SelectAllMediaItems(0, false)
+        reaper.SetMediaItemSelected(new_item, true)
+        
+        reaper.Main_OnCommand(40375, 0) -- move cursor to next transient 
+        local transient = reaper.GetCursorPosition()
+        
+        local _, division = reaper.GetSetProjectGrid(0, 0, 0, 0, 0)
+        local _, tempo = reaper.GetTempoTimeSigMarker(0, reaper.FindTempoTimeSigMarker(0, pos))
+        if tempo <= 0 then tempo = reaper.Master_GetTempo() end
+        local grid_duration = 
+
+60/tempo * division
+
+        local snapped, grid = reaper.SnapToGrid(0, pos)
+        if snapped <= pos then
+            grid = pos
+            while (grid <= pos) do pos = pos + grid_duration ; grid = reaper.SnapToGrid(0, pos) end
+        else
+            grid = snapped
+        end
+
+        final_offset = transient - grid
+        
+        if group_id then group_offsets[group_id] = final_offset end
+    end
+
+    local startoffs = reaper.GetMediaItemTakeInfo_Value(take, 'D_STARTOFFS')
+    reaper.SetMediaItemTakeInfo_Value(take, 'D_STARTOFFS', startoffs + final_offset)
+end
+
 
 local floor = math.floor
 
@@ -208,7 +243,8 @@ local function SplitAtEdges( RazorEdges, TracksWithEdges_cnt, Items )
             if current_edge % 2 == 1 then 
                 reaper.SetMediaItemSelected(new_item, true )
                 
-                quantize(new_item,RazorEdges[tr].lane[lane][current_edge])
+                -- quantize(new_item,RazorEdges[tr].lane[lane][current_edge])
+                quantize(new_item,RazorEdges[tr].lane[lane][current_edge], RazorEdges[tr].track)
             
                 -- print(new_item)     
             
@@ -223,44 +259,6 @@ local function SplitAtEdges( RazorEdges, TracksWithEdges_cnt, Items )
         it = it - 1
       end
 
-
-    -- reaper.Main_OnCommand(40375, 0) -- move cursor to next transient 
-    -- local transient = reaper.GetCursorPosition()
-    -- startoffs = reaper.GetMediaItemTakeInfo_Value( reaper.GetActiveTake(new_item),  'D_STARTOFFS' )
-    -- if startoffs == nil then startoffs = 0 end
-
-    -- pos = rz.st
-    -- local grid_duration = 0
-    -- if reaper.GetToggleCommandState( 41885 ) == 1 then -- Toggle framerate grid
-    --     grid_duration = 0.4/reaper.TimeMap_curFrameRate( 0 )
-    -- else
-    --     local _, division = reaper.GetSetProjectGrid( 0, 0, 0, 0, 0 )
-    --     local tmsgn_cnt = reaper.CountTempoTimeSigMarkers( 0 )
-    --     local _, tempo
-    --     if tmsgn_cnt == 0 then
-    --         tempo = reaper.Master_GetTempo()
-    --     else
-    --         local active_tmsgn = reaper.FindTempoTimeSigMarker( 0, pos )
-    --         _, _, _, _, tempo = reaper.GetTempoTimeSigMarker( 0, active_tmsgn )
-    --     end
-    --     grid_duration = 60/tempo * division
-    -- end
-
-    -- local snapped, grid = reaper.SnapToGrid(0, pos)
-    -- if snapped > pos then
-    --     grid = snapped
-    -- else
-    --     grid = pos
-    --     while (grid <= pos) do
-    --         pos = pos + grid_duration
-    --         grid = reaper.SnapToGrid(0, pos)
-    --     end
-    -- end
-    -- reaper.SetMediaItemTakeInfo_Value(reaper.GetActiveTake(new_item), 'D_STARTOFFS',  startoffs + (transient-grid) )
-    -- grid = 0
-
-
-
     end
     reaper.GetSetMediaTrackInfo_String(RazorEdges[tr].track, "P_RAZOREDITS", "", true)
   end
@@ -268,91 +266,12 @@ end
 
 -----------------------------------------------------------------------------------------
 
+
 reaper.Undo_BeginBlock()
 reaper.PreventUIRefresh( 1 )
+
 SplitAtEdges( RazorEdges, TracksWithEdges_cnt, Items )
+
 reaper.PreventUIRefresh( -1 )
 reaper.UpdateArrange()
-reaper.Undo_EndBlock( "Razor quantize", 1|4 )
-
--- local count_tracks = reaper.CountTracks(0)
--- if count_tracks == 0 then return end 
-
--- razors = {}
-
--- for i=0,count_tracks-1 do 
---     local track = reaper.GetTrack(0, i)
---     local retval, str = reaper.GetSetMediaTrackInfo_String(track, 'P_RAZOREDITS_EXT', '', false)
---     if area ~= "" then 
---         for block in str:gmatch("[^,]+") do
---             local rz = {}
---             local st, en, env, top, bot = block:match("(%S+)%s+(%S+)%s+(%S+)%s+(%S+)%s+(%S+)")
---             rz.track = track
---             rz.st = tonumber(st)
---             rz.en = tonumber(en) 
---             rz.top = tonumber(top) 
---             rz.bot = tonumber(bot)
---             rz.env = env 
---             table.insert(razors,rz)
---         end
---     end
--- end
-
--- printt(razors)
-
--- for i,rz in ipairs(razors) do
---     split_items = {}
---     local count_items = reaper.CountTrackMediaItems(rz.track)
---     -- print(count_items)
---     for it=0,count_items-1 do 
---         local item = reaper.GetTrackMediaItem(rz.track, it)
---         local item_start = reaper.GetMediaItemInfo_Value(item, 'D_POSITION')
---         local item_end = item_start + reaper.GetMediaItemInfo_Value(item, 'D_LENGTH')
---         -- if (rz.st > item_start and rz.st < item_end) or (rz.en > item_start and rz.en < item_end) then
---             -- if table_contains(split_items, item) then break end
---             -- new_item = reaper.SplitMediaItem(item, rz.st)
---             -- new_item = reaper.SplitMediaItem(new_item, rz.en)
---             -- table.insert( split_items,new_item )
---         -- end
---     end 
-
-    -- reaper.SetMediaItemSelected(new_item, true)
-
-
-    -- reaper.Main_OnCommand(40375, 0) -- move cursor to next transient 
-    -- local transient = reaper.GetCursorPosition()
-    -- startoffs = reaper.GetMediaItemTakeInfo_Value( reaper.GetActiveTake(new_item),  'D_STARTOFFS' )
-    -- if startoffs == nil then startoffs = 0 end
-
-    -- pos = rz.st
-    -- local grid_duration = 0
-    -- if reaper.GetToggleCommandState( 41885 ) == 1 then -- Toggle framerate grid
-    --     grid_duration = 0.4/reaper.TimeMap_curFrameRate( 0 )
-    -- else
-    --     local _, division = reaper.GetSetProjectGrid( 0, 0, 0, 0, 0 )
-    --     local tmsgn_cnt = reaper.CountTempoTimeSigMarkers( 0 )
-    --     local _, tempo
-    --     if tmsgn_cnt == 0 then
-    --         tempo = reaper.Master_GetTempo()
-    --     else
-    --         local active_tmsgn = reaper.FindTempoTimeSigMarker( 0, pos )
-    --         _, _, _, _, tempo = reaper.GetTempoTimeSigMarker( 0, active_tmsgn )
-    --     end
-    --     grid_duration = 60/tempo * division
-    -- end
-
-    -- local snapped, grid = reaper.SnapToGrid(0, pos)
-    -- if snapped > pos then
-    --     grid = snapped
-    -- else
-    --     grid = pos
-    --     while (grid <= pos) do
-    --         pos = pos + grid_duration
-    --         grid = reaper.SnapToGrid(0, pos)
-    --     end
-    -- end
-    -- reaper.SetMediaItemTakeInfo_Value(reaper.GetActiveTake(new_item), 'D_STARTOFFS',  startoffs + (transient-grid) )
-    -- grid = 0
--- end
--- reaper.Main_OnCommand(42406, 0)
--- reaper.UpdateArrange()
+reaper.Undo_EndBlock( "Razor quantize", -1)
