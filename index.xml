@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="b6ddc8b8c852053483ef342000ce4ca652304588">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="25fa4e8b529d22cf3b127facbfc3e1af69ad27c7">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -909,6 +909,20 @@
       </version>
       <version name="1.3" author="Misha Oshkanov" time="2025-08-07T15:41:07Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/59bae5bb25ea89ecedaf0f99f1f08eb92258a28a/ReaScripts/UI%20Utilities/misha%20-%20Sender.lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - Session Organizer.lua" type="script" desc="UI manager for session prepping">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Add target tracks by clicking "Add Selected Tracks" to your session Then type some kerwords Select some tracks and click "Organise" to move selected tracks to target track based by their names and keywords\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="Misha Oshkanov" time="2026-02-16T14:41:12Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/25fa4e8b529d22cf3b127facbfc3e1af69ad27c7/ReaScripts/UI%20Utilities/misha%20-%20Session%20Organizer.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Show peak LUFS readouts in arrange view.lua" type="script" desc="Show master peak lufs readouts in arrange view">
