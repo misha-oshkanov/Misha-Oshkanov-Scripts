@@ -1,12 +1,12 @@
 -- @description UI manager for session prepping
 -- @author Misha Oshkanov
--- @version 1.2
+-- @version 1.3
 -- @about
 --  Add target tracks by clicking "Add Selected Tracks" to your session
 --  Then type some kerwords
 --  Select some tracks and click "Organise" to move selected tracks to target track based by their names and keywords
 -- @changelog
---  new tooltips
+--  russian characters support
 
 function print(...)
     local values = {...}
@@ -131,72 +131,105 @@ load_data()
 -- Функция для обрезки пробелов
 function string.trim(s) return s:match("^%s*(.-)%s*$") end
 
+-- Функция для корректного перевода кириллицы в нижний регистр (UTF-8)
+local function utf8_lower_custom(str)
+    local upper = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
+    local lower = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
+    local res = str:lower() -- Латиницу обработает стандартно
+    
+    for i = 1, #upper/2 do -- В UTF-8 кириллица занимает 2 байта
+        local u_char = upper:sub(i*2-1, i*2)
+        local l_char = lower:sub(i*2-1, i*2)
+        res = res:gsub(u_char, l_char)
+    end
+    return res
+end
+
+-- Вспомогательная функция для проверки границ слова (UTF-8 safe)
+local function is_word_boundary(text, start_pos, end_pos)
+    local function is_alphanumeric(pos)
+        if pos < 1 or pos > #text then return false end
+        local char_code = text:byte(pos)
+        if not char_code then return false end
+        -- Латиница и Цифры
+        if (char_code >= 48 and char_code <= 57) or 
+           (char_code >= 65 and char_code <= 90) or 
+           (char_code >= 97 and char_code <= 122) then 
+            return true 
+        end
+        -- Все символы UTF-8 (выше 127) считаем буквами
+        if char_code > 127 then return true end
+        -- Символ подчеркивания '_'
+        if char_code == 95 then return true end 
+        return false
+    end
+    return not is_alphanumeric(start_pos - 1) and not is_alphanumeric(end_pos + 1)
+end
+
 local function organize_session()
     reaper.Undo_BeginBlock()
     
-    -- 1. Собираем все правила из таблицы в один плоский список
     local rules = {}
     for _, row in ipairs(session_data) do
         if reaper.ValidatePtr(row.parent_ptr, "MediaTrack*") then
             for kw in row.keywords:gmatch("([^,]+)") do
-                local clean_kw = kw:trim():lower()
-                if clean_kw ~= "" then
+                local clean_kw = kw:match("^%s*(.-)%s*$")
+                if clean_kw and clean_kw ~= "" then
                     table.insert(rules, {
-                        keyword = clean_kw,
+                        keyword = utf8_lower_custom(clean_kw),
                         parent = row.parent_ptr,
                         items_mode = row.items_mode,
-                        length = #clean_kw -- сохраняем длину для сортировки
+                        length = #clean_kw
                     })
                 end
             end
         end
     end
 
-    -- 2. Сортируем правила: самые длинные (точные) кейворды будут ПЕРВЫМИ
     table.sort(rules, function(a, b) return a.length > b.length end)
 
-    -- 3. Собираем выделенные треки
     local selected_tracks = {}
     for i = 0, reaper.CountSelectedTracks(0) - 1 do
         selected_tracks[i + 1] = reaper.GetSelectedTrack(0, i)
     end
 
-    -- 4. Проходим по трекам
     for _, tr in ipairs(selected_tracks) do
         if reaper.ValidatePtr(tr, "MediaTrack*") then
             local _, raw_name = reaper.GetTrackName(tr)
-            local tr_name = raw_name:lower():gsub("_", " ")
+            -- Приводим имя трека к нижнему регистру и меняем _ на пробел
+            local tr_name_norm = utf8_lower_custom(raw_name):gsub("_", " ")
             
-            -- Ищем ПЕРВОЕ совпадение из отсортированного списка правил
             for _, rule in ipairs(rules) do
                 if tr ~= rule.parent then
-                    local pattern = "%f[%w]" .. rule.keyword .. "%f[%W]"
-                    if tr_name:find(pattern) then
-                        
-                        -- ЕСЛИ НАШЛИ: выполняем действие и ПРЕКРЫВАЕМ поиск для этого трека
-                        if rule.items_mode then
-                            for j = reaper.CountTrackMediaItems(tr) - 1, 0, -1 do
-                                local item = reaper.GetTrackMediaItem(tr, j)
-                                reaper.MoveMediaItemToTrack(item, rule.parent)
+                    -- Поиск подстроки (plain = true)
+                    local start_pos, end_pos = tr_name_norm:find(rule.keyword, 1, true)
+                    
+                    if start_pos then
+                        if is_word_boundary(tr_name_norm, start_pos, end_pos) then
+                            if rule.items_mode then
+                                for j = reaper.CountTrackMediaItems(tr) - 1, 0, -1 do
+                                    local item = reaper.GetTrackMediaItem(tr, j)
+                                    reaper.MoveMediaItemToTrack(item, rule.parent)
+                                end
+                                reaper.DeleteTrack(tr)
+                            else
+                                reaper.Main_OnCommand(40297, 0)
+                                reaper.SetTrackSelected(tr, true)
+                                local p_idx = reaper.GetMediaTrackInfo_Value(rule.parent, "IP_TRACKNUMBER")
+                                reaper.ReorderSelectedTracks(p_idx, 1)
                             end
-                            reaper.DeleteTrack(tr)
-                        else
-                            reaper.Main_OnCommand(40297, 0)
-                            reaper.SetTrackSelected(tr, true)
-                            local parent_idx = reaper.GetMediaTrackInfo_Value(rule.parent, "IP_TRACKNUMBER")
-                            reaper.ReorderSelectedTracks(parent_idx, 1)
+                            break 
                         end
-                        
-                        break
                     end
                 end
             end
         end
     end
 
-    reaper.Undo_EndBlock("Organize Session (Smart Match)", -1)
+    reaper.Undo_EndBlock("Organize Session (Smart UTF8)", -1)
     reaper.TrackList_AdjustWindows(false)
 end
+
 
 local function loop()
     reaper.ImGui_PushFont(ctx, font, font_size)
