@@ -1,11 +1,12 @@
 -- @description UI manager for session prepping
 -- @author Misha Oshkanov
--- @version 1.0
+-- @version 1.1
 -- @about
 --  Add target tracks by clicking "Add Selected Tracks" to your session
 --  Then type some kerwords
 --  Select some tracks and click "Organise" to move selected tracks to target track based by their names and keywords
-
+-- @changelog
+-- much clewer keywork handling and track name detection
 
 function print(...)
     local values = {...}
@@ -55,34 +56,11 @@ function rgba(r, g, b, a)
     return r + g + b + a
 end
 
--- local function PushTrackStyles(track)
---     local col = reaper.GetTrackColor(track)
---     if col == 0 then return false end -- Если цвета нет, ничего не красим
-    
---     local r, g, b = reaper.ColorFromNative(col)
---     -- Конвертируем в RGBA (AA в конце — прозрачность)
---     local base_col = (r << 24) | (g << 16) | (b << 8) | 0x66 -- 0x66 (~40% прозрачности)
---     local hover_col = (r << 24) | (g << 16) | (b << 8) | 0x99 -- Для наведения
---     local active_col = (r << 24) | (g << 16) | (b << 8) | 0xBB -- Для клика
-
---     -- Красим фоны инпутов, чекбоксов и кнопок
---     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBg(), base_col)
---     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBgHovered(), hover_col)
---     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), 0x00000088)
---     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), hover_col)
---     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), active_col)
---     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_CheckMark(), 0xFFFFFFFF) -- Галочка белая
-    
---     return true
--- end
-
 local function PushTrackStyles()
-    -- Наш темно-серый цвет (0x333333) с хорошей плотностью (BB)
     local base_col  = 0x00000088 
-    local hover_col = 0x444444FF -- Чуть светлее при наведении
-    local active_col = 0x222222FF -- Совсем темный при клике
+    local hover_col = 0x444444FF 
+    local active_col = 0x222222FF 
 
-    -- Применяем ко всем элементам разом
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBg(),        base_col)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBgHovered(), hover_col)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),         base_col)
@@ -158,86 +136,72 @@ function string.trim(s) return s:match("^%s*(.-)%s*$") end
 local function organize_session()
     reaper.Undo_BeginBlock()
     
-    -- 1. Сначала сохраняем все текущие выделенные треки в таблицу
+    -- 1. Собираем все правила из таблицы в один плоский список
+    local rules = {}
+    for _, row in ipairs(session_data) do
+        if reaper.ValidatePtr(row.parent_ptr, "MediaTrack*") then
+            for kw in row.keywords:gmatch("([^,]+)") do
+                local clean_kw = kw:trim():lower()
+                if clean_kw ~= "" then
+                    table.insert(rules, {
+                        keyword = clean_kw,
+                        parent = row.parent_ptr,
+                        items_mode = row.items_mode,
+                        length = #clean_kw -- сохраняем длину для сортировки
+                    })
+                end
+            end
+        end
+    end
+
+    -- 2. Сортируем правила: самые длинные (точные) кейворды будут ПЕРВЫМИ
+    table.sort(rules, function(a, b) return a.length > b.length end)
+
+    -- 3. Собираем выделенные треки
     local selected_tracks = {}
     for i = 0, reaper.CountSelectedTracks(0) - 1 do
         selected_tracks[i + 1] = reaper.GetSelectedTrack(0, i)
     end
-    
-    for _, row in ipairs(session_data) do
-        if reaper.ValidatePtr(row.parent_ptr, "MediaTrack*") then
-            local keywords = {}
-            for kw in row.keywords:gmatch("([^,]+)") do 
-                table.insert(keywords, kw:trim():lower()) 
-            end
+
+    -- 4. Проходим по трекам
+    for _, tr in ipairs(selected_tracks) do
+        if reaper.ValidatePtr(tr, "MediaTrack*") then
+            local _, raw_name = reaper.GetTrackName(tr)
+            local tr_name = raw_name:lower():gsub("_", " ")
             
-            -- 2. Перебираем сохраненный список треков
-            for _, tr in ipairs(selected_tracks) do
-                -- Проверяем, что трек еще существует и это не сам родитель
-                if reaper.ValidatePtr(tr, "MediaTrack*") and tr ~= row.parent_ptr then
-                    local _, tr_name = reaper.GetTrackName(tr)
-                    tr_name = tr_name:lower()
-                    
-                    -- local is_match = false
-                    -- for _, kw in ipairs(keywords) do
-                    --     if kw ~= "" and tr_name:find(kw, 1, true) then 
-                    --         is_match = true 
-                    --         break 
-                    --     end
-                    -- end
-
-                    local is_match = false
-                    for _, kw in ipairs(keywords) do
-                        if kw ~= "" then
-                            -- Используем паттерн поиска "целого слова"
-                            -- %f[%a] - граница начала буквы, %f[%A] - граница конца буквы
-                            -- Если нужны и цифры, можно использовать более сложный паттерн:
-                            local pattern = "%f[%w]" .. kw:lower() .. "%f[%W]"
-                            if tr_name:find(pattern) then 
-                                is_match = true 
-                                break 
-                                
-                            -- Дополнительная проверка на случай, если в ключевом слове есть спецсимволы
-                            -- или если оно стоит в самом начале/конце с подчеркиванием
-                            elseif tr_name:find("[^%w]" .. kw:lower() .. "[^%w]") or
-                                tr_name:match("^" .. kw:lower() .. "[^%w]") or
-                                tr_name:match("[^%w]" .. kw:lower() .. "$") or
-                                tr_name == kw:lower() then
-                                is_match = true
-                                break
-                            end
-                        end
-                    end
-
-                    if is_match then
-                        if row.items_mode then
-                            -- Режим: Перемещаем только айтемы
+            -- Ищем ПЕРВОЕ совпадение из отсортированного списка правил
+            for _, rule in ipairs(rules) do
+                if tr ~= rule.parent then
+                    local pattern = "%f[%w]" .. rule.keyword .. "%f[%W]"
+                    if tr_name:find(pattern) then
+                        
+                        -- ЕСЛИ НАШЛИ: выполняем действие и ПРЕКРЫВАЕМ поиск для этого трека
+                        if rule.items_mode then
                             for j = reaper.CountTrackMediaItems(tr) - 1, 0, -1 do
                                 local item = reaper.GetTrackMediaItem(tr, j)
-                                reaper.MoveMediaItemToTrack(item, row.parent_ptr)
+                                reaper.MoveMediaItemToTrack(item, rule.parent)
                             end
+                            reaper.DeleteTrack(tr)
                         else
-                            -- Режим: Делаем трек дочерним
-                            -- Важно: ReorderSelectedTracks перемещает ВСЕ выделенные треки
-                            reaper.Main_OnCommand(40297, 0) -- Unselect all tracks
+                            reaper.Main_OnCommand(40297, 0)
                             reaper.SetTrackSelected(tr, true)
-                            local parent_idx = reaper.GetMediaTrackInfo_Value(row.parent_ptr, "IP_TRACKNUMBER")
-                            -- Перемещаем ПОСЛЕ родительского трека (индекс тот же, но flag 1)
+                            local parent_idx = reaper.GetMediaTrackInfo_Value(rule.parent, "IP_TRACKNUMBER")
                             reaper.ReorderSelectedTracks(parent_idx, 1)
                         end
+                        
+                        break
                     end
                 end
             end
         end
     end
-    
-    reaper.Undo_EndBlock("Organize Project", -1)
+
+    reaper.Undo_EndBlock("Organize Session (Smart Match)", -1)
     reaper.TrackList_AdjustWindows(false)
 end
 
 
 local function loop()
-
     reaper.ImGui_PushFont(ctx, font, font_size)
     reaper.ImGui_SetNextWindowSize(ctx, 500, 400, reaper.ImGui_Cond_FirstUseEver())
     local visible, open = reaper.ImGui_Begin(ctx, 'Session Organizer', true)
@@ -253,16 +217,7 @@ local function loop()
         reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), 0x55CF5488)
         reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBg(),        0x5BBB5A88)
         reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBgHovered(), 0x5BBB5A88)
-        -- if reaper.ImGui_Button(ctx, '+ Add Selected Tracks') then
-        --     for i = 0, reaper.CountSelectedTracks(0) - 1 do
-        --         local tr = reaper.GetSelectedTrack(0, i)
-        --         local _, name = reaper.GetTrackName(tr)
-        --         table.insert(session_data, { parent_ptr = tr, name = name, keywords = "", items_mode = false })
-        --     end
-        --     sort_session_data() 
-        --     save_data()
-        -- end
-        -- 1. Кнопка добавления (делаем ее не на всю ширину, чтобы влез BPM)
+
         if reaper.ImGui_Button(ctx, 'Add Selected Tracks', 160) then
             for i = 0, reaper.CountSelectedTracks(0) - 1 do
                 local tr = reaper.GetSelectedTrack(0, i)
@@ -398,8 +353,6 @@ local function loop()
                         reaper.ImGui_SetTooltip(ctx, "Add selected tracks' names as keywords")
                     end
 
-                    -- 3. Режим айтемов
-                    -- reaper.ImGui_TableSetColumnIndex(ctx, 2)
                     reaper.ImGui_SameLine(ctx)
 
                     local c_changed, c = reaper.ImGui_Checkbox(ctx, "##check", row.items_mode)
@@ -415,7 +368,7 @@ local function loop()
                     if reaper.ImGui_Button(ctx, "X", -1) then row_to_remove = i end
                     
                     if styles_pushed then
-                        reaper.ImGui_PopStyleColor(ctx, 6) -- Сбрасываем 6 запушенных цветов
+                        reaper.ImGui_PopStyleColor(ctx, 6)
                     end
 
                     reaper.ImGui_PopID(ctx)
@@ -433,8 +386,8 @@ local function loop()
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), 0xE6894788) -- 50% прозрачности (80)0x4C8A6E88
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), 0xDC9D7088)
 
-            if reaper.ImGui_Button(ctx, 'ORGANIZE', -1, 40) then
-                -- Здесь вызывается твоя исправленная функция organize_session()
+            if reaper.ImGui_Button(ctx, 'Organize Selected Track', -1, 40) then
+
                 organize_session() 
             end
             reaper.ImGui_PopStyleColor(ctx, 3)
@@ -447,6 +400,4 @@ local function loop()
     if open then reaper.defer(loop) end
     
 end
-
-
 reaper.defer(loop)
