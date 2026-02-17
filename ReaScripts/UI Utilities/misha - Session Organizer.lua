@@ -1,12 +1,13 @@
 -- @description UI manager for session prepping
 -- @author Misha Oshkanov
--- @version 1.1
+-- @version 1.2
 -- @about
 --  Add target tracks by clicking "Add Selected Tracks" to your session
 --  Then type some kerwords
 --  Select some tracks and click "Organise" to move selected tracks to target track based by their names and keywords
 -- @changelog
 -- much clewer keywork handling and track name detection
+-- new tooltips
 
 function print(...)
     local values = {...}
@@ -58,8 +59,8 @@ end
 
 local function PushTrackStyles()
     local base_col  = 0x00000088 
-    local hover_col = 0x444444FF 
-    local active_col = 0x222222FF 
+    local hover_col = 0x444444FF -- Чуть светлее при наведении
+    local active_col = 0x222222FF -- Совсем темный при клике
 
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBg(),        base_col)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBgHovered(), hover_col)
@@ -91,7 +92,6 @@ local function GetTrackDepth(track)
     end
     return depth
 end
-
 
 local function save_data()
     local serialized = ""
@@ -128,7 +128,6 @@ local function load_data()
     end
 end
 load_data()
-
 
 -- Функция для обрезки пробелов
 function string.trim(s) return s:match("^%s*(.-)%s*$") end
@@ -200,10 +199,9 @@ local function organize_session()
     reaper.TrackList_AdjustWindows(false)
 end
 
-
 local function loop()
     reaper.ImGui_PushFont(ctx, font, font_size)
-    reaper.ImGui_SetNextWindowSize(ctx, 500, 400, reaper.ImGui_Cond_FirstUseEver())
+    reaper.ImGui_SetNextWindowSize(ctx, 800, 700, reaper.ImGui_Cond_FirstUseEver())
     local visible, open = reaper.ImGui_Begin(ctx, 'Session Organizer', true)
 
     reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), 4, 4)    -- (X, Y) расстояние между кнопками/строками
@@ -218,7 +216,8 @@ local function loop()
         reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBg(),        0x5BBB5A88)
         reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBgHovered(), 0x5BBB5A88)
 
-        if reaper.ImGui_Button(ctx, 'Add Selected Tracks', 160) then
+        -- 1. Кнопка добавления (делаем ее не на всю ширину, чтобы влез BPM)
+        if reaper.ImGui_Button(ctx, 'Add selected tracks to session table', 320) then
             for i = 0, reaper.CountSelectedTracks(0) - 1 do
                 local tr = reaper.GetSelectedTrack(0, i)
                 local exists = false
@@ -264,10 +263,10 @@ local function loop()
 
         if #session_data > 0 then
             if reaper.ImGui_BeginTable(ctx, 'MainTable', 3, reaper.ImGui_TableFlags_Borders() | reaper.ImGui_TableFlags_Resizable()) then
-                reaper.ImGui_TableSetupColumn(ctx, 'Parent Track',reaper.ImGui_TableColumnFlags_WidthStretch(), 0.4)
+                reaper.ImGui_TableSetupColumn(ctx, 'Target Tracks',reaper.ImGui_TableColumnFlags_WidthStretch(), 0.25)
                 reaper.ImGui_TableSetupColumn(ctx, 'Keywords / Grab',reaper.ImGui_TableColumnFlags_WidthStretch(), 1)
                 -- reaper.ImGui_TableSetupColumn(ctx, 'Items', reaper.ImGui_TableColumnFlags_WidthFixed(), 40)
-                reaper.ImGui_TableSetupColumn(ctx, 'Delete', reaper.ImGui_TableColumnFlags_WidthFixed(), 10)
+                reaper.ImGui_TableSetupColumn(ctx, 'Delete', reaper.ImGui_TableColumnFlags_WidthFixed(), 20)
                 reaper.ImGui_TableHeadersRow(ctx)
 
                 local row_to_remove = nil
@@ -331,7 +330,7 @@ local function loop()
 
                     -- Всплывающая подсказка при наведении на "C"
                     if reaper.ImGui_IsItemHovered(ctx) then
-                        reaper.ImGui_SetTooltip(ctx, "Clear Keywords")
+                        reaper.ImGui_SetTooltip(ctx, row.name..": Clear Keywords")
                     end
 
                     reaper.ImGui_SameLine(ctx)
@@ -350,25 +349,29 @@ local function loop()
                     end
 
                     if reaper.ImGui_IsItemHovered(ctx) then
-                        reaper.ImGui_SetTooltip(ctx, "Add selected tracks' names as keywords")
+                        reaper.ImGui_SetTooltip(ctx, row.name..': Add sel tracks names to keywords')
                     end
 
+                    -- 3. Режим айтемов
                     reaper.ImGui_SameLine(ctx)
 
                     local c_changed, c = reaper.ImGui_Checkbox(ctx, "##check", row.items_mode)
                     if c_changed then row.items_mode = c save_data() end
                                         
                     if reaper.ImGui_IsItemHovered(ctx) then
-                        reaper.ImGui_SetTooltip(ctx, "Move items to parent track")
+                        reaper.ImGui_SetTooltip(ctx, row.name..": Move items to parent track")
                     end
-                    
                     
                     -- 4. Удаление
                     reaper.ImGui_TableSetColumnIndex(ctx, 2)
                     if reaper.ImGui_Button(ctx, "X", -1) then row_to_remove = i end
+
+                    if reaper.ImGui_IsItemHovered(ctx) then
+                        reaper.ImGui_SetTooltip(ctx, row.name..": Delete row")
+                    end
                     
                     if styles_pushed then
-                        reaper.ImGui_PopStyleColor(ctx, 6)
+                        reaper.ImGui_PopStyleColor(ctx, 6) -- Сбрасываем 6 запушенных цветов
                     end
 
                     reaper.ImGui_PopID(ctx)
@@ -386,8 +389,7 @@ local function loop()
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), 0xE6894788) -- 50% прозрачности (80)0x4C8A6E88
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), 0xDC9D7088)
 
-            if reaper.ImGui_Button(ctx, 'Organize Selected Track', -1, 40) then
-
+            if reaper.ImGui_Button(ctx, 'Organize Selected Tracks', -1, 40) then
                 organize_session() 
             end
             reaper.ImGui_PopStyleColor(ctx, 3)
@@ -400,4 +402,5 @@ local function loop()
     if open then reaper.defer(loop) end
     
 end
+
 reaper.defer(loop)
