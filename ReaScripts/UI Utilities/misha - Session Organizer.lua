@@ -6,8 +6,7 @@
 --  Then type some kerwords
 --  Select some tracks and click "Organise" to move selected tracks to target track based by their names and keywords
 -- @changelog
--- much clewer keywork handling and track name detection
--- new tooltips
+--  new tooltips
 
 function print(...)
     local values = {...}
