@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="25fa4e8b529d22cf3b127facbfc3e1af69ad27c7">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="e89ef87f4e7805c843255850d624a3169e032abe">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -923,6 +923,10 @@
       </metadata>
       <version name="1.0" author="Misha Oshkanov" time="2026-02-16T14:41:12Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/25fa4e8b529d22cf3b127facbfc3e1af69ad27c7/ReaScripts/UI%20Utilities/misha%20-%20Session%20Organizer.lua</source>
+      </version>
+      <version name="1.2" author="Misha Oshkanov" time="2026-02-17T08:35:41Z">
+        <changelog><![CDATA[new tooltips]]></changelog>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/e89ef87f4e7805c843255850d624a3169e032abe/ReaScripts/UI%20Utilities/misha%20-%20Session%20Organizer.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Show peak LUFS readouts in arrange view.lua" type="script" desc="Show master peak lufs readouts in arrange view">
