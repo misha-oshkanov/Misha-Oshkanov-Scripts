@@ -1,6 +1,6 @@
 -- @description press key to remove selected items and razor
 -- @author Misha Oshkanov
--- @version 1.6
+-- @version 1.7
 -- @about
 --    It deletes all selected items and razor when you press and hold script key button
 --    Ruler, peaks and item names change color if script is active
@@ -11,6 +11,7 @@
 
 CHANGE_COLOR = true -- apply color change
 color = "##4E1414" -- color
+color_light = "#A2A2A2"
 
 UNSELECT_AT_START = true -- script unselects all items during key press and selects it again after key release
 RAZOR_ON_RIGHT_MB = true -- script changes right mouse button modifier during key press for quick razor editing
@@ -18,10 +19,10 @@ action = 'Add to razor edit area ignoring snap' -- name of altered action for ri
 -- 'Add to razor edit area ignoring snap' by default
 -- 'Add to razor edit area' if you need snap
 
-MANUAL_RIGHT_MB_RESET = false -- very rarely script fails to reset mouse modifier (don't know why) but you can use this to make sure that it alway resets
+MANUAL_RIGHT_MB_RESET = true -- very rarely script fails to reset mouse modifier (don't know why) but you can use this to make sure that it alway resets
 manual_action = 'Hand scroll' -- name of the defaul action for right mouse button modifier 
 
-MANUAL_LEFT_MB_RESET = false 
+MANUAL_LEFT_MB_RESET = true 
 manual_action_left = 'Select item and move edit cursor'
 -----------------------------------------------------------------
 -----------------------------------------------------------------
@@ -32,8 +33,14 @@ function print(...)
     reaper.ShowConsoleMsg(table.concat(values, ' ') .. '\n')
 end
 
-theme_elements_by_modes = {
-  {"col_tr1_bg", "col_tr2_bg", "selcol_tr1_bg", "selcol_tr2_bg", "ts_lane_bg" }, 
+theme_elements = {
+  {element = "ts_lane_bg", color = reaper.ColorToNative( 80, 0, 0 )},
+  -- {element = "col_mi_bg",  color = reaper.ColorToNative( 168, 0, 0 )},
+  -- {element = "col_mi_bg2", color = reaper.ColorToNative( 168, 0, 0 )},
+  -- {element = "col_tr1_bg",  color = reaper.ColorToNative( 70, 40, 40 )},
+  -- {element = "col_tr2_bg",  color = reaper.ColorToNative( 70, 40, 40 )},
+  {element = "col_tr1_peaks", color = reaper.ColorToNative( 96, 0, 27 )},
+  {element = "col_tr2_peaks", color = reaper.ColorToNative( 96, 0, 27 )},
 }
 
 local mouse_action = nil
@@ -81,6 +88,23 @@ function HexToRGB(hex)
   return R, G, B
 end
 
+function rgba(r, g, b, a)
+    local b = b/255
+    local g = g/255 
+    local r = r/255 
+    local b = math.floor(b * 255) * 256
+    local g = math.floor(g * 255) * 256 * 256
+    local r = math.floor(r * 255) * 256 * 256 * 256
+    local a = math.floor(a * 255)
+    return r + g + b + a
+end
+
+function col(col,a)
+    r, g, b = reaper.ColorFromNative(col)
+    result = rgba(r,g,b,a)
+    return result
+end
+
 function SetButtonState(set)
   if not set then set = 0 end
   local is_new_value, filename, sec, cmd, mode, resolution, val = reaper.get_action_context()
@@ -92,9 +116,9 @@ end
 function exit()
 --   SetButtonState()
   if CHANGE_COLOR then 
-    for i, theme_elements_mode in ipairs( theme_elements_by_modes ) do
-      for k, v in ipairs( theme_elements_mode ) do reaper.SetThemeColor( v, -1,  0) end
-    end
+      for k, v in ipairs(theme_elements) do 
+        reaper.SetThemeColor(v.element, -1,  0)
+      end
   end
 
   if RAZOR_ON_RIGHT_MB then 
@@ -158,8 +182,8 @@ if RAZOR_ON_RIGHT_MB then
 end
 
 if CHANGE_COLOR then 
-  for i, v in ipairs(theme_elements_by_modes[1]) do
-    reaper.SetThemeColor(v, HexToInt(color),  0)
+  for i, v in ipairs(theme_elements) do
+    reaper.SetThemeColor(v.element, v.color,  0)
   end
 end
 

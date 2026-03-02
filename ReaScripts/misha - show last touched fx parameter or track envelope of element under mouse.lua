@@ -1,6 +1,6 @@
 -- @description Show last touched fx parameter or track envelope of element under mouse (volume, pan, width, send volume, fx wet)
 -- @author Misha Oshkanov
--- @version 1.0
+-- @version 1.1
 -- @about
 --    Show last touched fx parameter or track envelope of element under mouse
 
@@ -11,14 +11,15 @@ function print(...)
     reaper.ShowConsoleMsg(table.concat(values, ' ') .. '\n')
 end
 
-
 local track, info = reaper.GetThingFromPoint(reaper.GetMousePosition())
 local fxid = tonumber(info:match("fx:(%d+)"))
+local fxid2 = tonumber(info:match("fx_(%d+)"))
 local sendid = tonumber(info:match("send:(%d+)"))
 
 function show_env(env)
     local retval, vis = reaper.GetSetEnvelopeInfo_String(env, 'VISIBLE', '', false)
     local retval, act = reaper.GetSetEnvelopeInfo_String(env, 'ACTIVE', '', false)
+
     local retval, stringNeedBig = reaper.GetSetEnvelopeInfo_String(env, 'VISIBLE', vis=='0' and 1 or 0, true)
     if act == "0" then 
         local retval, stringNeedBig = reaper.GetSetEnvelopeInfo_String(env, 'ACTIVE', 1, true)
@@ -53,5 +54,12 @@ elseif info:find("width") then
     local env = reaper.GetMediaTrackInfo_Value(track, 'P_ENV:<WIDTHENV2')
     show_env(env)
 else 
+    if track and fxid2 and reaper.TrackFX_GetOpen(track, fxid2) then
+        local x, y = reaper.GetMousePosition()
+        if reaper.TrackFX_GetFloatingWindow(track, fxid2) == reaper.JS_Window_FromPoint(x, y) then 
+        reaper.Main_OnCommand(reaper.NamedCommandLookup('_S&M_MOUSE_L_CLICK'), 0)
+        reaper.TrackFX_SetOpen(track, fxid2, false)
+        end
+    end
     reaper.Main_OnCommand(41142, 1) -- show last touched env
 end
