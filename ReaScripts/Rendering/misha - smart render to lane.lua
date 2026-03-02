@@ -1,12 +1,13 @@
 -- @description Smart Render to new lane (Razor or item selection)
 -- @author Misha Oshkanov
--- @version 1.1
+-- @version 1.2
 -- @about
 --    Add razor edit area or select some items to render it to new lane and solo this lane
 --    Use targetFXNames table to toggle bypass of everything except plugins in this table before render and set it back online after the render
 --    Works with comping and automatically adds new item to comp
+--    if there is a vsti on track, all other fxs will be bypassed during render
 -- @changelog
---    fix comping lane solo
+--    fix track fx bypass if vsti on track
 
 local targetFXNames = {"Melodyne", "DynAssist", "Revoice", "Vovious", "kontakt" }
 
@@ -73,12 +74,7 @@ function ManageFXState(track, restore, savedStates, foundPluginName, item_lane)
             local isEnabled = reaper.TrackFX_GetEnabled(track, i)
             currentStates[i+1] = isEnabled
         
-            if foundTargetName then
-                local isThisTarget = fxName:lower():find(foundTargetName:lower())
-                if not isThisTarget then
-                    if (vsti_index > -1 and i > vsti_index) or (vsti_index == -1) then reaper.TrackFX_SetEnabled(track, i, false) end
-                end
-            end
+            if vsti_index >= 0 then if i > vsti_index then reaper.TrackFX_SetEnabled(track, i, false) end end
         end
         return currentStates, foundTargetName
     end
