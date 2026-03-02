@@ -1,9 +1,12 @@
 -- @description Smart Render to new lane (Razor or item selection)
 -- @author Misha Oshkanov
--- @version 1.0
+-- @version 1.1
 -- @about
 --    Add razor edit area or select some items to render it to new lane and solo this lane
 --    Use targetFXNames table to toggle bypass of everything except plugins in this table before render and set it back online after the render
+--    Works with comping and automatically adds new item to comp
+-- @changelog
+--    fix comping lane solo
 
 local targetFXNames = {"Melodyne", "DynAssist", "Revoice", "Vovious", "kontakt" }
 
@@ -152,7 +155,10 @@ function Main()
                 reaper.Main_OnCommand(42787,0)
                 item_lane = reaper.GetMediaItemInfo_Value(item, 'I_FIXEDLANE')
                 
-                reaper.SetMediaTrackInfo_Value(track, "C_LANEPLAYS:" .. item_lane, 1, true)
+                if not IsCompingActiveViaLaneRec(track) then 
+                    reaper.SetMediaTrackInfo_Value(track, "C_LANEPLAYS:" .. item_lane, 1, true)
+                end
+
                 local take = reaper.GetActiveTake(item)
                 if take then
                     local oldName = reaper.GetTakeName(take)
