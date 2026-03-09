@@ -940,9 +940,9 @@ function DrawSettingsWindow()
 
         USE_VOLUME_BUTTONS = true
         USE_LISTEN_BANDS = true
-        USE_REFS_SWITCH = true
-        USE_METRICAB_SWITCH = true
-        SHOW_CORRECTION_BTN = true
+        USE_REFS_SWITCH = false
+        USE_METRICAB_SWITCH = false
+        SHOW_CORRECTION_BTN = false
         REF_FOLDER_NAME = 'Refs'
         SLOPE = 2
         scroll_accuracy = 1.2
