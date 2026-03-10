@@ -1,6 +1,6 @@
 -- @description Monitor Volume Controller
 -- @author Misha Oshkanov
--- @version 4.0
+-- @version 4.1
 -- @about
 --  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. 
 --  If you need more levels or change db values you can edit buttons table.
@@ -12,7 +12,7 @@ USE_METRIC_IN_MONITORINGFX = true
 METRIC_AB = 'ADPTR MetricAB'
 CORRECTION_CONTAINER_NAME = "Corrections"
 
-buttons = {-32,-24, -14, -8, -4, 0, 4, 12, 18, 24} -- presets in dB
+buttons = {} -- presets in dB
 SLOPE = 2 -- 1 = 12db, 2 = 24db, 3 = 36db, 4 = 48db,5 = 60db, 6 = 72db 
 
 listen_buttons = {
@@ -22,6 +22,37 @@ listen_buttons = {
   {str = 'Mid',  l = 800,   h = 3570 ,col = {86,128,98,0.8}},
   {str = 'High', l = 4000,  h = 20000,col = {121,157,107,0.7}},
   {str = 'Free', l = 20,    h = 20000,col = {161,145,99,0.7}},
+}
+
+local layers = {
+  [1] = { vol = true,  lis = false,  corr = true,  ref = false,  ab = false },
+  [2] = { vol = false, lis = false,  corr = true,  ref = true,   ab = false },
+  [3] = { vol = false, lis = true,   corr = false, ref = false,  ab = false },
+}
+
+
+function rgba(r, g, b, a)
+    b = b/255
+    g = g/255 
+    r = r/255 
+    local b = math.floor(b * 255) * 256
+    local g = math.floor(g * 255) * 256 * 256
+    local r = math.floor(r * 255) * 256 * 256 * 256
+    local a = math.floor(a * 255)
+    return r + g + b + a
+end
+
+function col(col,a)
+    r, g, b = reaper.ColorFromNative(col)
+    result = rgba(r,g,b,a)
+    return result
+end
+
+
+local layer_colors = {
+  [1] = {r=70, g=105, b=126}, 
+  [2] = {r=86, g=133, b=80},
+  [3] = {r=126,g=71,  b=70},
 }
 
 correction_buttons = {}
@@ -90,6 +121,13 @@ base_freq_ext  = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'BASE_FREQ'))
 base_width_ext = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'BASE_WIDTH'))
 base_slope_ext = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'BASE_SLOPE'))
 ext_folder_name = reaper.GetExtState( 'MISHA_MONITOR', 'REF_FOLDER')
+local MAX_LAYERS = tonumber(reaper.GetExtState(SECTION, 'MAX_LAYERS')) or 3
+local current_layer = tonumber(reaper.GetExtState(SECTION, 'CURRENT_LAYER')) or 1
+
+local pdc_button_idx = tonumber(reaper.GetExtState(SECTION, 'PDC_IDX')) or 0
+local last_regular_idx = tonumber(reaper.GetExtState(SECTION, 'LAST_REG_IDX')) or 1
+local current_volume_idx = 1 -- текущая активная кнопка (виртуальная)
+
 if ext_folder_name ~= REF_FOLDER_NAME then 
   reaper.SetExtState( 'MISHA_MONITOR', 'REF_FOLDER', REF_FOLDER_NAME, true)
 end
@@ -115,6 +153,38 @@ end
 
 mon = (0x1000000)
 
+function update_pdc_logic(master)
+  -- Проверяем опцию 43150 (Auto-bypass FX with PDC on record arm)
+  -- 0 = выкл, 1 = вкл. Используем GetConfigVar
+  local auto_bypass_pdc = reaper.SNM_GetIntConfigVar("pdcbypass", -1) == 1
+  print(auto_bypass_pdc)
+  
+  -- Проверяем, есть ли хоть один трек на записи
+  local any_record_arm = false
+  for i = 0, reaper.CountTracks(0) - 1 do
+    local tr = reaper.GetTrack(0, i)
+    if reaper.GetMediaTrackInfo_Value(tr, "I_RECARM") == 1 then
+      any_record_arm = true
+      break
+    end
+  end
+  -- ЛОГИКА ПЕРЕКЛЮЧЕНИЯ
+  if pdc_button_idx > 0 and auto_bypass_pdc and any_record_arm then
+    -- Если условия PDC соблюдены — включаем PDC кнопку
+    if current_volume_idx ~= pdc_button_idx then
+      current_volume_idx = pdc_button_idx
+      set_volume(master, buttons[pdc_button_idx]) -- ваша функция установки громкости
+    end
+  else
+    -- Иначе возвращаемся к последней выбранной вручную кнопке
+    if current_volume_idx ~= last_regular_idx then
+      current_volume_idx = last_regular_idx
+      set_volume(master, buttons[last_regular_idx])
+    end
+  end
+end
+
+
 function SaveSettings()
   local settings = {
     USE_VOLUME_BUTTONS = USE_VOLUME_BUTTONS and '1' or '0',
@@ -135,6 +205,17 @@ function SaveSettings()
   reaper.SetExtState(SECTION, 'SLOPE', tostring(SLOPE), true)
   reaper.SetExtState(SECTION, 'SCROLL', tostring(scroll_accuracy), true)
   reaper.SetExtState(SECTION, 'BTN_H', tostring(button_h), true)
+
+  reaper.SetExtState(SECTION, 'MAX_LAYERS', tostring(MAX_LAYERS), true)
+  reaper.SetExtState(SECTION, 'CURRENT_LAYER', tostring(current_layer), true)
+  
+
+  for i = 1, 2 do
+    local l = layers[i]
+    local str = string.format("%d,%d,%d,%d,%d", 
+        l.vol and 1 or 0, l.lis and 1 or 0, l.corr and 1 or 0, l.ref and 1 or 0, l.ab and 1 or 0)
+    reaper.SetExtState(SECTION, "LAYER_"..i, str, true)
+  end
 end
 
 function LoadSettings()
@@ -165,32 +246,24 @@ function LoadSettings()
     buttons = StringToButtons(saved_buttons)
     buttons_text = saved_buttons
   else
-    buttons = {-32, -24, -14, -8, -4, 0, 4, 12, 18, 24} -- дефолт
+    buttons = {-32, -24, -14, -8, -4, 0, 4, 12, 18} -- дефолт
   end
 
   
   local saved_pw = tonumber(reaper.GetExtState(SECTION, 'pw'))
   if saved_pw and saved_pw > 100 then pw = saved_pw end
+
+  for i = 1, 2 do
+    local str = reaper.GetExtState(SECTION, "LAYER_"..i)
+    if str ~= "" then
+        local v, li, c, r, a = str:match("(%d),(%d),(%d),(%d),(%d)")
+        layers[i] = { vol = v=='1', lis = li=='1', corr = c=='1', ref = r=='1', ab = a=='1' }
+    end
+  end
+
 end
 
 LoadSettings()
-
-function rgba(r, g, b, a)
-    b = b/255
-    g = g/255 
-    r = r/255 
-    local b = math.floor(b * 255) * 256
-    local g = math.floor(g * 255) * 256 * 256
-    local r = math.floor(r * 255) * 256 * 256 * 256
-    local a = math.floor(a * 255)
-    return r + g + b + a
-end
-
-function col(col,a)
-    r, g, b = reaper.ColorFromNative(col)
-    result = rgba(r,g,b,a)
-    return result
-end
 
 function draw_color(color,px)
     min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
@@ -297,6 +370,9 @@ end
 
 function draw_volume_buttons(master,w)
   for i,b in ipairs(buttons) do
+    -- local is_pdc = (i == pdc_button_idx)
+    -- local is_active = (i == current_volume_idx)
+
     if state == b then s = 1 else s = 0 end
     ImGui.PushID(ctx, i)
     if s == 0 then
@@ -305,12 +381,15 @@ function draw_volume_buttons(master,w)
         ImGui.PushStyleColor(ctx, ImGui.Col_Text(),           rgba(240,240,240,1))
         ImGui.PushStyleColor(ctx, ImGui.Col_Button(),         rgba(100,100,100,0.8))
     else
+      -- if is_pdc then
+      --   ImGui.PushStyleColor(ctx, ImGui.Col_Button(), rgba(200, 100, 255, 0.4)) -- PDC метка (Фиолетовая)
+      -- else
+        ImGui.PushStyleColor(ctx, ImGui.Col_Button(),         rgba(195,105,105,0.6))
+      -- end
         ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive(),   rgba(195,105,105,0.9))
         ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered(),  rgba(205,105,105,0.8))
-        ImGui.PushStyleColor(ctx, ImGui.Col_Button(),         rgba(195,105,105,0.6))
         ImGui.PushStyleColor(ctx, ImGui.Col_Text(),           rgba(224,224,224,1))
     end
-
     b_button = ImGui.Button(ctx, tostring(b), w, button_h)
     
     if i < #buttons then ImGui.SameLine(ctx) end
@@ -318,12 +397,38 @@ function draw_volume_buttons(master,w)
     ImGui.PopStyleColor(ctx, 4)
     
     if b_button then
-      index = reaper.TrackFX_AddByName(master, controller_fx, true, 100)
-      if reaper.TrackFX_GetOpen(master, index+(0x1000000)) then reaper.TrackFX_Show(master, index+(0x1000000), 0 ) end
-      reaper.TrackFX_SetParam(master, index+(0x1000000), 4, b)
+      -- local modifiers = reaper.JS_Mouse_GetState(-1)
+      -- if modifiers == 4 then -- CTRL + ЛКМ
+      --   if pdc_button_idx == i then 
+      --     pdc_button_idx = 0 -- Сброс PDC
+      --   else 
+      --     pdc_button_idx = i -- Установка PDC
+      --   end
+      --   reaper.SetExtState(SECTION, 'PDC_IDX', tostring(pdc_button_idx), true)
+      -- else
+        -- last_regular_idx = i
+        -- current_volume_idx = i
+        reaper.SetExtState(SECTION, 'LAST_REG_IDX', tostring(i), true)
+        index = reaper.TrackFX_AddByName(master, controller_fx, true, 100)
+        if reaper.TrackFX_GetOpen(master, index+(0x1000000)) then reaper.TrackFX_Show(master, index+(0x1000000), 0 ) end
+        reaper.TrackFX_SetParam(master, index+(0x1000000), 4, b)
+      -- end
     end
+
+    -- if is_pdc then
+    --   local min_x, min_y = ImGui.GetItemRectMin(ctx)
+    --   local draw_list = ImGui.GetWindowDrawList(ctx)
+    --   ImGui.DrawList_AddText(draw_list, min_x + 2, min_y + 2, rgba(255, 255, 255, 0.8), "PDC")
+    -- end
+    
+      -- if reaper.ImGui_IsMouseClicked( ctx, reaper.ImGui_MouseButton_Right() ) and reaper.ImGui_IsItemHovered(ctx) then
+      --   USE_LISTEN_BANDS = not USE_LISTEN_BANDS
+      --   should_resize = true
+      --   SaveSettings()
+      -- end
   end
   if free_mode then free_mode = false end
+
 end 
 
 function set_correction(master, name, state)
@@ -345,12 +450,12 @@ function draw_correction_single_button(w)
     local active_name = get_active_correction_name()
 
     local btn_color = (active_name == "OFF") and rgba(100,100,100,0.5) or rgba(211,161,85,0.6)
-    
+    ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered(),  rgba(211,161,85,0.8))
     ImGui.PushStyleColor(ctx, ImGui.Col_Button(), btn_color)
     if ImGui.Button(ctx, active_name .. "##corr_pop", w, button_h) then
         ImGui.OpenPopup(ctx, 'corr_popup_menu')
     end
-    ImGui.PopStyleColor(ctx)
+    ImGui.PopStyleColor(ctx,2)
 
     if ImGui.BeginPopup(ctx, 'corr_popup_menu') then
 
@@ -869,29 +974,135 @@ function check_or_create_correction_container()
 end
 
 function DrawSettingsWindow()
+
   reaper.ImGui_SetNextWindowSize(ctx, 400, 400, reaper.ImGui_Cond_FirstUseEver())
 
   local visible, open = reaper.ImGui_Begin(ctx, 'Monitor Settings', true, reaper.ImGui_WindowFlags_None())
   if visible then
-    local function Toggle(label, var_name)
-        local current_val = _G[var_name] 
-        local changed, new_val = reaper.ImGui_Checkbox(ctx, label, current_val)
-        if changed then
-            _G[var_name] = new_val
-            should_resize = true
-            SaveSettings()
-        end
+    
+    if reaper.ImGui_BeginTable(ctx, "LayersTable", 3, reaper.ImGui_TableFlags_BordersInnerV()) then
+
+      -- for i = 1, MAX_LAYERS do
+      --     reaper.ImGui_TableSetupColumn(ctx, "Layer " .. i)
+      -- end
+
+      -- local row_keys = {"vol", "lis", "corr", "ref", "ab"}
+      -- local row_names = {"Volume", "Listen", "Corr", "Ref", "MetricAB"}
+
+      -- for r = 1, #row_keys do
+      --   reaper.ImGui_TableNextRow(ctx)
+      --   for i = 1, MAX_LAYERS do
+      --       reaper.ImGui_TableSetColumnIndex(ctx, i-1)
+            
+      --       -- Подсветка активной колонки
+      --       if current_layer == i then
+      --           local c = layer_colors[i]
+      --           if i == current_layer then a = 0.4 else a = 0.2 end
+      --           reaper.ImGui_TableSetBgColor(ctx, reaper.ImGui_TableBgTarget_CellBg(), rgba(c.r,c.g,c.b,a))
+      --       end
+
+      --       local l = layers[i]
+      --       if reaper.ImGui_Checkbox(ctx, row_names[r].."##"..i, l[row_keys[r]]) then 
+      --           l[row_keys[r]] = not l[row_keys[r]]
+      --           should_resize = true
+      --           SaveSettings() 
+      --       end
+      --   end
+      -- end
+
+      -- Заголовки колонок
+      reaper.ImGui_TableSetupColumn(ctx, "Layer 1" .. (current_layer == 1 and " [Active]" or ""))
+      reaper.ImGui_TableSetupColumn(ctx, "Layer 2" .. (current_layer == 2 and " [Active]" or "") .. (MAX_LAYERS == 1 and " [OFF]" or ""))
+      reaper.ImGui_TableSetupColumn(ctx, "Layer 3" .. (current_layer == 3 and " [Active]" or "") .. (MAX_LAYERS == 2 and " [OFF]" or ""))
+      reaper.ImGui_TableHeadersRow(ctx)
+      -- 1-я строка: Volume
+      reaper.ImGui_TableNextRow(ctx)
+      for i = 1, #layers do
+        reaper.ImGui_TableSetColumnIndex(ctx, i-1)
+        local c = layer_colors[i]
+        local l = layers[i]
+        if i == current_layer then a = 0.4 else a = 0.2 end
+        reaper.ImGui_TableSetBgColor(ctx, reaper.ImGui_TableBgTarget_CellBg(), rgba(c.r,c.g,c.b,a))
+        if reaper.ImGui_Checkbox(ctx, "Volume##"..i, l.vol) then l.vol = not l.vol; should_resize = true; SaveSettings() end
+      end
+      
+      -- 2-я строка: Listen
+      reaper.ImGui_TableNextRow(ctx)
+      
+      for i = 1, #layers do
+        reaper.ImGui_TableSetColumnIndex(ctx, i-1)
+        local c = layer_colors[i]
+        local l = layers[i]
+        if i == current_layer then a = 0.4 else a = 0.2 end
+        reaper.ImGui_TableSetBgColor(ctx, reaper.ImGui_TableBgTarget_CellBg(), rgba(c.r,c.g,c.b,a))
+        if reaper.ImGui_Checkbox(ctx, "Listen Bands##"..i, l.lis) then l.lis = not l.lis; should_resize = true; SaveSettings() end
+      end
+
+      -- 3-я строка: Correction
+      reaper.ImGui_TableNextRow(ctx)
+      for i = 1, #layers do
+        reaper.ImGui_TableSetColumnIndex(ctx, i-1)
+        local c = layer_colors[i]
+        local l = layers[i]
+        if i == current_layer then a = 0.4 else a = 0.2 end
+        reaper.ImGui_TableSetBgColor(ctx, reaper.ImGui_TableBgTarget_CellBg(), rgba(c.r,c.g,c.b,a))
+        if reaper.ImGui_Checkbox(ctx, "Corrections##"..i, l.corr) then l.corr = not l.corr; should_resize = true; SaveSettings() end
+      end
+
+      -- 4-я строка: Reference
+      reaper.ImGui_TableNextRow(ctx)
+      for i = 1, #layers do
+        reaper.ImGui_TableSetColumnIndex(ctx, i-1)
+        local c = layer_colors[i]
+        local l = layers[i]
+        if i == current_layer then a = 0.4 else a = 0.2 end
+        reaper.ImGui_TableSetBgColor(ctx, reaper.ImGui_TableBgTarget_CellBg(), rgba(c.r,c.g,c.b,a))
+        if reaper.ImGui_Checkbox(ctx, "Refs##"..i, l.ref) then l.ref = not l.ref; should_resize = true; SaveSettings() end
+      end
+
+      -- 5-я строка: Metric AB
+      reaper.ImGui_TableNextRow(ctx)
+      for i = 1, #layers do
+        reaper.ImGui_TableSetColumnIndex(ctx, i-1)
+        local c = layer_colors[i]
+        local l = layers[i]
+        if i == current_layer then a = 0.4 else a = 0.2 end
+        reaper.ImGui_TableSetBgColor(ctx, reaper.ImGui_TableBgTarget_CellBg(), rgba(c.r,c.g,c.b,a))
+        if reaper.ImGui_Checkbox(ctx, "AB from Metric##"..i, l.ab) then l.ab = not l.ab; should_resize = true; SaveSettings() end
+      end
+
+      reaper.ImGui_EndTable(ctx)
     end
 
-    Toggle("Volume Buttons", "USE_VOLUME_BUTTONS")
-    Toggle("Listen Bands",   "USE_LISTEN_BANDS")
-    Toggle("Corrections", "SHOW_CORRECTION_BTN")
-    Toggle("Metric AB",      "USE_METRICAB_SWITCH")
-    Toggle("References",   "USE_REFS_SWITCH")
+    reaper.ImGui_Separator(ctx)
+
+    -- local function Toggle(label, var_name)
+    --     local current_val = _G[var_name] 
+    --     local changed, new_val = reaper.ImGui_Checkbox(ctx, label, current_val)
+    --     if changed then
+    --         _G[var_name] = new_val
+    --         should_resize = true
+    --         SaveSettings()
+    --     end
+    -- end
+
+    -- Toggle("Volume Buttons", "USE_VOLUME_BUTTONS")
+    -- Toggle("Listen Bands",   "USE_LISTEN_BANDS")
+    -- Toggle("Corrections", "SHOW_CORRECTION_BTN")
+    -- Toggle("Metric AB",      "USE_METRICAB_SWITCH")
+    -- Toggle("References",   "USE_REFS_SWITCH")
 
     reaper.ImGui_Separator(ctx)
     if reaper.ImGui_TreeNode(ctx, "Advanced Settings") then
       reaper.ImGui_Spacing(ctx)
+
+      local rv_ml, new_ml = reaper.ImGui_SliderInt(ctx, "Active Layers", MAX_LAYERS, 1, 3)
+      if rv_ml then 
+          MAX_LAYERS = new_ml 
+          if current_layer > MAX_LAYERS then current_layer = 1 end
+          should_resize = false
+          SaveSettings() 
+      end
 
       local changed_useab, new_useab = reaper.ImGui_Checkbox(ctx, "Use Metric AB instead of JS", USE_METRICAB)
       if changed_useab then
@@ -920,7 +1131,7 @@ function DrawSettingsWindow()
       if rv_ref then REF_FOLDER_NAME = new_ref; SaveSettings() end
 
       local rv_bh, new_bh = reaper.ImGui_SliderInt(ctx, "Global Button Height", button_h, 16, 50)
-      if rv_bh then button_h = new_bh; should_resize = true; SaveSettings() end
+      if rv_bh then button_h = new_bh; should_resize = false; SaveSettings() end
 
       reaper.ImGui_Separator(ctx)
 
@@ -934,12 +1145,11 @@ function DrawSettingsWindow()
       end 
       
       reaper.ImGui_SameLine(ctx)
-
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), rgba(150, 50, 50, 0.6))
       if reaper.ImGui_Button(ctx, "RESET TO DEFAULTS", reset_btn_w) then
 
         USE_VOLUME_BUTTONS = true
-        USE_LISTEN_BANDS = true
+        USE_LISTEN_BANDS = false
         USE_REFS_SWITCH = false
         USE_METRICAB_SWITCH = false
         SHOW_CORRECTION_BTN = false
@@ -947,24 +1157,22 @@ function DrawSettingsWindow()
         SLOPE = 2
         scroll_accuracy = 1.2
         button_h = 24
-        buttons = {-32, -24, -14, -8, -4, 0, 4, 12, 18, 24}
+        buttons = {-32, -24, -14, -8, -4, 0, 4, 12, 18}
         buttons_text = ButtonsToString(buttons)
+        USE_METRICAB = false
         USE_METRIC_IN_MONITORINGFX = true
         pw = 600
         should_resize = true
         SaveSettings()
       end
       reaper.ImGui_PopStyleColor(ctx)
-
       reaper.ImGui_TreePop(ctx)
     end
-   
 
     reaper.ImGui_End(ctx)
   end
   if not open then show_settings_window = false end
 end
-
 
 function draw_settings_button(settings_w)
   if reaper.ImGui_Button(ctx, "?", settings_w, button_h) then
@@ -973,12 +1181,20 @@ function draw_settings_button(settings_w)
 end
 
 function Main(unit_w, settings_w, corr_w, ab_ref_w, gap)
+  
+
+  local c = layer_colors[current_layer]
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        rgba(c.r,c.g,c.b,0.7))
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), rgba(c.r,c.g,c.b,1))
+  
+  
   state = get_state(master)
   ext = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'LISTEN'))
   if ext == nil then ext = 0 end 
 
   draw_settings_button(settings_w)
   reaper.ImGui_SameLine(ctx)
+  reaper.ImGui_PopStyleColor(ctx, 2)
 
   if SHOW_CORRECTION_BTN then
     draw_correction_single_button(corr_w)
@@ -1055,121 +1271,99 @@ function get_bounds(hwnd)
 end
 
 function loop()  
-    if not pw then pw = 800 end 
-    local window_h = button_h + 8 + (free_mode and 26 or 0)
-      local current_pw, _ = reaper.ImGui_GetWindowSize(ctx)
-    if not current_pw or current_pw < 50 then current_pw = pw or 600 end
+    local layout = layers[current_layer]
+    USE_VOLUME_BUTTONS  = layout.vol
+    USE_LISTEN_BANDS    = layout.lis
+    SHOW_CORRECTION_BTN = layout.corr
+    USE_REFS_SWITCH     = layout.ref
+    USE_METRICAB_SWITCH = layout.ab
+    -- -----------------------
 
-    local current_unit_w = unit_w or 45 
-
+    local window_h = button_h + 10 + (free_mode and 26 or 0)
+    
     if should_resize then
-        local base_unit = current_unit_w
-        local settings_w = 16
-        local ab_ref_w = 30
-        local gap = 2
-        local spacing = 2
-        local target_pw = settings_w + 16
+        local base_unit = unit_w or 45
+        local settings_w, ab_ref_w, gap, spacing = 16, 30, 1, 1
+        local target_pw = settings_w + 22
         
-        if SHOW_CORRECTION_BTN then 
-            target_pw = target_pw + get_correction_button_width(master) + spacing 
-        end
-        
-        if USE_VOLUME_BUTTONS then 
-            target_pw = target_pw + gap + (#buttons * base_unit) + ((#buttons-1) * spacing)
-        end
-        
-        if USE_LISTEN_BANDS then 
-            target_pw = target_pw + gap + (#listen_buttons * base_unit * 1.5) + ((#listen_buttons-1) * spacing) + 35 + spacing
-        end
-        
+        if SHOW_CORRECTION_BTN then target_pw = target_pw + get_correction_button_width(master) + spacing end
+        if USE_VOLUME_BUTTONS then target_pw = target_pw + gap + (#buttons * base_unit) + ((#buttons-1) * spacing) end
+        if USE_LISTEN_BANDS then target_pw = target_pw + gap + (#listen_buttons * base_unit * 1.5) + ((#listen_buttons-1) * spacing) + 35 + spacing end
         if USE_METRICAB_SWITCH or USE_REFS_SWITCH then
             target_pw = target_pw + gap + 10
             if USE_METRICAB_SWITCH then target_pw = target_pw + ab_ref_w + spacing end
             if USE_REFS_SWITCH then target_pw = target_pw + ab_ref_w + spacing end
         end
-
         reaper.ImGui_SetNextWindowSize(ctx, target_pw, window_h, reaper.ImGui_Cond_Always())
         pw = target_pw
-        should_resize = false
+        should_resize = false 
     else
         reaper.ImGui_SetNextWindowSize(ctx, pw, window_h, reaper.ImGui_Cond_Always())
     end
 
-    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding(), 6, 3) 
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding(), 5, 4) 
     reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), 2, 2) 
     reaper.ImGui_PushFont(ctx, nil, font_size1)
 
     local visible, open = reaper.ImGui_Begin(ctx, 'Monitor Controller', true, window_flags)
+    local real_pw, real_ph = reaper.ImGui_GetWindowSize(ctx)
+    if real_pw > 50 and not should_resize then 
+        pw = real_pw 
+    end
     
-    pw, ph = reaper.ImGui_GetWindowSize(ctx)
-    px, py = reaper.ImGui_GetWindowPos(ctx)
-    local win_content_w = pw - 16
+    local win_content_w = pw - 10
 
     if visible then
-        local settings_w = 16
-        local ab_ref_w = 30
-        local gap = 2 
-        local spacing = 2
-
-        local corr_w = 0
-        if SHOW_CORRECTION_BTN then 
-            corr_w = get_correction_button_width(master) 
+        if reaper.ImGui_IsWindowHovered(ctx) and reaper.ImGui_IsMouseReleased(ctx, 1) then
+            current_layer = current_layer + 1
+            if current_layer > MAX_LAYERS then current_layer = 1 end
+            should_resize = true
+            SaveSettings()
         end
+
+        local settings_w, ab_ref_w, gap, spacing = 16, 30, 1, 2
+        local corr_w = SHOW_CORRECTION_BTN and get_correction_button_width(master) or 0
         
         local occupied = settings_w + spacing
         if SHOW_CORRECTION_BTN then occupied = occupied + corr_w + spacing end
         
         if USE_METRICAB_SWITCH or USE_REFS_SWITCH then
             occupied = occupied + gap
-            if USE_METRICAB_SWITCH then occupied = occupied + ab_ref_w end
+            if USE_METRICAB_SWITCH then occupied = occupied + ab_ref_w + 6  end
             if USE_REFS_SWITCH then 
-                local internal_s = USE_METRICAB_SWITCH and spacing or 0
-                occupied = occupied + internal_s + ab_ref_w + 4
+                local internal_s = USE_METRICAB_SWITCH and spacing  or 6
+                occupied = occupied + internal_s + ab_ref_w 
             end
         end
+        if USE_LISTEN_BANDS then occupied = occupied + spacing + gap end
 
-        if USE_LISTEN_BANDS then occupied = occupied + spacing end
-
-        local units = 0
-        local add_fixed = 0
-        local active_groups = 0
-        
+        local units, add_fixed = 0, 0
         if USE_VOLUME_BUTTONS then 
             units = units + #buttons 
             add_fixed = add_fixed + ((#buttons - 1) * spacing)
-            active_groups = active_groups + 1
         end
         if USE_LISTEN_BANDS then 
             units = units + (#listen_buttons * 1.5) 
             add_fixed = add_fixed + ((#listen_buttons - 1) * spacing)
-            active_groups = active_groups + 1
         end
 
-        occupied = occupied + (active_groups * gap) + add_fixed
-
-        local dynamic_area = win_content_w - occupied
-        if unit_w < 15 then unit_w = 15 end
-
+        local dynamic_area = win_content_w - (occupied + add_fixed + 2)
         unit_w = (units > 0) and (dynamic_area / units) or 45 
+        if unit_w < 10 then unit_w = 10 end
 
         Main(unit_w, settings_w, corr_w, ab_ref_w, gap)  
-        
         reaper.ImGui_End(ctx)
     end
 
     if show_settings_window then DrawSettingsWindow() end
     if show_refs_panel then DrawRefsWindow() end
 
-    if reaper.ImGui_IsMouseReleased(ctx, reaper.ImGui_MouseButton_Left()) then
-      SaveSettings()  
-    end
+    if reaper.ImGui_IsMouseReleased(ctx, 0) then SaveSettings() end
 
     reaper.ImGui_PopStyleVar(ctx, 2)
     reaper.ImGui_PopFont(ctx)
 
-    if open then
-        reaper.defer(loop)
-    end
+    if open then reaper.defer(loop) end
 end
 
 master = reaper.GetMasterTrack()
