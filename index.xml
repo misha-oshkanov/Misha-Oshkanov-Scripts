@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="09d42b8c3532849f4e1b6db58343bc8fce37193d">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="ffdf72b42a88be9644efd299fdc6fed7394a5031">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -901,6 +901,10 @@
       </version>
       <version name="4.1" author="Misha Oshkanov" time="2026-03-10T08:59:50Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/09d42b8c3532849f4e1b6db58343bc8fce37193d/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller.lua</source>
+      </version>
+      <version name="4.2" author="Misha Oshkanov" time="2026-03-25T07:34:18Z">
+        <changelog><![CDATA[bug fixes]]></changelog>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/ffdf72b42a88be9644efd299fdc6fed7394a5031/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller.lua</source>
       </version>
     </reapack>
     <reapack name="misha - project work timer.lua" type="script" desc="Project Time Tracker with Multi-Project Support and Efficient Saving">
