@@ -1,10 +1,12 @@
 -- @description Monitor Volume Controller
 -- @author Misha Oshkanov
--- @version 4.1
+-- @version 4.2
 -- @about
 --  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. 
 --  If you need more levels or change db values you can edit buttons table.
 --  Use right click to change modes between volume control and listen filters
+-- @changelog
+--  bug fixes
 
 -----------------------------------------------------------------------------
 REF_FOLDER_NAME = 'Refs'
@@ -209,7 +211,6 @@ function SaveSettings()
   reaper.SetExtState(SECTION, 'MAX_LAYERS', tostring(MAX_LAYERS), true)
   reaper.SetExtState(SECTION, 'CURRENT_LAYER', tostring(current_layer), true)
   
-
   for i = 1, 2 do
     local l = layers[i]
     local str = string.format("%d,%d,%d,%d,%d", 
@@ -239,7 +240,6 @@ function LoadSettings()
   SLOPE = tonumber(reaper.GetExtState(SECTION, 'SLOPE')) or 2
   scroll_accuracy = tonumber(reaper.GetExtState(SECTION, 'SCROLL')) or 1.2
   button_h = tonumber(reaper.GetExtState(SECTION, 'BTN_H')) or 24
-
 
   local saved_buttons = reaper.GetExtState(SECTION, 'BUTTONS_LIST')
   if saved_buttons ~= "" then
