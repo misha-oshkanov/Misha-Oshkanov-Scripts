@@ -1,3 +1,10 @@
+-- @description Monitor Volume Controller Shortcut - solo previous ref
+-- @author Misha Oshkanov
+-- @version 0.1
+-- @about
+--  Action to solo of previous ref track
+
+
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
 
 function printt(t, indent)
