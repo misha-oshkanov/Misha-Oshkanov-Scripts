@@ -1,8 +1,7 @@
 -- @description Adds pairs of selected tracks in free group and activates inverted pan
--- @version 1.0
+-- @version 1.1
 -- @about
 --     Adds pairs of selected tracks in free group and activates inverted pan, applies pan based on track name (gtr L, vocal R40 and so on)
-
 function Main()
     local sel_track_count = reaper.CountSelectedTracks(0)
     if sel_track_count < 2 then 
@@ -38,6 +37,11 @@ function Main()
             reaper.GetSetTrackGroupMembership(track1, "PAN_FOLLOW", mask, mask)
             reaper.GetSetTrackGroupMembership(track2, "PAN_LEAD", mask, mask)
             reaper.GetSetTrackGroupMembership(track2, "PAN_FOLLOW", mask, mask)
+            
+            reaper.GetSetTrackGroupMembership(track1, "VOLUME_LEAD", mask, mask)
+            reaper.GetSetTrackGroupMembership(track1, "VOLUME_FOLLOW", mask, mask)
+            reaper.GetSetTrackGroupMembership(track2, "VOLUME_LEAD", mask, mask)
+            reaper.GetSetTrackGroupMembership(track2, "VOLUME_FOLLOW", mask, mask)
             
             -- Инверсия панорамы для второго трека
             reaper.GetSetTrackGroupMembership(track2, "PAN_REVERSE", mask, mask)
