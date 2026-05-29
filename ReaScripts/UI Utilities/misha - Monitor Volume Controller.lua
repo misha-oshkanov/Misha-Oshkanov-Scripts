@@ -6,7 +6,7 @@
 --  If you need more levels or change db values you can edit buttons table.
 --  Use right click to change modes between volume control and listen filters
 -- @changelog
---  fixed Use Metric AB instead of JS setting
+--  fixed Use Metric AB instead of JS setting save
 
 -----------------------------------------------------------------------------
 REF_FOLDER_NAME = 'Refs'
