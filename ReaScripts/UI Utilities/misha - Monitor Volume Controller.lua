@@ -1,12 +1,12 @@
 -- @description Monitor Volume Controller
 -- @author Misha Oshkanov
--- @version 4.2
+-- @version 4.3
 -- @about
 --  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. 
 --  If you need more levels or change db values you can edit buttons table.
 --  Use right click to change modes between volume control and listen filters
 -- @changelog
---  bug fixes
+--  fixed new project tab crash
 
 -----------------------------------------------------------------------------
 REF_FOLDER_NAME = 'Refs'
@@ -1271,6 +1271,8 @@ function get_bounds(hwnd)
 end
 
 function loop()  
+    master = reaper.GetMasterTrack()
+
     local layout = layers[current_layer]
     USE_VOLUME_BUTTONS  = layout.vol
     USE_LISTEN_BANDS    = layout.lis
@@ -1366,5 +1368,4 @@ function loop()
     if open then reaper.defer(loop) end
 end
 
-master = reaper.GetMasterTrack()
 loop()
