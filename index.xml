@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="23e7ea148326831eacc57b3697b53385cea43f05">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="32ed5655c4bee12d6c0493b6bbaac721bbd6c1fe">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -508,6 +508,20 @@
     </reapack>
   </category>
   <category name="ReaScripts/Track and items">
+    <reapack name="misha - add render fades from markers.lua" type="script" desc="Set render fades using marker positions">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Automatically configures render fade-in and fade-out durations based on marker positions. Based on distance between markers (for example betwee marker named "FI" and "=START" for fade in) "=START" for render start, and "=END" for render end. Also enables fade options in render post-processing based on which fade markers are present.\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="Misha Oshkanov" time="2026-06-16T20:19:04Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/32ed5655c4bee12d6c0493b6bbaac721bbd6c1fe/ReaScripts/Track%20and%20items/misha%20-%20add%20render%20fades%20from%20markers.lua</source>
+      </version>
+    </reapack>
     <reapack name="misha - auto gain fx chain for selected track using GainMatch.lua" type="script" desc="Auto gain fx chain for selected track using GainMatch">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
@@ -551,6 +565,20 @@
       </metadata>
       <version name="1.0" author="Misha Oshkanov" time="2024-09-05T07:33:45Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/a627eaabb77f19be61043b5b8831aac21c4c287e/ReaScripts/Track%20and%20items/misha%20-%20float%20previous%20fx%20on%20selected%20track%20or%20item.lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - group selected tracks and activate inverted pan.lua" type="script" desc="Group selected tracks and activate inverted pan">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Adds pairs of selected tracks in free group and activates inverted pan, applies pan based on track name (gtr L, vocal R40 and so on)\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.2" time="2026-06-16T20:19:04Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/32ed5655c4bee12d6c0493b6bbaac721bbd6c1fe/ReaScripts/Track%20and%20items/misha%20-%20group%20selected%20tracks%20and%20activate%20inverted%20pan.lua</source>
       </version>
     </reapack>
     <reapack name="misha - insert fx - Comp.lua" type="script" desc="insert or open UI of FX plugin on selected tracks">
@@ -647,21 +675,35 @@
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/dc901333de2c146554d2963963589b73847fc17c/ReaScripts/Track%20and%20items/misha%20-%20nudge%20volume%20up%20(tracks,%20razor,%20and%20envelopes).lua</source>
       </version>
     </reapack>
-    <reapack name="misha - smart inverted pan.lua" type="script" desc="Adds pairs of selected tracks in free group and activates inverted pan">
+    <reapack name="misha - render first fx to lane.lua" type="script" desc="Render first FX to lane without affecting original track">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Adds pairs of selected tracks in free group and activates inverted pan, applies pan based on track name (gtr L, vocal R40 and so on)\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Renders selected items through the first FX plugin to a new lane on the same track. Bypasses all other FX and envelopes during rendering, then restores them. Creates a colored rendered copy in a new fixed lane with original track settings preserved.\par}
 }
 ]]></description>
       </metadata>
-      <version name="1.0" time="2026-02-17T11:40:10Z">
-        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/332a187b64253ef5689a9afbfdad16a576ba218c/ReaScripts/Track%20and%20items/misha%20-%20smart%20inverted%20pan.lua</source>
+      <version name="1.0" author="Misha Oshkanov" time="2026-06-16T20:19:04Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/32ed5655c4bee12d6c0493b6bbaac721bbd6c1fe/ReaScripts/Track%20and%20items/misha%20-%20render%20first%20fx%20to%20lane.lua</source>
       </version>
-      <version name="1.1" time="2026-04-21T11:50:27Z">
-        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/6f48be532b7c5c09b98083deda81e9e375cb0168/ReaScripts/Track%20and%20items/misha%20-%20smart%20inverted%20pan.lua</source>
+    </reapack>
+    <reapack name="misha - smart split items at mouse (contextual selection).lua" type="script" desc="Split item at mouse cursor - select left (top) or right (bottom) part">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Splits item under mouse cursor and selects:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Left part if mouse is in top half of item\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Right part if mouse is in bottom half of item\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Uses default crossfade and selection settings\sa180\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="Based on AZ Fade Tool &amp; amagalma split logic" time="2026-06-16T20:19:04Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/32ed5655c4bee12d6c0493b6bbaac721bbd6c1fe/ReaScripts/Track%20and%20items/misha%20-%20smart%20split%20items%20at%20mouse%20(contextual%20selection).lua</source>
       </version>
     </reapack>
     <reapack name="misha - smart track delete.lua" type="script" desc="Smart track delete.">
@@ -678,8 +720,36 @@
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/b6df32122125624932b5f0d9d7f3539ca11eaadd/ReaScripts/Track%20and%20items/misha%20-%20smart%20track%20delete.lua</source>
       </version>
     </reapack>
+    <reapack name="misha - snap item edges to nearest markers (without moving content).lua" type="script" desc="Snap item edges to neares markers (without moving content)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Move item edges to nearest markers if item start is bigger than new item start, then move item start to left marker\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="Misha Oshkanov" time="2026-06-16T20:19:04Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/32ed5655c4bee12d6c0493b6bbaac721bbd6c1fe/ReaScripts/Track%20and%20items/misha%20-%20snap%20item%20edges%20to%20nearest%20markers%20(without%20moving%20content).lua</source>
+      </version>
+    </reapack>
   </category>
   <category name="ReaScripts/UI Utilities">
+    <reapack name="misha - check snap and change ruler colors.lua" type="script" desc="Color ruler if snap is on">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Apply colors to ruler if snap is active\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.3" author="Misha Oshkanov" time="2026-06-16T20:19:04Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/32ed5655c4bee12d6c0493b6bbaac721bbd6c1fe/ReaScripts/UI%20Utilities/misha%20-%20check%20snap%20and%20change%20ruler%20colors.lua</source>
+      </version>
+    </reapack>
     <reapack name="misha - Item counter panel for selected tracks.lua" type="script" desc="Item counter panel for selected track">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
