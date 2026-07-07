@@ -1,6 +1,6 @@
 -- @description Project Work Timer: Smart time tracker with tags, afk and focus detection and alarms
 -- @author Misha Oshkanov
--- @version 2.1
+-- @version 2.2
 -- @about
 --  Tracks active work time per project tab in REAPER.
 --  Switches timers between tabs automatically.
@@ -12,7 +12,6 @@
 --------------------------------------------------------------------- 
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
-
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
 
 floating_window = true
@@ -28,9 +27,9 @@ local last_date_key = ""
 local last_project_path = "" -- Хранит путь к файлу текущего проекта
 
 -- Переменные для системы алертов (таймеров напоминания)
-local alert_end_time = nil   -- Время в секундах (reaper.time_precise), когда должен сработать алерт
-local alert_duration = 0     -- Длительность выбранного таймера (для вывода текста)
-local alert_active = false   -- Флаг: запущен ли сейчас таймер напоминания
+local alert_time_left = 0    -- Сколько секунд осталось до срабатывания алерта
+local alert_duration = 0     -- Общая длительность выбранного таймера
+local alert_active = false   
 
 -- Переменные для системы тегов
 local current_tag = "no tag" -- Тег по умолчанию
@@ -50,6 +49,7 @@ local ctx = reaper.ImGui_CreateContext('Project Work Timer')
 local font = reaper.ImGui_CreateFont('arial')
 local font_size_ui = 18
 local font_size_timer = 24
+local font_size_alarm = 22
 
 window_flags =  reaper.ImGui_WindowFlags_NoScrollbar() +
                 reaper.ImGui_WindowFlags_NoTitleBar() +
@@ -536,7 +536,12 @@ function frame()
             end
 
             is_afk = (now - last_input_time) > AFK_THRESHOLD
-            if delta < 60 and not is_afk then total_time = total_time + delta end
+            if delta < 60 and not is_afk then total_time = total_time + delta 
+            
+                if alert_active and alert_time_left > 0 then
+                    alert_time_left = alert_time_left - delta
+                end
+            end
         else is_afk = true end
         
         if now - last_save >= 60 then
@@ -573,18 +578,13 @@ function frame()
         DrawAlertProgressBar(item_min_x, item_min_y, item_max_x, item_max_y)
         -- ==============================================================
         
-        if alert_active and alert_end_time and reaper.ImGui_IsItemHovered(ctx) then
-            local now_precise = reaper.time_precise()
-            local time_left = alert_end_time - now_precise
-            
-            if time_left > 0 then
-                -- Открываем окно всплывающей подсказки
-                reaper.ImGui_BeginTooltip(ctx)
-                
-                -- Подсвечиваем текст красивым желтым цветом (0xFFCC00FF)
-                reaper.ImGui_TextColored(ctx, 0xFFCC00FF, FormatTime(time_left))
-                reaper.ImGui_EndTooltip(ctx)
-            end
+        if alert_active and alert_time_left > 0 and reaper.ImGui_IsItemHovered(ctx) then
+            reaper.ImGui_BeginTooltip(ctx)
+            reaper.ImGui_PushFont(ctx, font, font_size_alarm )
+            reaper.ImGui_TextColored(ctx, 0xFFCC00FF, "Alarm:  ")
+            reaper.ImGui_TextColored(ctx, 0xFFCC00FF,  FormatTime(alert_time_left))
+            reaper.ImGui_PopFont(ctx)
+            reaper.ImGui_EndTooltip(ctx)
         end
         
         reaper.ImGui_PopStyleColor(ctx,5)
@@ -638,46 +638,24 @@ function frame()
             
             reaper.ImGui_TextDisabled(ctx, "Set alarm:")
             
-            -- Первая кнопка (15 мин)
-            if reaper.ImGui_Button(ctx, "15м", 40, 22) then
-                alert_duration = 15 * 60
-                alert_end_time = reaper.time_precise() + alert_duration
-                alert_active = true
-                reaper.ImGui_CloseCurrentPopup(ctx) -- Закрываем попап после выбора
-            end
-            
-            -- Вторая кнопка (30 мин) в той же строке
-            reaper.ImGui_SameLine(ctx)
-            if reaper.ImGui_Button(ctx, "30м", 40, 22) then
-                alert_duration = 30 * 60
-                alert_end_time = reaper.time_precise() + alert_duration
-                alert_active = true
-                reaper.ImGui_CloseCurrentPopup(ctx)
-            end
-            
-            -- Третья кнопка (1 час) в той же строке
-            reaper.ImGui_SameLine(ctx)
-            if reaper.ImGui_Button(ctx, "1ч", 40, 22) then
-                alert_duration = 60 * 60
-                alert_end_time = reaper.time_precise() + alert_duration
-                alert_active = true
-                reaper.ImGui_CloseCurrentPopup(ctx)
-            end
-            
-            -- Четвертая кнопка (2 часа) в той же строке
-            reaper.ImGui_SameLine(ctx)
-            if reaper.ImGui_Button(ctx, "2ч", 40, 22) then
-                alert_duration = 120 * 60
-                alert_end_time = reaper.time_precise() + alert_duration
+            local function set_alert(minutes)
+                alert_duration = minutes * 60
+                alert_time_left = alert_duration
                 alert_active = true
                 reaper.ImGui_CloseCurrentPopup(ctx)
             end
 
+            if reaper.ImGui_Button(ctx, "15м", 40, 22) then set_alert(15) end
+            reaper.ImGui_SameLine(ctx)
+            if reaper.ImGui_Button(ctx, "30м", 40, 22) then set_alert(30) end
+            reaper.ImGui_SameLine(ctx)
+            if reaper.ImGui_Button(ctx, "1ч", 40, 22) then set_alert(60) end
+            reaper.ImGui_SameLine(ctx)
+            if reaper.ImGui_Button(ctx, "2ч", 40, 22) then set_alert(120) end
             
-            if alert_active and alert_end_time then
+            if alert_active and alert_time_left > 0 then
                 reaper.ImGui_Dummy( ctx, 10, 10 )
-                local time_left = math.max(0, alert_end_time - reaper.time_precise())
-                local status_text = string.format("Alarm in: %s", FormatTime(time_left))
+                local status_text = string.format("Alarm in: %s", FormatTime(alert_time_left))
                 local reset_text = "Reset alarm"
                 
                 local popup_width = reaper.ImGui_GetWindowWidth(ctx)
@@ -695,7 +673,7 @@ function frame()
                 
                 if reaper.ImGui_Selectable(ctx, reset_text, false, 0, btn_w) then
                     alert_active = false
-                    alert_end_time = nil
+                    alert_time_left = 0
                     alert_duration = 0
                 end
                 reaper.ImGui_Separator(ctx)
@@ -786,18 +764,15 @@ function frame()
             reaper.ImGui_EndPopup(ctx)
         end
 
-        if alert_active and alert_end_time then
-            local now_precise = reaper.time_precise()
-            if now_precise >= alert_end_time then
-                -- Время вышло! Выводим сообщение пользователю
-                local format_minutes = math.floor(alert_duration / 60)
-                reaper.MB(string.format("Таймер на %d мин. завершен! Время вышло.", format_minutes), "Напоминание", 0)
-                
-                -- Сбрасываем таймер алертов
-                alert_active = false
-                alert_end_time = nil
-                alert_duration = 0
-            end
+        if alert_active and alert_time_left <= 0 then
+            local format_minutes = math.floor(alert_duration / 60)
+            
+            -- Сбрасываем флаги ПЕРЕД вызовом окна, чтобы оно не зацикливалось при блокировке потока
+            alert_active = false
+            alert_time_left = 0
+            
+            reaper.MB(string.format("Таймер на %d мин. завершен! Время вышло.", format_minutes), "Напоминание", 0)
+            alert_duration = 0
         end
 
         DrawStatsWindow(current_proj_ptr)
@@ -805,36 +780,23 @@ function frame()
 end
 
 function DrawAlertProgressBar(item_min_x, item_min_y, item_max_x, item_max_y)
-    if not alert_active or not alert_end_time or alert_duration <= 0 then return end
+    if not alert_active or alert_time_left <= 0 or alert_duration <= 0 then return end
 
-    -- 1. Вычисляем, сколько времени осталось и сколько уже прошло
-    local now_precise = reaper.time_precise()
-    local time_left = alert_end_time - now_precise
-    local time_passed = alert_duration - time_left
-
-    -- Ограничиваем прогресс от 0.0 до 1.0 на случай микрозадержек Lua
+    -- Вычисляем прогресс на основе оставшихся и общих секунд
+    local time_passed = alert_duration - alert_time_left
     local progress = math.max(0.0, math.min(1.0, time_passed / alert_duration))
 
-    -- 2. Рассчитываем координаты полоски
-    -- Полоска будет высотой 3 пикселя и прижмется к самому нижнему краю кнопки
     local bar_h = 3
     local bar_min_x = item_min_x
-    local bar_max_x = item_min_x + ((item_max_x - item_min_x) * progress) -- растет вбок
+    local bar_max_x = item_min_x + ((item_max_x - item_min_x) * progress)
     local bar_min_y = item_max_y - bar_h
     local bar_max_y = item_max_y
 
-    -- 3. Получаем окно DrawList текущего окна
     local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-
-    -- Желтый цвет в формате HEX (RGBA: 255, 204, 0, прозрачность 200) -> 0xFFCC00C8
     local yellow_color = 0xFFCC00C8
-
-    -- Настройки закругления углов полоски (чтобы она не вылезала за скругленные края кнопки)
-    -- Используем флаг DrawFlags_RoundCornersBottom, чтобы закруглить только нижние углы
     local draw_flags = reaper.ImGui_DrawFlags_RoundCornersBottom()
-    local rounding = 6.0 -- совпадает с вашим FrameRounding кнопок
+    local rounding = 6.0 
 
-    -- Рисуем заполненный прямоугольник полосы прогресса
     reaper.ImGui_DrawList_AddRectFilled(draw_list, bar_min_x, bar_min_y, bar_max_x, bar_max_y, yellow_color, rounding, draw_flags)
 end
 
