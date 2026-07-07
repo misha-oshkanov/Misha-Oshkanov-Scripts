@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="486f61c49f8bbc13309badb081a3a021347a55a7">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="2314b454cf4a0d8bdf803d639e24c32e9f47be5f">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -1168,6 +1168,13 @@
       <version name="1.4" author="Misha Oshkanov" time="2026-02-17T11:25:43Z">
         <changelog><![CDATA[collapse crush fixed, new partical match checkbox added]]></changelog>
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/6650e2b8094079010878ddff3653008e273040da/ReaScripts/UI%20Utilities/misha%20-%20Session%20Organizer.lua</source>
+      </version>
+      <version name="2.0" author="Misha Oshkanov" time="2026-07-07T11:12:21Z">
+        <changelog><![CDATA[collapse crush fixed, new partical match checkbox added
+Added smart folder creator
+Added smart pan group creator for double tracks
+Added Check button to check if selected tracks match session rules]]></changelog>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/2314b454cf4a0d8bdf803d639e24c32e9f47be5f/ReaScripts/UI%20Utilities/misha%20-%20Session%20Organizer.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Show peak LUFS readouts in arrange view.lua" type="script" desc="Show master peak lufs readouts in arrange view">
