@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="2314b454cf4a0d8bdf803d639e24c32e9f47be5f">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="7d877864ebc45d286d2db0e5dadf284d6dacfa78">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -1058,13 +1058,13 @@
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/bc74709e8fc2ef4dad2be8c5ae97c0ab9ac534b6/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller.lua</source>
       </version>
     </reapack>
-    <reapack name="misha - project work timer.lua" type="script" desc="Project Time Tracker with Multi-Project Support and Efficient Saving">
+    <reapack name="misha - project work timer.lua" type="script" desc="Project Work Timer: Smart time tracker with tags, afk and focus detection">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Tracks active work time per project tab in REAPER. Switches timers between tabs automatically. Saves time to ExtState only once per minute or on save/exit.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Tracks active work time per project tab in REAPER. Switches timers between tabs automatically. Saves time to ExtState only once per minute or on save/exit. Create and color code tags to mark time Right click to open tag window Left click to open statistics\par}
 }
 ]]></description>
       </metadata>
@@ -1082,6 +1082,9 @@
       </version>
       <version name="1.2.2" author="Misha Oshkanov" time="2025-08-08T08:00:45Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/13c92c0cdaa82c1dbc83a45f7f05bca98ad4f6f0/ReaScripts/UI%20Utilities/misha%20-%20project%20work%20timer.lua</source>
+      </version>
+      <version name="2.0" author="Misha Oshkanov" time="2026-07-07T19:59:25Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/7d877864ebc45d286d2db0e5dadf284d6dacfa78/ReaScripts/UI%20Utilities/misha%20-%20project%20work%20timer.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Scroller.lua" type="script" desc="Scroller">
