@@ -1,6 +1,6 @@
 -- @description Project Work Timer: Smart time tracker with tags, afk and focus detection and alarms
 -- @author Misha Oshkanov
--- @version 2.2
+-- @version 2.3
 -- @about
 --  Tracks active work time per project tab in REAPER.
 --  Switches timers between tabs automatically.
@@ -12,6 +12,7 @@
 --------------------------------------------------------------------- 
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
+
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
 
 floating_window = true
@@ -223,8 +224,9 @@ function ImportHistoryFromRPP(target_proj_ptr)
     file:close()
     
     local current_date_key = GetCurrentDateKey()
-    total_time = load_proj_time(target_proj_ptr, current_date_key, current_tag)
-    
+    -- total_time = load_proj_time(target_proj_ptr, current_date_key, current_tag)
+    total_time = load_total_tag_time(current_proj_ptr, current_tag)
+
     reaper.MarkProjectDirty(target_proj_ptr)
     
     reaper.MB(string.format("Импорт успешно завершен!\nЗагружено записей задач: %d", imported_count), "Успех", 0)
@@ -264,7 +266,6 @@ function ClearProjectHistory(target_proj_ptr)
     
     reaper.MB("Вся история времени для текущего проекта успешно удалена!", "Успех", 0)
 end
-
 
 
 function DrawStatsWindow(proj_ptr)
@@ -405,12 +406,71 @@ function load_proj_time(proj_ptr, date_key, tag)
     return tonumber(saved_time) or 0
 end
 
-function save_proj_time(proj_ptr, date_key, tag, time_value)
+function save_proj_time(proj_ptr, date_key, tag, current_total_time)
     if not proj_ptr or date_key == "" or tag == "" then return end
-    local key = "TOTAL_TIME_" .. date_key .. "_" .. tag
-    reaper.SetProjExtState(proj_ptr, "TIME_TRACKER", key, tostring(time_value))
+    
+    local past_days_time = 0
+    local idx = 0
+    local target_tag = tostring(tag):lower():gsub("^%s*(.-)%s*$", "%1")
+    
+    while true do
+        local retval, key, val = reaper.EnumProjExtState(proj_ptr, "TIME_TRACKER", idx)
+        if not retval then break end
+        
+        if key and key:match("^TOTAL_TIME_") then
+            local d, t = key:match("^TOTAL_TIME_(%d%d%d%d%-%d%d%-%d%d)_(.+)$")
+            if not d and target_tag == "no tag" then
+                d = key:match("^TOTAL_TIME_(%d%d%d%d%-%d%d%-%d%d)$")
+                if d then t = "no tag" end
+            end
+            
+            if d and t and d ~= date_key and t:lower():gsub("^%s*(.-)%s*$", "%1") == target_tag then
+                past_days_time = past_days_time + (tonumber(val) or 0)
+            end
+        end
+        idx = idx + 1
+    end
+    
+    local today_only_time = math.max(0, current_total_time - past_days_time)
+    
+    local key = "TOTAL_TIME_" .. date_key .. "_" .. target_tag
+    reaper.SetProjExtState(proj_ptr, "TIME_TRACKER", key, tostring(today_only_time))
     reaper.MarkProjectDirty(proj_ptr) 
 end
+
+function load_total_tag_time(proj_ptr, current_tag_name)
+    if not proj_ptr then return 0 end
+    
+    local total_accumulated_seconds = 0
+    local idx = 0
+    local target_tag = tostring(current_tag_name or ""):lower():gsub("^%s*(.-)%s*$", "%1")
+    
+    while true do
+        local retval, key, val = reaper.EnumProjExtState(proj_ptr, "TIME_TRACKER", idx)
+        if not retval then break end
+        
+        if key and key:match("^TOTAL_TIME_") then
+            local date, tag = key:match("^TOTAL_TIME_(%d%d%d%d%-%d%d%-%d%d)_(.+)$")
+            
+            if not date and target_tag == "no tag" then
+                date = key:match("^TOTAL_TIME_(%d%d%d%d%-%d%d%-%d%d)$")
+                if date then tag = "no tag" end
+            end
+            
+            if date and tag then
+                local clean_tag = tag:lower():gsub("^%s*(.-)%s*$", "%1")
+                if clean_tag == target_tag then
+                    total_accumulated_seconds = total_accumulated_seconds + (tonumber(val) or 0)
+                end
+            end
+        end
+        idx = idx + 1
+    end
+    
+    return total_accumulated_seconds
+end
+
+
 
 function FormatTime(seconds)
     local hours = math.floor(seconds / 3600)
@@ -459,6 +519,7 @@ function atexit()
     end
 end
 
+
 function delete_tag(tag_name)
     if tag_name == "no tag" then return end
     local delete_idx = nil
@@ -484,11 +545,12 @@ function delete_tag(tag_name)
             end
             
             if current_proj_ptr then
-                total_time = load_proj_time(current_proj_ptr, GetCurrentDateKey(), current_tag)
+                -- total_time = load_proj_time(current_proj_ptr, GetCurrentDateKey(), current_tag)
+                total_time = load_total_tag_time(current_proj_ptr, current_tag)
             end
         end
     end
-end
+end 
 
 
 function frame()
@@ -511,7 +573,9 @@ function frame()
                 save_proj_time(last_project_ptr, last_date_key, current_tag, total_time)
             end
             
-            total_time = load_proj_time(current_proj_ptr, current_date_key, current_tag)
+            -- total_time = load_proj_time(current_proj_ptr, current_date_key, current_tag)
+            total_time = load_total_tag_time(current_proj_ptr, current_tag)
+
             
             last_project_ptr = current_proj_ptr
             last_date_key = current_date_key
@@ -541,6 +605,8 @@ function frame()
                 if alert_active and alert_time_left > 0 then
                     alert_time_left = alert_time_left - delta
                 end
+            
+            
             end
         else is_afk = true end
         
@@ -622,16 +688,21 @@ function frame()
                 if reaper.ImGui_MenuItem(ctx, tag_name, nil, (current_tag == tag_name)) then
                     save_proj_time(current_proj_ptr, last_date_key, current_tag, total_time)
                     current_tag = tag_name
-                    total_time = load_proj_time(current_proj_ptr, last_date_key, current_tag)
+                    -- total_time = load_proj_time(current_proj_ptr, last_date_key, current_tag)
+                    total_time = load_total_tag_time(current_proj_ptr, current_tag)
                 end
                 reaper.ImGui_PopStyleColor(ctx,1)
             end
             
+            reaper.ImGui_Dummy(ctx,5,5)
             reaper.ImGui_Separator(ctx)
             
-            if reaper.ImGui_MenuItem(ctx, "+ Add / Modify") then 
+            reaper.ImGui_PushFont(ctx, nil, 14 )
+
+            if reaper.ImGui_MenuItem(ctx, "        + Add / Modify") then 
                 should_open_manage_modal = true 
             end
+            reaper.ImGui_PopFont(ctx)
 
             reaper.ImGui_Spacing(ctx)
             reaper.ImGui_Separator(ctx)
@@ -656,7 +727,7 @@ function frame()
             if alert_active and alert_time_left > 0 then
                 reaper.ImGui_Dummy( ctx, 10, 10 )
                 local status_text = string.format("Alarm in: %s", FormatTime(alert_time_left))
-                local reset_text = "Reset alarm"
+                local reset_text = "Clear alarm"
                 
                 local popup_width = reaper.ImGui_GetWindowWidth(ctx)
                 
@@ -855,7 +926,7 @@ local start_proj, _ = reaper.EnumProjects(-1)
 if start_proj then
     last_project_ptr = start_proj
     last_date_key = GetCurrentDateKey()
-    total_time = load_proj_time(last_project_ptr, last_date_key, current_tag)
+    total_time = load_total_tag_time(current_proj_ptr, current_tag)
 end
 
 loop()
