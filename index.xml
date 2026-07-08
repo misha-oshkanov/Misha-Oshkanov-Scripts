@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="6d2d9dc25c15dbb0243511d1baffc5dd58feb1b4">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="f271fbdfa543b1e5f5ccdab63a33d819c7af019f">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -786,6 +786,9 @@
       </metadata>
       <version name="0.7.8" author="Misha Oshkanov" time="2026-07-08T13:58:11Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/6d2d9dc25c15dbb0243511d1baffc5dd58feb1b4/ReaScripts/UI%20Utilities/misha%20-%20fx%20scroller.lua</source>
+      </version>
+      <version name="1.0" author="Misha Oshkanov" time="2026-07-08T14:00:54Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/f271fbdfa543b1e5f5ccdab63a33d819c7af019f/ReaScripts/UI%20Utilities/misha%20-%20fx%20scroller.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Item counter panel for selected tracks.lua" type="script" desc="Item counter panel for selected track">
