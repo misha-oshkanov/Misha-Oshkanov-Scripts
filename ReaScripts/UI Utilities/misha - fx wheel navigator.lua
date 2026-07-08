@@ -1,28 +1,31 @@
--- @description FX Scroller
+-- @description FX Wheel Navigator
 -- @author Misha Oshkanov
--- @version 1.0
+-- @version 1.2
 -- @about
 --   # FX Scroller
 --   An interactive overlay utility for REAPER that simplifies plug-in chain management using ReaImGui.
 --
 --   ### Features:
 --   - Centered Overlay Button: Automatically places a floating overlay button right in the center of the focused FX window's title bar.
---   - Mouse Wheel Navigation: Hover over the button and scroll the mouse wheel to cyclically switch between previous or next plug-ins in the track's FX chain.
---   - Dry/Wet Toggle (Click): Left-clicking the button toggles the plug-in's Dry/Wet parameter between 0% and its previous value (or 100%), creating a quick bypass comparison tool.
---   - Visual Feedback:** The button dynamically updates its index number and color. It turns yellow when active, red when Dry/Wet is set to 0%, and parks itself as a neutral grey indicator if no FX window is in focus.
+--   - Mouse Wheel Navigation: Hover over the button and scroll the mouse wheel to cyclically switch between previous or next plug-ins in the track's FX chain (skips offline plugins).
+--   - Bypass / Wet Toggles (Click): Left-click toggles full plugin Bypass. Right-click toggles Dry/Wet between 0% and 100%.
+--   - Visual Feedback: The button dynamically updates its index number and color. It turns dark grey when active, red when Dry/Wet is set to 0%, and parks itself if no FX window is in focus.
+--   - FX Chain Tooltip: Hovering over the button reveals a complete list of FX in the current track's chain, with the currently focused plug-in highlighted.
 --
 --   ### Requirements:
 --   - REAPER v7.06 or higher
---   - ReaImGui extension (v0.9+)
+--   - ReaImGui extension (v0.10+)
 --   - js_ReaScriptAPI extension
-
 
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
 
 package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua;' .. package.path
-local ImGui = require 'imgui' '0.9'
+local ImGui = require 'imgui' '0.10'
 
 local ctx = ImGui.CreateContext('FX Wheel Navigator')
+local font = reaper.ImGui_CreateFont('arial')
+local font_size_tooltip = 16
+local font_size_main = 14
 
 local last_win_x, last_win_y = 100, 100
 local last_valid_x, last_valid_y = 100, 100
@@ -32,6 +35,8 @@ local target_fx_idx = nil
 local should_reposition_window = false
 
 local btn_w, btn_h = 100, 20
+
+local INVERT_SCROLL = false
 
 function rgb(r, g, b)
     a = 1
@@ -49,6 +54,23 @@ local function round(num, numDecimalPlaces)
     local mult = 10^(numDecimalPlaces or 0)
     if num >= 0 then return math.floor(num * mult + 0.5) / mult
     else return math.ceil(num * mult - 0.5) / mult end
+end
+
+function clean_fx_name(name)
+  name = tostring(name or "")
+  name = name:gsub("^%s+", ""):gsub("%s+$", "")
+  name = name:gsub("^VST3i:%s*", "")
+  name = name:gsub("^VSTi:%s*", "")
+  name = name:gsub("^VST3:%s*", "")
+  name = name:gsub("^VST:%s*", "")
+  name = name:gsub("^CLAPi:%s*", "")
+  name = name:gsub("^CLAP:%s*", "")
+  name = name:gsub("^AUi:%s*", "")
+  name = name:gsub("^LV2i:%s*", "")
+  name = name:gsub("^AU:%s*", "")
+  name = name:gsub("%s+%(.-%)%s*$", "")
+  if name == "" then return "FX" end
+  return name
 end
 
 function ToggleFXWet(track, fx_idx)
@@ -83,7 +105,7 @@ function ToggleFXWet(track, fx_idx)
     end
     
     local x, y = reaper.GetMousePosition()
-    reaper.TrackCtl_SetToolTip(msg, x, y, true)
+    -- reaper.TrackCtl_SetToolTip(msg, x, y, true)
 end
 
 function Loop()
@@ -93,7 +115,7 @@ function Loop()
     local current_num = "-"
     local track, fx_idx, fx_count = nil, nil, 0
     local is_wet_zero = false 
-
+     byp = nil
     local retval, track_idx, _, _fx_idx = reaper.GetFocusedFX()
 
     if retval == 1 then
@@ -105,11 +127,11 @@ function Loop()
             current_num = tostring(fx_idx + 1).."/"..fx_count
 
             local wetparam = reaper.TrackFX_GetParamFromIdent(track, fx_idx, ":wet")
+            byp = reaper.TrackFX_GetEnabled(track, fx_idx) == false
+        
             if wetparam ~= -1 then
                 local wet_val = reaper.TrackFX_GetParam(track, fx_idx, wetparam)
-                if wet_val <= 0.001 then
-                    is_wet_zero = true
-                end
+                if wet_val <= 0.001 then is_wet_zero = true end
             end
 
             local fx_hwnd = reaper.TrackFX_GetFloatingWindow(track, fx_idx)
@@ -117,7 +139,6 @@ function Loop()
             if fx_hwnd then
                 local _, l, t, r, b = reaper.JS_Window_GetRect(fx_hwnd)
                 if l then 
-                    
                     if should_reposition_window and fx_idx == target_fx_idx then
                         local new_w = r - l
                         local half_btn_w = math.floor(btn_w / 2)
@@ -157,9 +178,11 @@ function Loop()
     end
 
     if not fx_found then
-        last_win_x = 0
-        last_win_y = 0
+        last_win_x = -100
+        last_win_y = -100
     end
+    
+    ImGui.PushFont(ctx, font, font_size_main)
 
     ImGui.SetNextWindowPos(ctx, last_win_x, last_win_y, ImGui.Cond_Always)
     ImGui.SetNextWindowSize(ctx, btn_w, btn_h)
@@ -176,9 +199,11 @@ function Loop()
         local btn_color = rgb(100, 100, 100)
         if fx_found then
             if is_wet_zero then
-                btn_color = rgb(140, 50, 50)  -- Красный цвет для 0% Wet
+                btn_color = rgb(140, 50, 50)
+            elseif byp then 
+                btn_color = rgb(51, 68, 114)
             else
-                btn_color = 0x444444FF-- Желтый цвет для активного режима
+                btn_color = rgb(94, 94, 94)
             end
         end
 
@@ -186,21 +211,80 @@ function Loop()
         ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered, btn_color)
         ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive, btn_color)
 
-
-        if ImGui.Button(ctx, current_num, btn_w, btn_h) and fx_found then
-            ToggleFXWet(track, fx_idx)
+        ImGui.Button(ctx, current_num, btn_w, btn_h)
+        
+        if fx_found then
+            if ImGui.IsItemClicked(ctx, ImGui.MouseButton_Left) then
+                local current_state = reaper.TrackFX_GetEnabled(track, fx_idx)
+                reaper.TrackFX_SetEnabled(track, fx_idx, not current_state)
+                local _, fx_name = reaper.TrackFX_GetFXName(track, fx_idx, "")
+                local status_msg = current_state and "Bypassed" or "Enabled"
+                reaper.Undo_OnStateChangeEx("Toggle Bypass for " .. fx_name, 2, -1)
+                
+                local x, y = reaper.GetMousePosition()
+                -- reaper.TrackCtl_SetToolTip(clean_fx_name(fx_name) .. " => " .. status_msg, x, y, true)
+            end
+            
+            if ImGui.IsItemClicked(ctx, ImGui.MouseButton_Right) then
+                ToggleFXWet(track, fx_idx)
+            end
         end
 
         if fx_found and ImGui.IsItemHovered(ctx) then
+            ImGui.PushFont(ctx, font, font_size_tooltip)
+
+            ImGui.BeginTooltip(ctx)
+            
+            local _, track_name = reaper.GetTrackName(track)
+            if track_name == "" then track_name = (track == reaper.GetMasterTrack(0)) and "MASTER" or "Track " .. track_idx end
+            ImGui.TextDisabled(ctx, track_name)
+            ImGui.Separator(ctx)
+            
+            for i = 0, fx_count - 1 do
+                local _, fx_name = reaper.TrackFX_GetFXName(track, i, "")
+                local is_byp = reaper.TrackFX_GetEnabled(track, i) == false
+                local is_off = reaper.TrackFX_GetOffline(track, i) == true
+
+                fx_name = clean_fx_name(fx_name)
+                local line_text = string.format("%d. %s", i + 1, fx_name)
+                if not is_off then 
+                    if i == fx_idx then
+                        if is_byp then c = rgb(132, 150, 255) else c = rgb(255, 227, 11) end
+                        if is_wet_zero then c = rgb(207, 74, 74) end
+                        ImGui.TextColored(ctx, c, line_text)
+                    else
+                        if is_byp then c = rgb(93, 93, 93) else c = rgb(238, 238, 238) end
+                        ImGui.TextColored(ctx, c, line_text)
+                    end
+                end
+            end
+            ImGui.PopFont(ctx)
+            ImGui.EndTooltip(ctx)
+
             local vertical = reaper.ImGui_GetMouseWheel(ctx)
+            if INVERT_SCROLL then
+                vertical = vertical * -1
+            end
             if vertical ~= 0 and fx_count > 1 then
-                if vertical > 0 then
-                    target_fx_idx = (fx_idx + 1) % fx_count
-                else
-                    target_fx_idx = (fx_idx - 1 + fx_count) % fx_count
+                local next_idx = fx_idx
+                local loops = 0
+                
+                while loops < fx_count do
+                    if vertical > 0 then
+                        next_idx = (next_idx + 1) % fx_count
+                    else
+                        next_idx = (next_idx - 1 + fx_count) % fx_count
+                    end
+                    
+                    loops = loops + 1
+                    
+                    if not reaper.TrackFX_GetOffline(track, next_idx) then
+                        target_fx_idx = next_idx
+                        break
+                    end
                 end
 
-                if target_fx_idx ~= fx_idx then
+                if target_fx_idx and target_fx_idx ~= fx_idx then
                     last_valid_x, last_valid_y = last_win_x, last_win_y
                     should_reposition_window = true
                     
@@ -211,6 +295,7 @@ function Loop()
         end
 
         ImGui.PopStyleColor(ctx, 3)
+        ImGui.PopFont(ctx)
         ImGui.End(ctx)
     end
     reaper.defer(Loop)
