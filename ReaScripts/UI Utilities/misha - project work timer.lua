@@ -1,6 +1,6 @@
 -- @description Project Work Timer: Smart time tracker with tags, afk and focus detection and alarms
 -- @author Misha Oshkanov
--- @version 2.3
+-- @version 2.4
 -- @about
 --  Tracks active work time per project tab in REAPER.
 --  Switches timers between tabs automatically.
@@ -38,7 +38,7 @@ local available_tags = {"no tag"} -- Базовый список
 local new_tag_buf = "" -- Буфер для ввода имени нового тега
 local is_popup_open = false
 
-local AFK_THRESHOLD = 60 
+local AFK_THRESHOLD = 10 
 local last_input_time = reaper.time_precise()
 
 -- Переменные для отслеживания активности
@@ -357,7 +357,6 @@ function DrawStatsWindow(proj_ptr)
         -- reaper.ImGui_SameLine(ctx, window_width * 1)
         reaper.ImGui_SameLine(ctx)
 
-        
         reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), 0xFF333340)
         reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), 0xFF333366)
         reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0xFF8888FF) -- Светло-красный/розовый текст
@@ -470,8 +469,6 @@ function load_total_tag_time(proj_ptr, current_tag_name)
     return total_accumulated_seconds
 end
 
-
-
 function FormatTime(seconds)
     local hours = math.floor(seconds / 3600)
     local mins = math.floor((seconds % 3600) / 60)
@@ -562,7 +559,7 @@ function frame()
     local current_date_key = GetCurrentDateKey()
 
     local _,proj_name = reaper.GetSetProjectInfo_String(0, "PROJECT_NAME", "", false)
-    if proj_name=="" then is_untitled = true else  is_untitled = false end
+    if proj_name == "" then is_untitled = true else  is_untitled = false end
     
     if current_proj_ptr and not is_untitled then
         local current_proj_path = reaper.GetProjectPath()
@@ -587,9 +584,11 @@ function frame()
         if prev_dirty and not current_dirty then
             save_proj_time(current_proj_ptr, last_date_key, current_tag, total_time)
         end
+        
         prev_dirty = current_dirty
 
         local is_afk = false
+        
         if IsReaperFocused() or IsPlayingOrRecording() then
             local mouse_x, mouse_y = reaper.GetMousePosition()
             local mouse_state = reaper.JS_Mouse_GetState and reaper.JS_Mouse_GetState(0xFFFF) or 0
@@ -599,17 +598,21 @@ function frame()
                 last_mouse_x, last_mouse_y = mouse_x, mouse_y
             end
 
+            if IsPlayingOrRecording() then last_input_time = now end
+
             is_afk = (now - last_input_time) > AFK_THRESHOLD
-            if delta < 60 and not is_afk then total_time = total_time + delta 
             
+            if delta < 60 and not is_afk then 
+                total_time = total_time + delta 
+                
                 if alert_active and alert_time_left > 0 then
                     alert_time_left = alert_time_left - delta
                 end
-            
-            
             end
-        else is_afk = true end
-        
+        else 
+            is_afk = true 
+        end
+
         if now - last_save >= 60 then
             save_proj_time(current_proj_ptr, last_date_key, current_tag, total_time)
             last_save = now
@@ -640,9 +643,7 @@ function frame()
         local item_min_x, item_min_y = reaper.ImGui_GetItemRectMin(ctx)
         local item_max_x, item_max_y = reaper.ImGui_GetItemRectMax(ctx)
         
-        -- Вызываем функцию отрисовки желтой полоски поверх нижней грани кнопки
         DrawAlertProgressBar(item_min_x, item_min_y, item_max_x, item_max_y)
-        -- ==============================================================
         
         if alert_active and alert_time_left > 0 and reaper.ImGui_IsItemHovered(ctx) then
             reaper.ImGui_BeginTooltip(ctx)
@@ -750,7 +751,6 @@ function frame()
                 reaper.ImGui_Separator(ctx)
             end
 
-
             reaper.ImGui_EndPopup(ctx)
         end
         
@@ -838,7 +838,6 @@ function frame()
         if alert_active and alert_time_left <= 0 then
             local format_minutes = math.floor(alert_duration / 60)
             
-            -- Сбрасываем флаги ПЕРЕД вызовом окна, чтобы оно не зацикливалось при блокировке потока
             alert_active = false
             alert_time_left = 0
             
@@ -853,7 +852,6 @@ end
 function DrawAlertProgressBar(item_min_x, item_min_y, item_max_x, item_max_y)
     if not alert_active or alert_time_left <= 0 or alert_duration <= 0 then return end
 
-    -- Вычисляем прогресс на основе оставшихся и общих секунд
     local time_passed = alert_duration - alert_time_left
     local progress = math.max(0.0, math.min(1.0, time_passed / alert_duration))
 
@@ -889,14 +887,11 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBg(),           title_bg)
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBgActive(),     title_active)
 
-
     reaper.ImGui_PushStyleVar(ctx,    reaper.ImGui_StyleVar_WindowPadding(), 4, 4) 
     reaper.ImGui_PushStyleVar(ctx,    reaper.ImGui_StyleVar_ItemSpacing(),   4, 4) 
     reaper.ImGui_PushStyleVar(ctx,    reaper.ImGui_StyleVar_WindowMinSize(), 2, 14) 
     reaper.ImGui_PushStyleVar(ctx,    reaper.ImGui_StyleVar_FrameRounding(), 6.0)
     reaper.ImGui_PushStyleVar(ctx,    reaper.ImGui_StyleVar_WindowRounding(), 6.0)
-
-
     
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), rgb(70, 70, 70))       -- Фон приглушенный
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBg(), rgb(70, 70, 70))       -- Фон приглушенный
@@ -906,11 +901,7 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), rgb(88, 87, 87)) -- При наведении
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), rgb(98, 97, 97)) -- При наведении
 
-
-
-    
     reaper.ImGui_SetNextWindowSize(ctx, 0, 42,  reaper.ImGui_Cond_Always())
-    
     
     local visible, open = reaper.ImGui_Begin(ctx, 'Project Work Timer', true, window_flags)
     if visible then frame() reaper.ImGui_End(ctx) end
