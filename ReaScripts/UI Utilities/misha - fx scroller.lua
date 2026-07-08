@@ -1,6 +1,6 @@
 -- @description FX Scroller
 -- @author Misha Oshkanov
--- @version 0.7.8
+-- @version 1.0
 -- @about
 --   # FX Scroller
 --   An interactive overlay utility for REAPER that simplifies plug-in chain management using ReaImGui.
@@ -195,9 +195,9 @@ function Loop()
             local vertical = reaper.ImGui_GetMouseWheel(ctx)
             if vertical ~= 0 and fx_count > 1 then
                 if vertical > 0 then
-                    target_fx_idx = (fx_idx - 1 + fx_count) % fx_count
-                else
                     target_fx_idx = (fx_idx + 1) % fx_count
+                else
+                    target_fx_idx = (fx_idx - 1 + fx_count) % fx_count
                 end
 
                 if target_fx_idx ~= fx_idx then
