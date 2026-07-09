@@ -1,6 +1,6 @@
 -- @description Show last touched fx parameter or track envelope of element under mouse (volume, pan, width, send volume, fx wet)
 -- @author Misha Oshkanov
--- @version 1.1
+-- @version 1.2
 -- @about
 --    Show last touched fx parameter or track envelope of element under mouse
 
@@ -37,6 +37,7 @@ if fxid then
     else
         show_env(env)
     end
+
 elseif sendid then 
     if not reaper.ValidatePtr2(-1, track, 'MediaTrack*') then return end
     local env = reaper.GetTrackSendInfo_Value(track, 0, sendid, 'P_ENV:<VOLENV')
@@ -53,13 +54,35 @@ elseif info:find("width") then
     if not reaper.ValidatePtr2(-1, track, 'MediaTrack*') then return end
     local env = reaper.GetMediaTrackInfo_Value(track, 'P_ENV:<WIDTHENV2')
     show_env(env)
-else 
-    if track and fxid2 and reaper.TrackFX_GetOpen(track, fxid2) then
-        local x, y = reaper.GetMousePosition()
-        if reaper.TrackFX_GetFloatingWindow(track, fxid2) == reaper.JS_Window_FromPoint(x, y) then 
+ else
+  if track and fxid2 and reaper.TrackFX_GetOpen(track, fxid2) then
+    local x, y = reaper.GetMousePosition()
+    local is_mac = reaper.GetOS():match("OSX") or reaper.GetOS():match("macOS")
+    
+    if is_mac then
+      local _, _, _, _, _, _, _, max_y = reaper.my_getViewport(0, 0, 0, 0, 0, 0, 0, 0, false)
+      y = max_y - y
+    end
+    
+    local fx_window = reaper.TrackFX_GetFloatingWindow(track, fxid2)
+    local window_under_mouse = reaper.JS_Window_FromPoint(reaper.JS_Window_ScreenToClient(reaper.GetMainHwnd(), x, y))
+    
+    if fx_window and window_under_mouse then
+      local is_child = false
+      local current = window_under_mouse
+      while current and current ~= 0 do
+        if current == fx_window then
+          is_child = true
+          break
+        end
+        current = reaper.JS_Window_GetParent(current)
+      end
+      
+      if is_child then
         reaper.Main_OnCommand(reaper.NamedCommandLookup('_S&M_MOUSE_L_CLICK'), 0)
         reaper.TrackFX_SetOpen(track, fxid2, false)
-        end
+      end
     end
-    reaper.Main_OnCommand(41142, 1) -- show last touched env
+  end
+  reaper.Main_OnCommand(41142, 1) -- show last touched env
 end
