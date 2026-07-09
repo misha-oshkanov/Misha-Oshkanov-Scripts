@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="c861b02a4eb2024d09836bddd15f6b5790e547ed">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="bc97f5e4db1ad2103eaebf647565730dbe47e008">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -764,7 +764,7 @@
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/32ed5655c4bee12d6c0493b6bbaac721bbd6c1fe/ReaScripts/UI%20Utilities/misha%20-%20check%20snap%20and%20change%20ruler%20colors.lua</source>
       </version>
     </reapack>
-    <reapack name="misha - fx wheel navigator.lua" type="script" desc="FX Scroller">
+    <reapack name="misha - fx wheel navigator.lua" type="script" desc="FX Wheel Navigator">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -774,18 +774,22 @@
 {\pard \ql \f0 \sa180 \li0 \fi0 An interactive overlay utility for REAPER that simplifies plug-in chain management using ReaImGui.\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Features:\par}
 {\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Centered Overlay Button: Automatically places a floating overlay button right in the center of the focused FX window's title bar.\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Mouse Wheel Navigation: Hover over the button and scroll the mouse wheel to cyclically switch between previous or next plug-ins in the track's FX chain.\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Dry/Wet Toggle (Click): Left-clicking the button toggles the plug-in's Dry/Wet parameter between 0% and its previous value (or 100%), creating a quick bypass comparison tool.\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Visual Feedback:** The button dynamically updates its index number and color. It turns yellow when active, red when Dry/Wet is set to 0%, and parks itself as a neutral grey indicator if no FX window is in focus.\sa180\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Mouse Wheel Navigation: Hover over the button and scroll the mouse wheel to cyclically switch between previous or next plug-ins in the track's FX chain (skips offline plugins).\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Bypass / Wet Toggles (Click): Left-click toggles full plugin Bypass. Right-click toggles Dry/Wet between 0% and 100%.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Visual Feedback: The button dynamically updates its index number and color. It turns dark grey when active, red when Dry/Wet is set to 0%, and parks itself if no FX window is in focus.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab FX Chain Tooltip: Hovering over the button reveals a complete list of FX in the current track's chain, with the currently focused plug-in highlighted.\sa180\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Requirements:\par}
 {\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab REAPER v7.06 or higher\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab ReaImGui extension (v0.9+)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab ReaImGui extension (v0.10+)\par}
 {\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab js_ReaScriptAPI extension\sa180\par}
 }
 ]]></description>
       </metadata>
       <version name="1.0" author="Misha Oshkanov" time="2026-07-08T15:31:50Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/c861b02a4eb2024d09836bddd15f6b5790e547ed/ReaScripts/UI%20Utilities/misha%20-%20fx%20wheel%20navigator.lua</source>
+      </version>
+      <version name="1.2" author="Misha Oshkanov" time="2026-07-08T15:52:44Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/bc97f5e4db1ad2103eaebf647565730dbe47e008/ReaScripts/UI%20Utilities/misha%20-%20fx%20wheel%20navigator.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Item counter panel for selected tracks.lua" type="script" desc="Item counter panel for selected track">
