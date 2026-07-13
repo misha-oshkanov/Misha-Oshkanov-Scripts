@@ -1,6 +1,6 @@
 -- @description Sender
 -- @author Misha Oshkanov
--- @version 2.0
+-- @version 2.0.1
 -- @about
 --   Ui panel for controlling sends for selected track
 --   You should create folder for sends in the project (Name in Sends, Rhythm Sends, Special FX and etc.)
@@ -1125,7 +1125,7 @@ function DrawXYPad(ctx, width, height, folder_data, sel_track, sel_track_color)
             xy_max_limit = 1.0 -- Дефолтное значение (100%)
             SaveXYSliders()
         end
-
+        reaper.ImGui_Dummy(ctx,1,2)
         reaper.ImGui_PopItemWidth(ctx)
         sliders_active = active_max or active_min
     end
