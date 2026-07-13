@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="7007a1738a52661909aa3c2a155e732fcadf4af7">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="a2e0d57268b1674970f2b35dbd90ef4c672b9cba">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -1176,7 +1176,7 @@
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/59bae5bb25ea89ecedaf0f99f1f08eb92258a28a/ReaScripts/UI%20Utilities/misha%20-%20Scroller.lua</source>
       </version>
     </reapack>
-    <reapack name="misha - Sender.lua" type="script" desc="UI send manager for selected track">
+    <reapack name="misha - Sender.lua" type="script" desc="Sender">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -1191,6 +1191,9 @@
       </version>
       <version name="1.3" author="Misha Oshkanov" time="2025-08-07T15:41:07Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/59bae5bb25ea89ecedaf0f99f1f08eb92258a28a/ReaScripts/UI%20Utilities/misha%20-%20Sender.lua</source>
+      </version>
+      <version name="2.0" author="Misha Oshkanov" time="2026-07-13T10:14:29Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/a2e0d57268b1674970f2b35dbd90ef4c672b9cba/ReaScripts/UI%20Utilities/misha%20-%20Sender.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Session Organizer.lua" type="script" desc="UI manager for session prepping">
