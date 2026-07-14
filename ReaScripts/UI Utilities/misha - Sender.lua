@@ -1,6 +1,6 @@
 -- @description Sender
 -- @author Misha Oshkanov
--- @version 2.1
+-- @version 2.2
 -- @about
 --   Ui panel for controlling sends for selected track
 --   You should create folder for sends in the project (Name in Sends, Rhythm Sends, Special FX and etc.)
@@ -10,7 +10,6 @@
 --   4 preset for send comparing and sharing between tracks
 --   Relative control fader to adjust levels of all track sends at the same time
 --   Click on the track name button to pin the track. In pin mode script it will not follow track selection selection
-
 
 function print(...)
     local values = {...}
@@ -205,14 +204,11 @@ local function ScanInstalledFX()
     fx_list_scanned = true
 end
 
-
 ScanInstalledFX()
-
 
 local function SaveSettings()
     reaper.SetProjExtState(0, EXT_SECTION, "send_folders_text", send_folders_raw_text)
 end 
-
 
 local function LoadSettings()
     local _, saved_folders = reaper.GetProjExtState(0, EXT_SECTION, "send_folders_text")
@@ -232,11 +228,23 @@ local function UpdateSendFoldersList()
     end
 end
 
+local function SaveFolderOpenState(folder_name, is_open)
+    local state_str = is_open and "1" or "0"
+    reaper.SetProjExtState(0, extname, "FOLDER_OPEN_" .. folder_name, state_str)
+end
 
 local function SaveXYSliders()
     reaper.SetProjExtState(0, EXT_SECTION, "xy_min_center", xy_min_center)
     reaper.SetProjExtState(0, EXT_SECTION, "xy_max_limit",  xy_max_limit)
 end 
+
+local function GetFolderOpenState(folder_name)
+    local ret, state_str = reaper.GetProjExtState(0, extname, "FOLDER_OPEN_" .. folder_name)
+    if ret == 1 and state_str ~= "" then
+        return state_str == "1"
+    end
+    return true -- По умолчанию папки ОТКРЫТЫ, если в проекте еще нет данных
+end
 
 local function LoadXYSliders()
     local _, xy_min_center_str = reaper.GetProjExtState(0, EXT_SECTION, "xy_min_center")
@@ -247,7 +255,6 @@ local function LoadXYSliders()
     if xy_max_limit_str ~= "" then 
         xy_max_limit = tonumber(xy_max_limit_str)
     end
-
 end 
 
 local function SaveXYPadState()
@@ -634,39 +641,6 @@ function OD_ToggleShowEnvelope(env, show) --- from Odedd: Send Buddy
     end
 end
 
--- function get_send_folders_data()
---     local folder_data = {}
---     local count = reaper.CountTracks(0)
-    
---     for i = 1, count do 
---         local track = reaper.GetTrack(0, i - 1)
---         local is_parent = reaper.GetMediaTrackInfo_Value(track, 'I_FOLDERDEPTH') == 1
-        
---         if is_parent then 
---             local _, parent_name = reaper.GetTrackName(track)
---             parent_name = parent_name:gsub('_', '')
-            
---             for i2 = 1, #send_folders do
---                 local config = send_folders[i2]
---                 if parent_name == config.name then 
---                     local parent_color = reaper.GetTrackColor(track)
---                     local children_tracks = get_children(track) or {}
-                    
---                     table.insert(folder_data, {
---                         name = parent_name,
---                         color = parent_color,
---                         open_config = config.open,
---                         children = children_tracks
---                     })
---                     break
---                 end 
---             end
---         end
---     end
-    
---     return folder_data
--- end
-
 function get_send_folders_data()
     local folder_data = {}
     local count = reaper.CountTracks(0)
@@ -712,40 +686,50 @@ end
 function draw_send_folder_slots(folder_data, sel_track)
     for i = 1, #folder_data do
         local folder = folder_data[i]
-        local open_flag = reaper.ImGui_TreeNodeFlags_DefaultOpen()
+        local is_folder_open = GetFolderOpenState(folder.name)
 
+        local open_flag = reaper.ImGui_TreeNodeFlags_AllowOverlap()
+        if is_folder_open then
+            open_flag = open_flag + reaper.ImGui_TreeNodeFlags_DefaultOpen()
+        end
+        
         local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
         local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
         local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+
         reaper.ImGui_DrawList_AddRectFilled(draw_list, min_x, max_y - 10, min_x + w - 17, max_y, col(folder.color, 0.6))
         
         reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), col(folder.color, 1))
         
-        if reaper.ImGui_TreeNode(ctx, folder.name, reaper.ImGui_TreeNodeFlags_SpanFullWidth() + open_flag) then
-            for i3 = 1, #folder.children do 
-                reaper.ImGui_PushID(ctx, i3)
-                local child = folder.children[i3].track
-                
-                send_slot(child, sel_track) 
-                
-                reaper.ImGui_PopID(ctx)
-            end
+        local is_node_open = reaper.ImGui_TreeNode(ctx, folder.name, open_flag)
 
-            reaper.ImGui_Spacing(ctx)
-            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x888888FF)
-            
-            if reaper.ImGui_Selectable(ctx, "  + Add to " .. folder.name, false) then
-                active_add_folder_name = folder.name
-                add_fx_search_text = ""
-                reaper.ImGui_OpenPopup(ctx, "AddFXPopup_Id") 
-            end
-            reaper.ImGui_PopStyleColor(ctx)
+        if reaper.ImGui_IsItemToggledOpen(ctx) then SaveFolderOpenState(folder.name, is_node_open) end
+
+        local node_min_x, node_min_y = reaper.ImGui_GetItemRectMin(ctx)
+        local node_max_x, node_max_y = reaper.ImGui_GetItemRectMax(ctx)
+        local node_w = node_max_x - node_min_x
+        local node_h = node_max_y - node_min_y
+        local btn_w = 44
+        local btn_h = 24 -- делаем чуть меньше высоты строки для аккуратности
+        local btn_x = node_min_x + (w - 17) - btn_w
+        local btn_y = node_min_y -3
+        
+        local saved_cx, saved_cy = reaper.ImGui_GetCursorPos(ctx)
+        reaper.ImGui_SetCursorScreenPos(ctx, btn_x, btn_y)
+        
+        -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(),          0xAAAAAAFF)   -- Серый цвет иконки
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        0x00000000)   -- Прозрачный фон
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), col(folder.color, 0.6))   -- Легкая полупрозрачная подложка при наведении
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  col(folder.color, 0.8))   -- Чуть плотнее при клике
+        
+        if reaper.ImGui_Button(ctx, "  +##add_send", btn_w, btn_h) then
+            reaper.ImGui_OpenPopup(ctx, "AddFXPopup_Id")
+        end 
+        
         if reaper.ImGui_BeginPopup(ctx, "AddFXPopup_Id") then
             reaper.ImGui_Text(ctx, "Search & Add FX to " .. active_add_folder_name .. ":")
             
-            if reaper.ImGui_IsWindowAppearing(ctx) then
-                reaper.ImGui_SetKeyboardFocusHere(ctx, 0)
-            end
+            if reaper.ImGui_IsWindowAppearing(ctx) then reaper.ImGui_SetKeyboardFocusHere(ctx, 0) end
             
             reaper.ImGui_SetNextItemWidth(ctx, 320)
             local input_changed, new_text = reaper.ImGui_InputText(ctx, "##fxsearch", add_fx_search_text)
@@ -786,7 +770,7 @@ function draw_send_folder_slots(folder_data, sel_track)
                     end
                     reaper.TrackList_AdjustWindows(false)
                 end
-                reaper.Undo_EndBlock("Add track with FX via XY Sender", -1)
+                reaper.Undo_EndBlock("Add send track via SSender", -1)
                 reaper.ImGui_CloseCurrentPopup(ctx)
             end
 
@@ -799,9 +783,7 @@ function draw_send_folder_slots(folder_data, sel_track)
             reaper.ImGui_Separator(ctx)
             
             if reaper.ImGui_BeginChild(ctx, "##fx_list_child", 370, 150, reaper.ImGui_ChildFlags_Border()) then
-                
                 local search_query = add_fx_search_text:lower()
-                
                 for idx, fx_full_name in ipairs(installed_fx_list) do
                     if search_query == "" or fx_full_name:lower():find(search_query, 1, true) then
                         local display_name = fx_full_name:gsub("^%w+:%s*", "") 
@@ -813,17 +795,25 @@ function draw_send_folder_slots(folder_data, sel_track)
                 
                 reaper.ImGui_EndChild(ctx)
             end
-            
             reaper.ImGui_EndPopup(ctx)
         end
 
-                
+        reaper.ImGui_PopStyleColor(ctx, 3)
+
+        if is_node_open then
+            for i3 = 1, #folder.children do 
+                reaper.ImGui_PushID(ctx, i3)
+                local child = folder.children[i3].track
+                send_slot(child, sel_track) 
+                reaper.ImGui_PopID(ctx)
+            end
+            reaper.ImGui_Dummy(ctx, 3, 3)
             reaper.ImGui_TreePop(ctx) 
         end
-        
+
+
         reaper.ImGui_Dummy(ctx, 4, 10)
         reaper.ImGui_PopStyleColor(ctx)
-
     end
 end
 
@@ -862,7 +852,6 @@ function IsAllFXOffline(track)
         local is_offline = reaper.TrackFX_GetOffline(track, fx)
         if not is_offline then return false end
     end
-    
     return true -- Все плагины гарантированно в оффлайне
 end
 
@@ -1280,7 +1269,7 @@ function send_slot(dest_track,sel_track)
     draw_list = reaper.ImGui_GetWindowDrawList(ctx)
     
     local draw_slider_r = (max_x-min_x)-((max_x-min_x)*(slider_value))
-    ImGui.DrawList_AddRectFilled(draw_list, min_x, min_y, max_x - draw_slider_r, max_y, col(color,0.3),4)
+    ImGui.DrawList_AddRectFilled(draw_list, min_x, min_y, max_x - draw_slider_r, max_y, col(color,0.3))
     if sendnum > 0 then 
         sendnum_text_w = reaper.ImGui_CalcTextSize(ctx, sendnum)
         reaper.ImGui_DrawList_AddText(draw_list, x+14+sendnum_text_w, min_y+2, text_color, name)
@@ -1403,93 +1392,8 @@ function frame()
         reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBgHovered(),          col(target_color,0.4))
         reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBgActive(),           col(target_color,0.5))
 
-        local xy_open_flags = 0
-        if xy_folder_open_state == 1 then
-            xy_open_flags = xy_open_flags + reaper.ImGui_TreeNodeFlags_DefaultOpen()
-        end
-        
-        reaper.ImGui_Dummy(ctx, 2, 4)
 
-        -- xy = reaper.ImGui_TreeNode(ctx, "XY", xy_open_flags)
-        -- if xy then 
-        --     xy_folder_open_state = 1
-        --     local s1, s2, s3, s4 = DrawXYPad(ctx, w-16, 180, current_folders, target_track, target_color)
-        --     reaper.ImGui_TreePop(ctx)
-        -- else 
-        --     xy_folder_open_state = 0
-        -- end
-
-                -----------------------------------------------------------------------
-        -- ОТРИСОВКА TREENODE С КНОПКОЙ НАСТРОЕК У ПРАВОГО КРАЯ
-        -----------------------------------------------------------------------
-        local xy = reaper.ImGui_TreeNode(ctx, "XY", xy_open_flags)
-        
-        local node_min_x, node_min_y = reaper.ImGui_GetItemRectMin(ctx)
-        local node_max_x, node_max_y = reaper.ImGui_GetItemRectMax(ctx)
-        
-        local node_w = node_max_x - node_min_x
-        local node_h = node_max_y - node_min_y
-        
-        -- Размеры для кнопки-шестерёнки
-        local btn_w = 24
-        local btn_h = 20 -- делаем чуть меньше высоты строки для аккуратности
-        
-        -- Смещаем к правому краю всей доступной ширины (w - 17) с небольшим отступом
-        local btn_x = node_min_x + (w - 17) - btn_w
-        local btn_y = node_min_y -3
-        
-        local saved_cx, saved_cy = reaper.ImGui_GetCursorPos(ctx)
-        
-        reaper.ImGui_SetCursorScreenPos(ctx, btn_x, btn_y)
-        
-        -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(),          0xAAAAAAFF)   -- Серый цвет иконки
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        0x00000000)   -- Прозрачный фон
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), 0x44444488)   -- Легкая полупрозрачная подложка при наведении
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  0x666666AA)   -- Чуть плотнее при клике
-        
-        if reaper.ImGui_Button(ctx, "⦾##settings_btn", btn_w, btn_h) then
-            reaper.ImGui_OpenPopup(ctx, "Settings_popup")
-        end
-        reaper.ImGui_PopStyleColor(ctx, 3)
-
-        if reaper.ImGui_BeginPopup(ctx, "Settings_popup") then
-            reaper.ImGui_Text(ctx, "Enter send folder names (separated by comma):")
-            reaper.ImGui_SetNextItemWidth(ctx, 300)
-            local changed, new_text = reaper.ImGui_InputText(ctx, "##folders_input", send_folders_raw_text)
-            
-            if changed then
-                send_folders_raw_text = new_text
-                UpdateSendFoldersList() -- Мгновенно перестраиваем список папок «на лету»
-                SaveSettings()       -- Сохраняем изменения в проект REAPER
-            end
-            
-            reaper.ImGui_Spacing(ctx)
-            if reaper.ImGui_Button(ctx, "Close", 60) then
-                reaper.ImGui_CloseCurrentPopup(ctx)
-            end
-            
-            reaper.ImGui_EndPopup(ctx)
-        end
-        
-        reaper.ImGui_SetCursorPos(ctx, saved_cx, saved_cy)
-
-        if reaper.ImGui_IsItemClicked(ctx, reaper.ImGui_MouseButton_Left()) then
-            local mx, _ = reaper.ImGui_GetMousePos(ctx)
-            if mx < btn_x then
-                xy_folder_open_state = (xy_folder_open_state == 1) and 0 or 1
-                SaveXYPadState()
-            end
-        end
-
-        if xy then 
-            xy_folder_open_state = 1
-            local s1, s2, s3, s4 = DrawXYPad(ctx, w-16, 180, current_folders, target_track, target_color)
-            reaper.ImGui_TreePop(ctx)
-        else 
-            xy_folder_open_state = 0
-        end
-
-        reaper.ImGui_Dummy(ctx, 2, 4)
+        reaper.ImGui_Dummy(ctx, 4, 4)
 
         for preset=1,4 do 
             reaper.ImGui_PushID(ctx, preset)
@@ -1538,6 +1442,82 @@ function frame()
         if all_retval then 
             adjust_all_sends(target_track,all_adjust_slider)
         end
+        
+        local xy_open_flags = 0
+        if xy_folder_open_state == 1 then
+            xy_open_flags = xy_open_flags + reaper.ImGui_TreeNodeFlags_DefaultOpen()
+        end
+        
+        reaper.ImGui_Dummy(ctx, 2, 4)
+
+        local xy = reaper.ImGui_TreeNode(ctx, "XY", xy_open_flags)
+
+
+        
+        local node_min_x, node_min_y = reaper.ImGui_GetItemRectMin(ctx)
+        local node_max_x, node_max_y = reaper.ImGui_GetItemRectMax(ctx)
+        local node_w = node_max_x - node_min_x
+        local node_h = node_max_y - node_min_y
+        local btn_w = 43
+        local btn_h = 20 -- делаем чуть меньше высоты строки для аккуратности
+        local btn_x = node_min_x + (w - 17) - btn_w
+        local btn_y = node_min_y -3
+        
+        local saved_cx, saved_cy = reaper.ImGui_GetCursorPos(ctx)
+        reaper.ImGui_SetCursorScreenPos(ctx, btn_x, btn_y)
+
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(),          0xFFFFFF99)   -- Серый цвет иконки
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        0x00000000)   -- Прозрачный фон
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), 0x44444488)   -- Легкая полупрозрачная подложка при наведении
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  0x666666AA)   -- Чуть плотнее при клике
+        
+        if reaper.ImGui_Button(ctx, "  ⛭##settings_btn", btn_w, btn_h) then
+            reaper.ImGui_OpenPopup(ctx, "Settings_popup")
+        end
+        reaper.ImGui_PopStyleColor(ctx, 4)
+
+
+
+
+        if reaper.ImGui_BeginPopup(ctx, "Settings_popup") then
+            reaper.ImGui_Text(ctx, "Enter send folder names (separated by comma):")
+            reaper.ImGui_SetNextItemWidth(ctx, 300)
+            local changed, new_text = reaper.ImGui_InputText(ctx, "##folders_input", send_folders_raw_text)
+            
+            if changed then
+                send_folders_raw_text = new_text
+                UpdateSendFoldersList() -- Мгновенно перестраиваем список папок «на лету»
+                SaveSettings()       -- Сохраняем изменения в проект REAPER
+            end
+            
+            reaper.ImGui_Spacing(ctx)
+            if reaper.ImGui_Button(ctx, "Close", 60) then
+                reaper.ImGui_CloseCurrentPopup(ctx)
+            end
+            
+            reaper.ImGui_EndPopup(ctx)
+        end
+        
+        reaper.ImGui_SetCursorPos(ctx, saved_cx, saved_cy)
+
+        if reaper.ImGui_IsItemClicked(ctx, reaper.ImGui_MouseButton_Left()) then
+            local mx, _ = reaper.ImGui_GetMousePos(ctx)
+            if mx < btn_x then
+                xy_folder_open_state = (xy_folder_open_state == 1) and 0 or 1
+                SaveXYPadState()
+            end
+        end
+
+        if xy then 
+            xy_folder_open_state = 1
+            local s1, s2, s3, s4 = DrawXYPad(ctx, w-16, 180, current_folders, target_track, target_color)
+            reaper.ImGui_TreePop(ctx)
+        else 
+            xy_folder_open_state = 0
+        end 
+
+        reaper.ImGui_Dummy(ctx, 4, 4)
+
 
         if scroll_to_button then scroll_to_track(target_track) end
         if bypass_button then 
@@ -1559,7 +1539,9 @@ function frame()
             pinned_mode = not pinned_mode 
             pinned_track = target_track
         end 
+            -- reaper.ImGui_EndPopup(ctx)
         draw_send_folder_slots(current_folders, target_track)
+       
     end
 end 
 
@@ -2071,7 +2053,9 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_SliderGrab(),       0xB19102FF)      
 
 
-    reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_HeaderHovered(),    0x646464FF)
+    reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_HeaderHovered(),    rgba(50,50,50,1))
+    reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_HeaderActive(),     0x504B4BFF)
+
 
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_Button(),           0x69696999)
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_ButtonHovered(),    0x575757FF)
@@ -2088,7 +2072,7 @@ function loop()
         frame()
         reaper.ImGui_End(ctx)
     end
-    reaper.ImGui_PopStyleColor(ctx,10)
+    reaper.ImGui_PopStyleColor(ctx,11)
     reaper.ImGui_PopStyleVar(ctx, 5)
     reaper.ImGui_PopFont(ctx)
     
