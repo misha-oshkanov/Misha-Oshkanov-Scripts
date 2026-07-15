@@ -1,6 +1,6 @@
 -- @description Sender
 -- @author Misha Oshkanov
--- @version 2.2
+-- @version 2.3
 -- @about
 --   Ui panel for controlling sends for selected track
 --   You should create folder for sends in the project (Name in Sends, Rhythm Sends, Special FX and etc.)
@@ -44,12 +44,6 @@ function table_contains(table, element)
     end
     return false
 end
-
--- send_folders = {
---     {name = 'Sends',          open=1},
---     {name = 'Rhythm Sends',   open=1},
---     {name = 'Special FX',     open=1}
--- }
 
 if send_folders_raw_text == nil then 
     send_folders_raw_text = "Sends, Reverbs" 
@@ -111,7 +105,15 @@ if xy_folder_open_state == nil then xy_folder_open_state = 0 end
 local add_fx_search_text = ""     -- Буфер для ввода текста в поиске
 local active_add_folder_name = "" -- Имя папки, для которой открыт поиск в данный момент
 
-local eq_fxname = "ZL EQ 2 (ZL)"
+local eq_fxname = "ReaEq"
+
+if show_presets_setting == nil   then show_presets_setting = "1" end
+if show_allslider_setting == nil then show_allslider_setting = "1" end
+if show_xy_setting == nil        then show_xy_setting = "1" end
+
+if show_presets_checkbox == nil   then show_presets_checkbox = true end
+if show_allslider_checkbox == nil then show_allslider_checkbox = true end
+if show_xy_checkbox == nil        then show_xy_checkbox = true end
 
 local installed_fx_list = {} -- Сюда запишем все чистые имена плагинов
 local fx_list_scanned = false -- Флаг, чтобы не сканировать диск каждый кадр
@@ -127,7 +129,6 @@ local fx_exceptions = {
     'ch',
 }
 
-
 local Icon = {
     Mute    = "\xef\x8a\xb2", -- Иконка динамика (Volume Off)
     Solo    = "\xef\x80\x85", -- Звезда (или наушники)
@@ -138,7 +139,6 @@ local Icon = {
     Trash   = "\xef\x80\x94", -- Корзина для удаления
     Offline = "\xef\x8a\x8c", -- Луна / Сон (для оффлайна)
 }
-
 
 
 local function ScanInstalledFX()
@@ -207,16 +207,17 @@ end
 ScanInstalledFX()
 
 local function SaveSettings()
-    reaper.SetProjExtState(0, EXT_SECTION, "send_folders_text", send_folders_raw_text)
-end 
+    local p_str = show_presets_checkbox and "1" or "0"
+    local a_str = show_allslider_checkbox and "1" or "0"
+    local x_str = show_xy_checkbox and "1" or "0"
 
-local function LoadSettings()
-    local _, saved_folders = reaper.GetProjExtState(0, EXT_SECTION, "send_folders_text")
-    if saved_folders and saved_folders ~= "" then
-        send_folders_raw_text = saved_folders
-        UpdateSendFoldersList() -- обновляем массив имен после загрузки
-    end
-end
+    reaper.SetExtState(EXT_SECTION, "send_folders_text", send_folders_raw_text,  true)
+    reaper.SetExtState(EXT_SECTION, "eq_fxname",         eq_fxname,              true)
+
+    reaper.SetExtState(EXT_SECTION, "show_presets",      p_str,   true)
+    reaper.SetExtState(EXT_SECTION, "show_allslider",    a_str,   true)
+    reaper.SetExtState(EXT_SECTION, "show_xy",           x_str,   true)
+end 
 
 local function UpdateSendFoldersList()
     send_folders = {}
@@ -227,6 +228,41 @@ local function UpdateSendFoldersList()
         end
     end
 end
+
+local function SaveSettings()
+    local p_str = show_presets_checkbox and "1" or "0"
+    local a_str = show_allslider_checkbox and "1" or "0"
+    local x_str = show_xy_checkbox and "1" or "0"
+
+    reaper.SetExtState(EXT_SECTION, "send_folders_text", send_folders_raw_text,  true)
+    reaper.SetExtState(EXT_SECTION, "eq_fxname",         eq_fxname,              true)
+
+    reaper.SetExtState(EXT_SECTION, "show_presets",      p_str,   true)
+    reaper.SetExtState(EXT_SECTION, "show_allslider",    a_str,   true)
+    reaper.SetExtState(EXT_SECTION, "show_xy",           x_str,   true)
+end 
+
+function LoadSettings()
+    local saved_folders = reaper.GetExtState(EXT_SECTION, "send_folders_text")
+    local saved_eq_fxname = reaper.GetExtState(EXT_SECTION, "eq_fxname")
+
+    show_presets_setting   = reaper.GetExtState(EXT_SECTION, "show_presets")
+    show_allslider_setting = reaper.GetExtState(EXT_SECTION, "show_allslider")
+    show_xy_setting        = reaper.GetExtState(EXT_SECTION, "show_xy")
+
+    if saved_folders and saved_folders ~= "" then
+        send_folders_raw_text = saved_folders
+        UpdateSendFoldersList() 
+    end
+    if saved_eq_fxname and saved_eq_fxname ~= "" then 
+        eq_fxname = saved_eq_fxname 
+    end
+    
+    if show_presets_setting   and show_presets_setting   ~= "" then show_presets_checkbox   = (show_presets_setting   == "1") end
+    if show_allslider_setting and show_allslider_setting ~= "" then show_allslider_checkbox = (show_allslider_setting == "1") end
+    if show_xy_setting        and show_xy_setting        ~= "" then show_xy_checkbox        = (show_xy_setting        == "1") end
+end
+
 
 local function SaveFolderOpenState(folder_name, is_open)
     local state_str = is_open and "1" or "0"
@@ -279,7 +315,6 @@ end
 local function LoadXYPadState()
     local function GetTrackByGUIDString(guid_str)
         if not guid_str or guid_str == "" then return nil end
-        -- Проходим по всем трекам проекта в поисках нужного GUID
         local count = reaper.CountTracks(0)
         for i = 0, count - 1 do
             local track = reaper.GetTrack(0, i)
@@ -350,6 +385,7 @@ data = {}
 pinned_mode = false
 LoadXYPadState()
 LoadXYSliders()
+LoadSettings()
 
 
 function rgba(r, g, b, a)
@@ -567,6 +603,7 @@ function Convert_Fader2Val(fader_val)
     if val < 0 then val = 0 end
     return val
 end
+
 
 function remove_arch_prefix(string)
     return string:gsub('_','')
@@ -1052,7 +1089,12 @@ function send_slot(dest_track,sel_track)
             end 
             
             reaper.ImGui_PopStyleVar(ctx)
-            
+            reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_SliderGrab(),       0xB19102FF)   -- pan
+            reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBg(),          0x92862099)  
+            reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBgHovered(),   0x928620FF)  
+            reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBgActive(),    0x92862077)      
+
+
             reaper.ImGui_SetNextItemWidth( ctx, pw)
             send_retval, send_pan = reaper.ImGui_SliderDouble(ctx, '##pan', pan, -1, 1, math.floor(trunc(pan,2)*100), reaper.ImGui_SliderFlags_NoInput())
 
@@ -1062,6 +1104,7 @@ function send_slot(dest_track,sel_track)
 
             if send_retval then reaper.SetTrackSendInfo_Value(sel_track, 0, id, 'D_PAN', send_pan) end
             reaper.ImGui_PushStyleVar(ctx,  reaper.ImGui_StyleVar_ItemSpacing(),2,2)
+            reaper.ImGui_PopStyleColor(ctx,4)
 
             if fx_count > 0 then 
                 for fx=1,fx_count do 
@@ -1220,8 +1263,6 @@ function send_slot(dest_track,sel_track)
                     if receive_solo then reaper.SetMediaTrackInfo_Value(r.dest, 'I_SOLO', 0) restore_solos()
                     else save_solos() unsolo_all_tracks() reaper.SetMediaTrackInfo_Value(r.dest, 'I_SOLO', 2)
                     end
-                    -- if reaper.AnyTrackSolo(0) and not solo then reaper.Main_OnCommand(40340, 0) end
-                    -- reaper.SetMediaTrackInfo_Value(dest_track, 'I_SOLO', reaper.GetMediaTrackInfo_Value(dest_track, 'I_SOLO')==2 and 0 or 2)
                 end
                 if reaper.ImGui_IsMouseDoubleClicked( ctx, reaper.ImGui_MouseButton_Left() ) then 
                     reaper.SetTrackSendInfo_Value(dest_track, -1, r.id, 'D_VOL', 1)
@@ -1255,8 +1296,6 @@ function send_slot(dest_track,sel_track)
             if solo then reaper.SetMediaTrackInfo_Value(dest_track, 'I_SOLO', 0) restore_solos()
             else save_solos() unsolo_all_tracks() reaper.SetMediaTrackInfo_Value(dest_track, 'I_SOLO', 2)
             end
-            -- reaper.SetMediaTrackInfo_Value(dest_track, 'I_SOLO', reaper.GetMediaTrackInfo_Value(dest_track, 'I_SOLO')==2 and 0 or 2)
-            -- if reaper.AnyTrackSolo(0) and not solo then reaper.Main_OnCommand(40340, 0) end
         end
         if reaper.ImGui_IsMouseDoubleClicked( ctx, reaper.ImGui_MouseButton_Left() ) then 
             reaper.SetTrackSendInfo_Value(sel_track, 0, id, 'D_VOL', 1)
@@ -1361,163 +1400,97 @@ function frame()
             draw_color(col(target_color,0.7),2)
         end            
 
-        -- if reaper.ImGui_IsItemClicked(ctx, reaper.ImGui_MouseButton_Right()) then reaper.ImGui_OpenPopup(ctx, 'pin_popup')   end 
         reaper.ImGui_PopStyleColor(ctx,3)
 
-            
         reaper.ImGui_PushStyleVar(ctx,  reaper.ImGui_StyleVar_ItemSpacing(),2,2)
         local scroll_to_button = reaper.ImGui_Button(ctx, 'Go to track', w-17,  24)
-            -- reaper.ImGui_Dummy(ctx, 2, 2)
+
         if mute_state then 
             reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_Text(),          0xFF6969FF)
-
             bypass_button_text = "Muted"
         else bypass_button_text = 'Mute all' reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_Text(),    0xFFFFFFFF)end
 
-
         local bypass_button = reaper.ImGui_Button(ctx, bypass_button_text, w/2-9, 24)
         reaper.ImGui_PopStyleColor(ctx)
-
-        -- local bypass_button = reaper.ImGui_Button(ctx, Icon.Mute .. "##mute", w/2-9, 24)
-
         reaper.ImGui_SameLine(ctx)
         local remove_button = reaper.ImGui_Button(ctx, 'Clear all', w/2-10, 24)
-
-        -- reaper.ImGui_Dummy(ctx, 4, 10)
+       
         local current_folders = get_send_folders_data()
 
-        reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_SliderGrab(),              col(target_color,0.4))
-        reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_SliderGrabActive(),        col(target_color,0.5))
-        reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBg(),                 col(target_color,0.2))
-        reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBgHovered(),          col(target_color,0.4))
-        reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBgActive(),           col(target_color,0.5))
+        if show_presets_checkbox then 
+            reaper.ImGui_Dummy(ctx, 4, 4)
 
+            for preset=1,4 do 
+                reaper.ImGui_PushID(ctx, preset)
 
-        reaper.ImGui_Dummy(ctx, 4, 4)
+                local preset_ret, _ = reaper.GetProjExtState(0, extname, 'P'..preset)
+                if preset_ret == 1 then 
+                    preset_button_color = target_color
+                else 
+                    preset_button_color = reaper.ColorToNative(50, 50, 50)
+                end
 
-        for preset=1,4 do 
-            reaper.ImGui_PushID(ctx, preset)
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),       col(preset_button_color,0.5))
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(),col(preset_button_color,0.8))
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), col(preset_button_color,0.7))
 
-            local preset_ret, _ = reaper.GetProjExtState(0, extname, 'P'..preset)
-            if preset_ret == 1 then 
-                preset_button_color = target_color
-            else 
-                preset_button_color = reaper.ColorToNative(50, 50, 50)
+                preset_button = reaper.ImGui_Button(ctx, tostring(preset), w/4-6, 20)
+                if preset < 4 then reaper.ImGui_SameLine(ctx) end
+
+                if preset_button then 
+                    if key_down() == 'alt' then remove_preset(preset) else
+                        if preset_ret == 1 then 
+                            load_preset(preset,target_track)
+                        else 
+                            save_preset(preset,target_track)
+                        end 
+                    end
+                end
+                reaper.ImGui_PopStyleColor(ctx,3)
+                reaper.ImGui_PopID(ctx)
             end
-
-            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),       col(preset_button_color,0.5))
-            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(),col(preset_button_color,0.8))
-            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), col(preset_button_color,0.7))
-
-            preset_button = reaper.ImGui_Button(ctx, tostring(preset), w/4-6, 20)
-            if preset < 4 then reaper.ImGui_SameLine(ctx) end
-
-            if preset_button then 
-                if key_down() == 'alt' then remove_preset(preset) else
-                    if preset_ret == 1 then 
-                        load_preset(preset,target_track)
-                    else 
-                        save_preset(preset,target_track)
-                    end 
+        end
+        
+        if show_allslider_checkbox then
+            reaper.ImGui_SetNextItemWidth( ctx, w-17)
+            all_retval, all_adjust_slider = reaper.ImGui_SliderDouble(ctx, '##all', all_vol, -0.8, 0.8,'',reaper.ImGui_SliderFlags_None()+
+            reaper.ImGui_SliderFlags_NoInput())
+       
+            if reaper.ImGui_IsItemHovered(ctx) then 
+                if not all_retval and reaper.ImGui_IsMouseReleased( ctx,reaper.ImGui_MouseButton_Left()) then 
+                    all_vol = 0
+                    save_sends_states(target_track)
                 end
             end
-            reaper.ImGui_PopStyleColor(ctx,3)
-            reaper.ImGui_PopID(ctx)
+
+            if all_retval then adjust_all_sends(target_track,all_adjust_slider) end
         end
         
-        reaper.ImGui_SetNextItemWidth( ctx, w-17)
-
-        all_retval, all_adjust_slider = reaper.ImGui_SliderDouble(ctx, '##all', all_vol, -0.8, 0.8,'',reaper.ImGui_SliderFlags_None()+
-        reaper.ImGui_SliderFlags_NoInput())
-
-        -- print(reaper.ImGui_IsMouseDown( ctx,reaper.ImGui_MouseButton_Left()))
-
-        if reaper.ImGui_IsItemHovered(ctx) then 
-            if not all_retval and reaper.ImGui_IsMouseDown( ctx,reaper.ImGui_MouseButton_Left()) then 
-                all_vol = 0
-                save_sends_states(target_track)
-            end
-        end
-
-        if all_retval then 
-            adjust_all_sends(target_track,all_adjust_slider)
-        end
-        
-        local xy_open_flags = 0
+        local xy_open_flags = reaper.ImGui_TreeNodeFlags_SpanFullWidth()
         if xy_folder_open_state == 1 then
             xy_open_flags = xy_open_flags + reaper.ImGui_TreeNodeFlags_DefaultOpen()
         end
         
-        reaper.ImGui_Dummy(ctx, 2, 4)
-
-        local xy = reaper.ImGui_TreeNode(ctx, "XY", xy_open_flags)
-
-
-        
-        local node_min_x, node_min_y = reaper.ImGui_GetItemRectMin(ctx)
-        local node_max_x, node_max_y = reaper.ImGui_GetItemRectMax(ctx)
-        local node_w = node_max_x - node_min_x
-        local node_h = node_max_y - node_min_y
-        local btn_w = 43
-        local btn_h = 20 -- делаем чуть меньше высоты строки для аккуратности
-        local btn_x = node_min_x + (w - 17) - btn_w
-        local btn_y = node_min_y -3
-        
-        local saved_cx, saved_cy = reaper.ImGui_GetCursorPos(ctx)
-        reaper.ImGui_SetCursorScreenPos(ctx, btn_x, btn_y)
-
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(),          0xFFFFFF99)   -- Серый цвет иконки
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        0x00000000)   -- Прозрачный фон
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), 0x44444488)   -- Легкая полупрозрачная подложка при наведении
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  0x666666AA)   -- Чуть плотнее при клике
-        
-        if reaper.ImGui_Button(ctx, "  ⛭##settings_btn", btn_w, btn_h) then
-            reaper.ImGui_OpenPopup(ctx, "Settings_popup")
-        end
-        reaper.ImGui_PopStyleColor(ctx, 4)
-
-
-
-
-        if reaper.ImGui_BeginPopup(ctx, "Settings_popup") then
-            reaper.ImGui_Text(ctx, "Enter send folder names (separated by comma):")
-            reaper.ImGui_SetNextItemWidth(ctx, 300)
-            local changed, new_text = reaper.ImGui_InputText(ctx, "##folders_input", send_folders_raw_text)
+        if show_xy_checkbox then 
+            reaper.ImGui_Dummy(ctx, 4, 4)
+            local xy = reaper.ImGui_TreeNode(ctx, "XY", xy_open_flags)
             
-            if changed then
-                send_folders_raw_text = new_text
-                UpdateSendFoldersList() -- Мгновенно перестраиваем список папок «на лету»
-                SaveSettings()       -- Сохраняем изменения в проект REAPER
-            end
-            
-            reaper.ImGui_Spacing(ctx)
-            if reaper.ImGui_Button(ctx, "Close", 60) then
-                reaper.ImGui_CloseCurrentPopup(ctx)
-            end
-            
-            reaper.ImGui_EndPopup(ctx)
-        end
-        
-        reaper.ImGui_SetCursorPos(ctx, saved_cx, saved_cy)
-
-        if reaper.ImGui_IsItemClicked(ctx, reaper.ImGui_MouseButton_Left()) then
-            local mx, _ = reaper.ImGui_GetMousePos(ctx)
-            if mx < btn_x then
+            if reaper.ImGui_IsItemToggledOpen(ctx) then 
                 xy_folder_open_state = (xy_folder_open_state == 1) and 0 or 1
-                SaveXYPadState()
+                SaveXYPadState()    
             end
+
+
+            if xy then 
+                xy_folder_open_state = 1
+                local s1, s2, s3, s4 = DrawXYPad(ctx, w-16, 180, current_folders, target_track, target_color)
+                reaper.ImGui_TreePop(ctx)
+            else 
+                xy_folder_open_state = 0
+            end 
+
+            reaper.ImGui_Dummy(ctx, 4, 4)
         end
-
-        if xy then 
-            xy_folder_open_state = 1
-            local s1, s2, s3, s4 = DrawXYPad(ctx, w-16, 180, current_folders, target_track, target_color)
-            reaper.ImGui_TreePop(ctx)
-        else 
-            xy_folder_open_state = 0
-        end 
-
-        reaper.ImGui_Dummy(ctx, 4, 4)
-
 
         if scroll_to_button then scroll_to_track(target_track) end
         if bypass_button then 
@@ -1531,17 +1504,68 @@ function frame()
             reaper.Undo_EndBlock( 'Sender: Remove sends', -1)
         end
         reaper.ImGui_PopStyleVar(ctx)
-        reaper.ImGui_PopStyleColor(ctx,5)
-
         
         reaper.ImGui_Dummy(ctx, 4, 10)
         if track_button then 
             pinned_mode = not pinned_mode 
             pinned_track = target_track
         end 
-            -- reaper.ImGui_EndPopup(ctx)
         draw_send_folder_slots(current_folders, target_track)
-       
+    end
+
+    local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
+    local btn_height = 22
+    local dummy_height = avail_h - btn_height - 5
+    
+    if dummy_height > 0 then
+        reaper.ImGui_Dummy(ctx, 1, dummy_height)
+    end
+
+
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(),          0xFFFFFF66)   -- Серый цвет иконки
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        0x00000000)   -- Прозрачный фон
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), 0x44444488)   -- Легкая полупрозрачная подложка при наведении
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  0x666666AA)   -- Чуть плотнее при клике
+    
+    if reaper.ImGui_Button(ctx, "⛭ Settings ##settings_btn", w-17, btn_height) then
+        reaper.ImGui_OpenPopup(ctx, "Settings_popup")
+    end
+    reaper.ImGui_PopStyleColor(ctx, 4)
+    
+    if reaper.ImGui_BeginPopup(ctx, "Settings_popup") then
+        reaper.ImGui_Text(ctx, "Send folder names (separated by comma):")
+        reaper.ImGui_SetNextItemWidth(ctx, 300)
+        local changed, new_text = reaper.ImGui_InputText(ctx, "##folders_input", send_folders_raw_text)
+        if changed then
+            send_folders_raw_text = new_text
+            UpdateSendFoldersList() 
+            SaveSettings()       -- Сохраняем изменения в проект REAPER
+        end
+        reaper.ImGui_Dummy(ctx, 6,4)
+        reaper.ImGui_Text(ctx, "EQ plugin name (For EQ button):")
+        local changed, new_text = reaper.ImGui_InputText(ctx, "##eq_input", eq_fxname)
+        if changed then eq_fxname = new_text SaveSettings() end
+
+        reaper.ImGui_Dummy(ctx, 6,4)
+        show_presets_retval, show_presets_checkbox = reaper.ImGui_Checkbox(ctx, "Show Presets", show_presets_checkbox )
+        if show_presets_retval then 
+            show_presets_setting = show_presets_checkbox == true and 1 or 0
+            SaveSettings()  
+        end
+        show_allslider_retval, show_allslider_checkbox = reaper.ImGui_Checkbox(ctx, "Show Adjust All Slider", show_allslider_checkbox )
+        if show_allslider_retval then 
+            show_allslider_setting = show_allslider_checkbox == true and 1 or 0
+            SaveSettings()  
+        end
+        show_xy_retval, show_xy_checkbox = reaper.ImGui_Checkbox(ctx, "Show XY", show_xy_checkbox )
+        if show_xy_retval then 
+            show_xy_setting = show_xy_checkbox == true and 1 or 0
+            SaveSettings()  
+        end
+
+        reaper.ImGui_Dummy(ctx, 6,4)
+        if reaper.ImGui_Button(ctx, "Close", 60) then reaper.ImGui_CloseCurrentPopup(ctx) end
+        reaper.ImGui_EndPopup(ctx)
     end
 end 
 
@@ -1707,16 +1731,16 @@ function DrawXYPad(ctx, width, height, folder_data, sel_track, sel_track_color)
     if xy_send_TL and xy_send_TR and xy_send_BL and xy_send_BR then all_selected = true else all_selected = false end
 
     if all_selected then 
-        reaper.ImGui_PushItemWidth(ctx, width)
-        local changed_min, val_min = reaper.ImGui_SliderDouble(ctx, "##xymin", xy_min_center * 100, 1, 100.0,"Center:        ".. "%.0f %%", reaper.ImGui_SliderFlags_NoInput())
+        reaper.ImGui_PushItemWidth(ctx, width/2)
+        local changed_min, val_min = reaper.ImGui_SliderDouble(ctx, "##xymin", xy_min_center * 100, 1, 100.0,"M: ".. "%.0f", reaper.ImGui_SliderFlags_NoInput())
         local active_min = reaper.ImGui_IsItemActive(ctx)
         if changed_min then xy_min_center = val_min / 100 SaveXYSliders() end
         if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, reaper.ImGui_MouseButton_Right()) then
             xy_min_center = 0.25
             SaveXYSliders()
         end
-
-        local changed_max, val_max = reaper.ImGui_SliderDouble(ctx, "##xymax", xy_max_limit * 100, 5, 200.0,"Corners:         ".."%.0f %%", reaper.ImGui_SliderFlags_NoInput())
+        reaper.ImGui_SameLine(ctx)
+        local changed_max, val_max = reaper.ImGui_SliderDouble(ctx, "##xymax", xy_max_limit * 100, 5, 200.0,"C: ".."%.0f", reaper.ImGui_SliderFlags_NoInput())
         if changed_max then xy_max_limit = val_max / 100 SaveXYSliders() end
         local active_max = reaper.ImGui_IsItemActive(ctx)
         if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, reaper.ImGui_MouseButton_Right()) then
@@ -1911,9 +1935,6 @@ function DrawXYPad(ctx, width, height, folder_data, sel_track, sel_track_color)
     local weight_BL = CalculateAdvancedWeight(w_BL)
     local weight_BR = CalculateAdvancedWeight(w_BR)
     
-    ---------------------------------------------------------------------------
-    -- ЗАПИСЬ В REAPER
-    ---------------------------------------------------------------------------
     if any_active and sel_track and reaper.ValidatePtr(sel_track, "MediaTrack*") then
         local function SetSendVol(target_track, weight)
             if not target_track then return end
@@ -1931,21 +1952,6 @@ function DrawXYPad(ctx, width, height, folder_data, sel_track, sel_track_color)
         reaper.TrackList_AdjustWindows(false)
     end
 
-    -- local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-    -- local col_border = 0x5A5A5AFF 
-    -- local col_lines  = 0x404040FF 
-    -- local col_point  = 0xCCCCCCFF 
-    
-    -- if all_selected then 
-    --     reaper.ImGui_DrawList_AddRectFilled(draw_list, start_x, start_y, start_x + width, start_y + height, col(sel_track_color,0.03))
-    -- end
-    
-    -- reaper.ImGui_DrawList_AddLine(draw_list, start_x + width/2, start_y, start_x + width/2, start_y + height,  col(sel_track_color,0.5))
-    -- reaper.ImGui_DrawList_AddLine(draw_list, start_x, start_y + height/2, start_x + width, start_y + height/2,  col(sel_track_color,0.5))
-
-        ---------------------------------------------------------------------------
-    -- ОТРИСОВКА ГРАФИКИ (ФОН С ДИНАМИЧЕСКИМ ГРАДИЕНТОМ УГЛОВ)
-    ---------------------------------------------------------------------------
     local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
     local col_border = 0x000000FF 
     local col_lines  = 0x3D3D3D77 -- Сделаем осевые линии чуть прозрачнее (альфа 77 вместо FF), чтобы градиент лучше читался
@@ -2033,6 +2039,7 @@ end
 
 function exit()
     SaveXYPadState()
+    SaveSettings()
 end
 
 function loop()
@@ -2048,9 +2055,15 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_WindowBg(),         0x1C1D1EFF)
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBg(),          0x1C1D1EFF)
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBgActive(),    0x441D1EFF)
-    reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBg(),          0x323232FF)      
+    reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBg(),          0x6D6D6D99)      
 
-    reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_SliderGrab(),       0xB19102FF)      
+    -- reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_SliderGrab(),       0xB19102FF)   -- pan
+    
+    reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_SliderGrab(),              0x8F8F8FFF)
+    reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_SliderGrabActive(),        0x9F9F9FFF)
+    -- reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBg(),                 0x69696999)
+    reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBgHovered(),          0x575757FF)
+    reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBgActive(),           0x5A5A5AFF)
 
 
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_HeaderHovered(),    rgba(50,50,50,1))
@@ -2072,7 +2085,7 @@ function loop()
         frame()
         reaper.ImGui_End(ctx)
     end
-    reaper.ImGui_PopStyleColor(ctx,11)
+    reaper.ImGui_PopStyleColor(ctx,14)
     reaper.ImGui_PopStyleVar(ctx, 5)
     reaper.ImGui_PopFont(ctx)
     
@@ -2082,6 +2095,5 @@ function loop()
 
 end
 
-UpdateSendFoldersList()
 loop()
-reaper.atexit(exit )
+reaper.atexit(exit)
