@@ -1,6 +1,6 @@
 -- @description Sender
 -- @author Misha Oshkanov
--- @version 2.3
+-- @version 2.3.1
 -- @about
 --   Ui panel for controlling sends for selected track
 --   You should create folder for sends in the project (Name in Sends, Rhythm Sends, Special FX and etc.)
@@ -1732,7 +1732,7 @@ function DrawXYPad(ctx, width, height, folder_data, sel_track, sel_track_color)
 
     if all_selected then 
         reaper.ImGui_PushItemWidth(ctx, width/2)
-        local changed_min, val_min = reaper.ImGui_SliderDouble(ctx, "##xymin", xy_min_center * 100, 1, 100.0,"M: ".. "%.0f", reaper.ImGui_SliderFlags_NoInput())
+        local changed_min, val_min = reaper.ImGui_SliderDouble(ctx, "##xymin", xy_min_center * 100, 1, 100.0,"%.0f", reaper.ImGui_SliderFlags_NoInput())
         local active_min = reaper.ImGui_IsItemActive(ctx)
         if changed_min then xy_min_center = val_min / 100 SaveXYSliders() end
         if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, reaper.ImGui_MouseButton_Right()) then
@@ -1740,7 +1740,7 @@ function DrawXYPad(ctx, width, height, folder_data, sel_track, sel_track_color)
             SaveXYSliders()
         end
         reaper.ImGui_SameLine(ctx)
-        local changed_max, val_max = reaper.ImGui_SliderDouble(ctx, "##xymax", xy_max_limit * 100, 5, 200.0,"C: ".."%.0f", reaper.ImGui_SliderFlags_NoInput())
+        local changed_max, val_max = reaper.ImGui_SliderDouble(ctx, "##xymax", xy_max_limit * 100, 5, 200.0,"%.0f", reaper.ImGui_SliderFlags_NoInput())
         if changed_max then xy_max_limit = val_max / 100 SaveXYSliders() end
         local active_max = reaper.ImGui_IsItemActive(ctx)
         if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, reaper.ImGui_MouseButton_Right()) then
