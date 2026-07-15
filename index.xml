@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="13d29ae82610df13e2a6da002ad71f10eb093817">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="53d1b26e6c72b12d735d1677ac6e6c6311bef6ca">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -1209,6 +1209,9 @@
       </version>
       <version name="2.3.1" author="Misha Oshkanov" time="2026-07-15T19:22:33Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/13d29ae82610df13e2a6da002ad71f10eb093817/ReaScripts/UI%20Utilities/misha%20-%20Sender.lua</source>
+      </version>
+      <version name="2.3.2" author="Misha Oshkanov" time="2026-07-15T19:34:47Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/53d1b26e6c72b12d735d1677ac6e6c6311bef6ca/ReaScripts/UI%20Utilities/misha%20-%20Sender.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Session Organizer.lua" type="script" desc="UI manager for session prepping">
