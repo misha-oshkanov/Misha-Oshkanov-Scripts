@@ -1,6 +1,6 @@
 -- @description Sender
 -- @author Misha Oshkanov
--- @version 2.3.1
+-- @version 2.3.2
 -- @about
 --   Ui panel for controlling sends for selected track
 --   You should create folder for sends in the project (Name in Sends, Rhythm Sends, Special FX and etc.)
@@ -1446,6 +1446,11 @@ function frame()
                         end 
                     end
                 end
+
+                if reaper.ImGui_IsItemClicked(ctx, reaper.ImGui_MouseButton_Right()) then 
+                    remove_preset(preset)
+                end
+
                 reaper.ImGui_PopStyleColor(ctx,3)
                 reaper.ImGui_PopID(ctx)
             end
