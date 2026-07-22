@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="db09513373b166c2020760a7b11e559c4f810177">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="55ff32e9e68d82f0fdd178b906047801dcbbd584">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -1131,6 +1131,9 @@
       </version>
       <version name="2.5" author="Misha Oshkanov" time="2026-07-08T10:19:30Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/9dd045c2f8b67222872c7514e7347e1e77b3e09a/ReaScripts/UI%20Utilities/misha%20-%20project%20work%20timer.lua</source>
+      </version>
+      <version name="2.7" author="Misha Oshkanov" time="2026-07-22T10:22:15Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/55ff32e9e68d82f0fdd178b906047801dcbbd584/ReaScripts/UI%20Utilities/misha%20-%20project%20work%20timer.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Scroller.lua" type="script" desc="Scroller">
