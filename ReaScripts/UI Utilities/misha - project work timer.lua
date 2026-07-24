@@ -1,6 +1,6 @@
 -- @description Project Work Timer: Smart time tracker with tags, afk and focus detection and alarms
 -- @author Misha Oshkanov
--- @version 2.7
+-- @version 2.8
 -- @about
 --  Tracks active work time per project tab in REAPER.
 --  Switches timers between tabs automatically.
@@ -13,13 +13,29 @@
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
 
+function print(msg) 
+    if msg==nil then msg="da" end
+    reaper.ShowConsoleMsg(tostring(msg) .. '\n') 
 
-function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
+end
+
+function printt(t, indent)
+    indent = indent or 0
+    for k, v in pairs(t) do
+      if type(v) == "table" then
+        print(string.rep(" ", indent) .. k .. " = {")
+        printt(v, indent + 2)
+        print(string.rep(" ", indent) .. "}")
+      else
+        print(string.rep(" ", indent) .. k .. " = " .. tostring(v))
+      end
+    end
+end
 
 local total_time = 0
 local last_save = reaper.time_precise()
 local last_check = reaper.time_precise()
-local last_project_ptr = nil 
+local last_project_ptr = 0 
 local last_date_key = "" 
 local last_project_path = "" -- Хранит путь к файлу текущего проекта
 
@@ -56,6 +72,15 @@ local font_size_alarm = 22
 
 local blink_check = false
 local notag_nocoutn_check = false
+local day_or_all_check = false
+
+local edit_mode = "transfer"     -- Режимы: "transfer" (перенос), "change" (изменение), "remove" (удаление)
+local change_action = "increase" -- Действия для change: "increase" (добавить), "decrease" (вычесть)
+local move_hours_buf = "0"       -- Буфер ввода часов
+local move_mins_buf = "0"        -- Буфер ввода минут
+local move_secs_buf = "0"        -- Буфер ввода секунд
+local move_date_context = ""     -- Хранит дату редактируемого дня
+
 
 window_flags =  reaper.ImGui_WindowFlags_NoScrollbar() +
                 reaper.ImGui_WindowFlags_NoTitleBar() +
@@ -81,12 +106,22 @@ function rgb(r, g, b)
     return r + g + b + a
 end
 
+function draw_color(color,px)
+    min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
+    max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
+    draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+    reaper.ImGui_DrawList_AddRect( draw_list, min_x, min_y, max_x, max_y,  color,6,0,px)
+end
+
 function save_settings()
     local blink_str = blink_check and "1" or "0"
     local nocount_str = notag_nocoutn_check and "1" or "0"
+    local day_or_all_str = day_or_all_check and "1" or "0"
 
     reaper.SetExtState(EXT_SECTION, "blink_check",         blink_str,    true)
     reaper.SetExtState(EXT_SECTION, "notag_nocoutn_check", nocount_str,  true)
+    reaper.SetExtState(EXT_SECTION, "day_or_all_check", day_or_all_str,  true)
+
 
     reaper.SetExtState(EXT_SECTION, "font_size_ui",    font_size_ui,     true)
     reaper.SetExtState(EXT_SECTION, "font_size_alarm", font_size_alarm,  true)
@@ -94,16 +129,21 @@ function save_settings()
 end 
 
 
+
 function load_settings()
     local saved_font_size_ui    = reaper.GetExtState(EXT_SECTION, "font_size_ui")
     local saved_font_size_alarm = reaper.GetExtState(EXT_SECTION, "font_size_alarm")
     local saved_font_size_timer = reaper.GetExtState(EXT_SECTION, "font_size_timer")
 
-    blink_check_setting   = reaper.GetExtState(EXT_SECTION, "blink_check")
+    blink_check_setting           = reaper.GetExtState(EXT_SECTION, "blink_check")
     notag_nocoutn_check_setting   = reaper.GetExtState(EXT_SECTION, "notag_nocoutn_check")
+    day_or_all_check_setting        = reaper.GetExtState(EXT_SECTION, "day_or_all_check")
+
 
     if blink_check_setting   and blink_check_setting   ~= "" then blink_check   = (blink_check_setting   == "1") end
     if notag_nocoutn_check_setting   and notag_nocoutn_check_setting   ~= "" then notag_nocoutn_check   = (notag_nocoutn_check_setting   == "1") end
+    if day_or_all_check_setting   and day_or_all_check_setting   ~= "" then day_or_all_check   = (day_or_all_check_setting   == "1") end
+
 
     if saved_font_size_ui    and saved_font_size_ui    ~= "" then font_size_ui = tonumber(saved_font_size_ui) end 
     if saved_font_size_alarm and saved_font_size_alarm ~= "" then saved_font_size_alarm = tonumber(saved_font_size_alarm) end 
@@ -173,6 +213,16 @@ function GetTagColor(tag_name, is_afk)
 end
 
 function GetCurrentDateKey() return os.date("%Y-%m-%d") end
+
+
+function key_down()
+    local key = reaper.JS_Mouse_GetState(95)
+    if key == 4 or key == 5 then return 'ctrl'
+    elseif key == 8 or key == 9 then return 'shift'
+    elseif key == 16 or key == 17 then return 'alt'
+    else return nil 
+    end
+end
 
 function load_proj_time(proj_ptr, date_key, tag)
     if not proj_ptr then return 0 end
@@ -250,10 +300,7 @@ function ImportHistoryFromRPP(target_proj_ptr)
     file:close()
     
     local current_date_key = GetCurrentDateKey()
-    -- total_time = load_proj_time(target_proj_ptr, current_date_key, current_tag)
-    total_time = load_total_tag_time(current_proj_ptr, current_tag)
-
-    -- reaper.MarkProjectDirty(target_proj_ptr)
+    total_time = load_proj_time(target_proj_ptr, current_date_key, current_tag)
     
     reaper.MB(string.format("Successful import!\nData loaded: %d", imported_count), "Done", 0)
 end
@@ -311,6 +358,7 @@ function DrawStatsWindow(proj_ptr)
         local total_project_time = 0
         local total_per_tag = {}
         local daily_totals = {}
+
 
         while true do
             local retval, key, val = reaper.EnumProjExtState(proj_ptr, "TIME_TRACKER", idx)
@@ -421,128 +469,237 @@ function DrawStatsWindow(proj_ptr)
         end
 
         if open_move_popup then
-            reaper.ImGui_OpenPopup(ctx, "MoveTimePopup")
+            reaper.ImGui_OpenPopup(ctx, "Edit Time Popup")
             move_date_context = target_move_date
         end
 
-        if reaper.ImGui_BeginPopupModal(ctx, "MoveTimePopup", true, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
-            reaper.ImGui_Text(ctx, "Transfer tag time for: " .. tostring(move_date_context))
+        
+        if reaper.ImGui_BeginPopupModal(ctx, "Edit Time Popup", true, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
+            reaper.ImGui_Text(ctx, "Date context: " .. tostring(move_date_context))
+            reaper.ImGui_Spacing(ctx)
+            
+            reaper.ImGui_SetNextItemWidth(ctx, 150)
+            if reaper.ImGui_BeginCombo(ctx, "Function", edit_mode) then
+                if reaper.ImGui_Selectable(ctx, "transfer", edit_mode == "transfer") then edit_mode = "transfer" end
+                if reaper.ImGui_Selectable(ctx, "change", edit_mode == "change") then edit_mode = "change" end
+                if reaper.ImGui_Selectable(ctx, "remove", edit_mode == "remove") then edit_mode = "remove" end
+                reaper.ImGui_EndCombo(ctx)
+            end
             reaper.ImGui_Separator(ctx)
+            reaper.ImGui_Spacing(ctx)
 
-            local current_from_day_sec = load_proj_time(proj_ptr, move_date_context, move_tag_from)
-            local combo_from_label = string.format("%s  (%s)", move_tag_from, FormatTime(current_from_day_sec))
-            
-            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), GetTagColor(move_tag_from, false))
-            local begin_from = reaper.ImGui_BeginCombo(ctx, "From", combo_from_label)
-            reaper.ImGui_PopStyleColor(ctx)
+            if edit_mode == "transfer" then
+                local current_from_day_sec = load_proj_time(proj_ptr, move_date_context, move_tag_from)
+                local combo_from_label = string.format("%s  (%s)", move_tag_from, FormatTime(current_from_day_sec))
+                
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), GetTagColor(move_tag_from, false))
+                local begin_from = reaper.ImGui_BeginCombo(ctx, "From", combo_from_label)
+                reaper.ImGui_PopStyleColor(ctx)
 
-            if begin_from then
-                for _, t in ipairs(available_tags) do
-                    if type(t) == "table" and t.name then
-                        local tag_day_sec = load_proj_time(proj_ptr, move_date_context, t.name)
-                        local item_label = string.format("%s  [%s]", t.name, FormatTime(tag_day_sec))
-                        
-                        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), GetTagColor(t.name, false))
-                        local selected = reaper.ImGui_Selectable(ctx, item_label, move_tag_from == t.name)
-                        reaper.ImGui_PopStyleColor(ctx)
+                if begin_from then
+                    for _, t in ipairs(available_tags) do
+                        if type(t) == "table" and t.name then
+                            local tag_day_sec = load_proj_time(proj_ptr, move_date_context, t.name)
+                            local item_label = string.format("%s  [%s]", t.name, FormatTime(tag_day_sec))
+                            
+                            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), GetTagColor(t.name, false))
+                            local selected = reaper.ImGui_Selectable(ctx, item_label, move_tag_from == t.name)
+                            reaper.ImGui_PopStyleColor(ctx)
+                            if selected then move_tag_from = t.name end
+                        end
+                    end
+                    reaper.ImGui_EndCombo(ctx)
+                end
 
-                        if selected then move_tag_from = t.name end
+                local current_to_day_sec = load_proj_time(proj_ptr, move_date_context, move_tag_to)
+                local combo_to_label = string.format("%s  (%s)", move_tag_to, FormatTime(current_to_day_sec))
+
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), GetTagColor(move_tag_to, false))
+                local begin_to = reaper.ImGui_BeginCombo(ctx, "To", combo_to_label)
+                reaper.ImGui_PopStyleColor(ctx)
+
+                if begin_to then
+                    for _, t in ipairs(available_tags) do
+                        if type(t) == "table" and t.name then
+                            local tag_day_sec = load_proj_time(proj_ptr, move_date_context, t.name)
+                            local item_label = string.format("%s  [%s]", t.name, FormatTime(tag_day_sec))
+                            
+                            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), GetTagColor(t.name, false))
+                            local selected = reaper.ImGui_Selectable(ctx, item_label, move_tag_to == t.name)
+                            reaper.ImGui_PopStyleColor(ctx)
+                            if selected then move_tag_to = t.name end
+                        end
+                    end
+                    reaper.ImGui_EndCombo(ctx)
+                end
+
+                reaper.ImGui_Text(ctx, "Time to transfer:")
+                
+                reaper.ImGui_SetNextItemWidth(ctx, 35)
+                local rc_h, txt_h = reaper.ImGui_InputText(ctx, "h##move_h", move_hours_buf)
+                if rc_h then move_hours_buf = txt_h end
+                reaper.ImGui_SameLine(ctx)
+                reaper.ImGui_Dummy(ctx,10,10)
+                reaper.ImGui_SameLine(ctx)
+                
+                reaper.ImGui_SetNextItemWidth(ctx, 35)
+                local rc_m, txt_m = reaper.ImGui_InputText(ctx, "m##move_m", move_mins_buf)
+                if rc_m then move_mins_buf = txt_m end
+                reaper.ImGui_SameLine(ctx)
+                reaper.ImGui_Dummy(ctx,10,10)
+                reaper.ImGui_SameLine(ctx)
+                
+                reaper.ImGui_SetNextItemWidth(ctx, 35)
+                local rc_s, txt_s = reaper.ImGui_InputText(ctx, "s##move_s", move_secs_buf)
+                if rc_s then move_secs_buf = txt_s end
+                reaper.ImGui_SameLine(ctx)
+                reaper.ImGui_Dummy(ctx,10,10)
+                reaper.ImGui_SameLine(ctx)
+
+                if reaper.ImGui_Button(ctx, "All##all_transfer", 45, 0) then
+                    if current_from_day_sec > 0 then
+                        move_hours_buf = tostring(math.floor(current_from_day_sec / 3600))
+                        move_mins_buf = tostring(math.floor((current_from_day_sec % 3600) / 60))
+                        move_secs_buf = tostring(math.floor(current_from_day_sec % 60))
+                    else
+                        move_hours_buf, move_mins_buf, move_secs_buf = "0", "0", "0"
                     end
                 end
-                reaper.ImGui_EndCombo(ctx)
-            end
 
-            local current_to_day_sec = load_proj_time(proj_ptr, move_date_context, move_tag_to)
-            local combo_to_label = string.format("%s  (%s)", move_tag_to, FormatTime(current_to_day_sec))
+            -- [РЕЖИМ 2: CHANGE] Добавление или вычитание времени у выбранного тега
+            elseif edit_mode == "change" then
+                local current_from_day_sec = load_proj_time(proj_ptr, move_date_context, move_tag_from)
+                local combo_from_label = string.format("%s  (%s)", move_tag_from, FormatTime(current_from_day_sec))
 
-            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), GetTagColor(move_tag_to, false))
-            local begin_to = reaper.ImGui_BeginCombo(ctx, "To", combo_to_label)
-            reaper.ImGui_PopStyleColor(ctx)
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), GetTagColor(move_tag_from, false))
+                local begin_change = reaper.ImGui_BeginCombo(ctx, "Select Tag", combo_from_label)
+                reaper.ImGui_PopStyleColor(ctx)
 
-            if begin_to then
-                for _, t in ipairs(available_tags) do
-                    if type(t) == "table" and t.name then
-                        local tag_day_sec = load_proj_time(proj_ptr, move_date_context, t.name)
-                        local item_label = string.format("%s  [%s]", t.name, FormatTime(tag_day_sec))
-                        
-                        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), GetTagColor(t.name, false))
-                        local selected = reaper.ImGui_Selectable(ctx, item_label, move_tag_to == t.name)
-                        reaper.ImGui_PopStyleColor(ctx)
+                if begin_change then
+                    for _, t in ipairs(available_tags) do
+                        if type(t) == "table" and t.name then
+                            local tag_day_sec = load_proj_time(proj_ptr, move_date_context, t.name)
+                            local item_label = string.format("%s  [%s]", t.name, FormatTime(tag_day_sec))
+                            
+                            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), GetTagColor(t.name, false))
+                            local selected = reaper.ImGui_Selectable(ctx, item_label, move_tag_from == t.name)
+                            reaper.ImGui_PopStyleColor(ctx)
+                            if selected then move_tag_from = t.name end
+                        end
+                    end
+                    reaper.ImGui_EndCombo(ctx)
+                end
 
-                        if selected then move_tag_to = t.name end
+                reaper.ImGui_SetNextItemWidth(ctx, 120)
+                if reaper.ImGui_BeginCombo(ctx, "Action", change_action) then
+                    if reaper.ImGui_Selectable(ctx, "increase", change_action == "increase") then change_action = "increase" end
+                    if reaper.ImGui_Selectable(ctx, "decrease", change_action == "decrease") then change_action = "decrease" end
+                    reaper.ImGui_EndCombo(ctx)
+                end
+
+                reaper.ImGui_Text(ctx, "Time to increase/decrese:")
+                
+                reaper.ImGui_SetNextItemWidth(ctx, 35)
+                local rc_h, txt_h = reaper.ImGui_InputText(ctx, "h##change_h", move_hours_buf)
+                if rc_h then move_hours_buf = txt_h end
+                reaper.ImGui_SameLine(ctx)
+                reaper.ImGui_Dummy(ctx,10,10)
+                reaper.ImGui_SameLine(ctx)
+                
+                reaper.ImGui_SetNextItemWidth(ctx, 35)
+                local rc_m, txt_m = reaper.ImGui_InputText(ctx, "m##change_m", move_mins_buf)
+                if rc_m then move_mins_buf = txt_m end
+                reaper.ImGui_SameLine(ctx)
+                reaper.ImGui_Dummy(ctx,10,10)
+                reaper.ImGui_SameLine(ctx)
+                
+                reaper.ImGui_SetNextItemWidth(ctx, 35)
+                local rc_s, txt_s = reaper.ImGui_InputText(ctx, "s##change_s", move_secs_buf)
+                if rc_s then move_secs_buf = txt_s end
+                reaper.ImGui_SameLine(ctx)
+                reaper.ImGui_Dummy(ctx,10,10)
+                reaper.ImGui_SameLine(ctx)
+
+                if reaper.ImGui_Button(ctx, "All##all_change", 45, 0) then
+                    if current_from_day_sec > 0 then
+                        move_hours_buf = tostring(math.floor(current_from_day_sec / 3600))
+                        move_mins_buf = tostring(math.floor((current_from_day_sec % 3600) / 60))
+                        move_secs_buf = tostring(math.floor(current_from_day_sec % 60))
+                    else
+                        move_hours_buf, move_mins_buf, move_secs_buf = "0", "0", "0"
                     end
                 end
-                reaper.ImGui_EndCombo(ctx)
-            end
 
-            reaper.ImGui_Text(ctx, "Time to transfer:")
-            
-            reaper.ImGui_SetNextItemWidth(ctx, 45)
-            local rc_h, txt_h = reaper.ImGui_InputText(ctx, "h##move_h", move_hours_buf)
-            if rc_h then move_hours_buf = txt_h end
-            
-            reaper.ImGui_SameLine(ctx)
-            
-            reaper.ImGui_SetNextItemWidth(ctx, 45)
-            local rc_m, txt_m = reaper.ImGui_InputText(ctx, "m##move_m", move_mins_buf)
-            if rc_m then move_mins_buf = txt_m end
-            
-            reaper.ImGui_SameLine(ctx)
-            
-            reaper.ImGui_SetNextItemWidth(ctx, 45)
-            local rc_s, txt_s = reaper.ImGui_InputText(ctx, "s##move_s", move_secs_buf)
-            if rc_s then move_secs_buf = txt_s end
+            -- [РЕЖИМ 3: REMOVE] Очистка тега за выбранные сутки
+            elseif edit_mode == "remove" then
+                local current_from_day_sec = load_proj_time(proj_ptr, move_date_context, move_tag_from)
+                local combo_from_label = string.format("%s  (%s)", move_tag_from, FormatTime(current_from_day_sec))
 
-            reaper.ImGui_SameLine(ctx)
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), GetTagColor(move_tag_from, false))
+                local begin_remove = reaper.ImGui_BeginCombo(ctx, "Tag to reset", combo_from_label)
+                reaper.ImGui_PopStyleColor(ctx)
 
-            if reaper.ImGui_Button(ctx, "All", 40, 20) then
-                if current_from_day_sec > 0 then
-                    local h = math.floor(current_from_day_sec / 3600)
-                    local m = math.floor((current_from_day_sec % 3600) / 60)
-                    local s = math.floor(current_from_day_sec % 60)
-                    
-                    move_hours_buf = tostring(h)
-                    move_mins_buf = tostring(m)
-                    move_secs_buf = tostring(s)
-                else
-                    move_hours_buf, move_mins_buf, move_secs_buf = "0", "0", "0"
+                if begin_remove then
+                    for _, t in ipairs(available_tags) do
+                        if type(t) == "table" and t.name then
+                            local tag_day_sec = load_proj_time(proj_ptr, move_date_context, t.name)
+                            local item_label = string.format("%s  [%s]", t.name, FormatTime(tag_day_sec))
+                            
+                            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), GetTagColor(t.name, false))
+                            local selected = reaper.ImGui_Selectable(ctx, item_label, move_tag_from == t.name)
+                            reaper.ImGui_PopStyleColor(ctx)
+                            if selected then move_tag_from = t.name end
+                        end 
+                    end 
+                    reaper.ImGui_EndCombo(ctx)
                 end
+                reaper.ImGui_TextColored(ctx, 0xFF3333FF, "Warning: OK will delete all time for this tag on this day.")
             end
-
             reaper.ImGui_Spacing(ctx)
             reaper.ImGui_Separator(ctx)
             reaper.ImGui_Spacing(ctx)
 
-            if reaper.ImGui_Button(ctx, "OK", 120, 24) then
+            if reaper.ImGui_Button(ctx, "OK", 80, 24) then
                 local input_hours = tonumber(move_hours_buf) or 0
                 local input_mins  = tonumber(move_mins_buf) or 0
                 local input_secs  = tonumber(move_secs_buf) or 0
-                
-                local secs_to_move = (input_hours * 3600) + (input_mins * 60) + input_secs
+                local delta_secs  = (input_hours * 3600) + (input_mins * 60) + input_secs
 
-                if secs_to_move > 0 and move_tag_from ~= move_tag_to then
-                    local current_from_time = load_proj_time(proj_ptr, move_date_context, move_tag_from)
-                    local actual_move = math.min(secs_to_move, current_from_time)
-
-                    if actual_move > 0 then
-                        local current_to_time = load_proj_time(proj_ptr, move_date_context, move_tag_to)
-                        
-                        reaper.SetProjExtState(proj_ptr, "TIME_TRACKER", "TOTAL_TIME_" .. move_date_context .. "_" .. move_tag_from, tostring(current_from_time - actual_move))
-                        reaper.SetProjExtState(proj_ptr, "TIME_TRACKER", "TOTAL_TIME_" .. move_date_context .. "_" .. move_tag_to, tostring(current_to_time + actual_move))
-                        
-                        total_time = load_total_tag_time(proj_ptr, current_tag)
-                        reaper.MarkProjectDirty(proj_ptr)
+                if edit_mode == "transfer" then 
+                    if delta_secs > 0 and move_tag_from ~= move_tag_to then
+                        local current_from_time = load_proj_time(proj_ptr, move_date_context, move_tag_from)
+                        local actual_move = math.min(delta_secs, current_from_time)
+                        if actual_move > 0 then
+                            local current_to_time = load_proj_time(proj_ptr, move_date_context, move_tag_to)
+                            reaper.SetProjExtState(proj_ptr, "TIME_TRACKER", "TOTAL_TIME_" .. move_date_context .. "" .. move_tag_from, tostring(current_from_time - actual_move))
+                            reaper.SetProjExtState(proj_ptr, "TIME_TRACKER", "TOTAL_TIME" .. move_date_context .. "_" .. move_tag_to, tostring(current_to_time + actual_move))
+                        end 
                     end
+                elseif edit_mode == "change" then
+                    if delta_secs > 0 then
+                        local current_time = load_proj_time(proj_ptr, move_date_context, move_tag_from)
+                        local new_time = current_time
+                        if change_action == "increase" then
+                            new_time = current_time + delta_secs
+                        elseif change_action == "decrease" then
+                            new_time = math.max(0, current_time - delta_secs)
+                        end
+                        reaper.SetProjExtState(proj_ptr, "TIME_TRACKER", "TOTAL_TIME_" .. move_date_context .. "_" .. move_tag_from, tostring(new_time))
+                    end
+                elseif edit_mode == "remove" then
+                    reaper.SetProjExtState(proj_ptr, "TIME_TRACKER", "TOTAL_TIME_" .. move_date_context .. "_" .. move_tag_from, "")
                 end
-                
+
+                total_time = load_total_tag_time(proj_ptr, current_tag)
+                reaper.MarkProjectDirty(proj_ptr)
+
+                move_hours_buf, move_mins_buf, move_secs_buf = "0", "0", "0"reaper.ImGui_CloseCurrentPopup(ctx) 
+
+            end
+            reaper.ImGui_SameLine(ctx)
+            if reaper.ImGui_Button(ctx, "Cancel", 80, 24) then
                 move_hours_buf, move_mins_buf, move_secs_buf = "0", "0", "0"
                 reaper.ImGui_CloseCurrentPopup(ctx)
-            end
-
-            reaper.ImGui_SameLine(ctx)
-            if reaper.ImGui_Button(ctx, "Cancel", 80, 24) then 
-                move_hours_buf, move_mins_buf, move_secs_buf = "0", "0", "0"
-                reaper.ImGui_CloseCurrentPopup(ctx) 
             end
             reaper.ImGui_EndPopup(ctx)
         end
@@ -569,6 +726,7 @@ function DrawStatsWindow(proj_ptr)
 
             blink_check_r,         blink_check = reaper.ImGui_Checkbox(ctx, "Button blinks if no tag", blink_check)
             notag_nocoutn_check_r, notag_nocoutn_check = reaper.ImGui_Checkbox(ctx, "Do not start timer if no tag",  notag_nocoutn_check)
+            day_or_all_check_r, day_or_all_check = reaper.ImGui_Checkbox(ctx, "Show only Today time on timer",  day_or_all_check)
 
             reaper.ImGui_Spacing( ctx )
 
@@ -585,8 +743,8 @@ function DrawStatsWindow(proj_ptr)
                     end
                 end
             end
-
-            if blink_check_r or notag_nocoutn_check_r or font_size_timer_r or font_size_ui_r or font_size_alarm_r then 
+            
+            if blink_check_r or notag_nocoutn_check_r or font_size_timer_r or font_size_ui_r or font_size_alarm_r or day_or_all_check_r then 
                 if reaper.ImGui_IsMouseReleased( ctx, reaper.ImGui_MouseButton_Left() ) then 
                     save_settings()
                 end
@@ -614,8 +772,9 @@ function load_proj_time(proj_ptr, date_key, tag)
 end
 
 function save_proj_time(proj_ptr, date_key, tag, current_total_time)
-    proj_ptr = 0
+
     if not proj_ptr or date_key == "" or tag == "" then return end
+    if not reaper.ValidatePtr(proj_ptr, "ReaProject*") then return end
     
     local past_days_time = 0
     local idx = 0
@@ -722,7 +881,7 @@ end
 
 function atexit()
     local current_proj_ptr, _ = reaper.EnumProjects(-1)
-    if current_proj_ptr and last_date_key ~= "" then
+    if current_proj_ptr and reaper.ValidatePtr(current_proj_ptr, "ReaProject*") and last_date_key ~= "" then
         save_proj_time(current_proj_ptr, last_date_key, current_tag, total_time)
     end
 end
@@ -753,13 +912,11 @@ function delete_tag(tag_name)
             end
             
             if current_proj_ptr then
-                -- total_time = load_proj_time(current_proj_ptr, GetCurrentDateKey(), current_tag)
                 total_time = load_total_tag_time(current_proj_ptr, current_tag)
             end
         end
     end
 end 
-
 
 function frame()
     local now = reaper.time_precise()
@@ -769,8 +926,8 @@ function frame()
     local current_proj_ptr, _ = reaper.EnumProjects(-1)
     local current_date_key = GetCurrentDateKey()
 
-    local _,proj_name = reaper.GetSetProjectInfo_String(0, "PROJECT_NAME", "", false)
-    if proj_name == "" then is_untitled = true else  is_untitled = false end
+    local _, proj_name = reaper.GetSetProjectInfo_String(0, "PROJECT_NAME", "", false)
+    local is_untitled = (proj_name == "")
     
     if current_proj_ptr and not is_untitled then
         local current_proj_path = reaper.GetProjectPath()
@@ -785,10 +942,9 @@ function frame()
             if has_last_tag and last_tag_val ~= "" then
                 current_tag = last_tag_val:lower():gsub("^%s*(.-)%s*$", "%1")
             else
-                current_tag = "no tag" -- Если проект чистый, ставим дефолт
+                current_tag = "no tag"
             end
             
-            -- total_time = load_proj_time(current_proj_ptr, current_date_key, current_tag)
             total_time = load_total_tag_time(current_proj_ptr, current_tag)
             
             last_project_ptr = current_proj_ptr
@@ -797,16 +953,8 @@ function frame()
             last_save = now 
         end
 
-        local current_dirty = reaper.IsProjectDirty(current_proj_ptr) == 1
-        if prev_dirty and not current_dirty then
-            save_proj_time(current_proj_ptr, last_date_key, current_tag, total_time)
-        end
-        
-        prev_dirty = current_dirty
-
         local is_afk = false
-        
-        if (IsReaperFocused() or IsPlayingOrRecording()) and not notag_nocoutn_check then
+        if IsReaperFocused() or IsPlayingOrRecording() and not notag_nocoutn_check then
             local mouse_x, mouse_y = reaper.GetMousePosition()
             local mouse_state = reaper.JS_Mouse_GetState and reaper.JS_Mouse_GetState(0xFFFF) or 0
 
@@ -816,12 +964,10 @@ function frame()
             end
 
             if IsPlayingOrRecording() then last_input_time = now end
-
             is_afk = (now - last_input_time) > AFK_THRESHOLD
             
             if delta < 60 and not is_afk then 
                 total_time = total_time + delta 
-                
                 if alert_active and alert_time_left > 0 then
                     alert_time_left = alert_time_left - delta
                 end
@@ -829,24 +975,51 @@ function frame()
         else 
             is_afk = true 
         end
-
+        
         if now - last_save >= 60 then
             save_proj_time(current_proj_ptr, last_date_key, current_tag, total_time)
             last_save = now
         end
 
+        local display_seconds = total_time
+
+        if day_or_all_check then
+            local past_days_time = 0
+            local idx = 0
+            local target_tag = current_tag:lower():gsub("^%s*(.-)%s*$", "%1")
+            
+            while true do
+                local retval, key, val = reaper.EnumProjExtState(current_proj_ptr, "TIME_TRACKER", idx)
+                if not retval then break end
+                
+                if key and key:match("^TOTAL_TIME_") then
+                    local d, t = key:match("^TOTAL_TIME_(%d%d%d%d%-%d%d%-%d%d)_(.+)$")
+                    if not d and target_tag == "no tag" then
+                        d = key:match("^TOTAL_TIME_(%d%d%d%d%-%d%d%-%d%d)$")
+                        if d then t = "no tag" end
+                    end
+                    
+                    -- Складываем время ВСЕХ дней, кроме СЕГОДНЯШНЕГО
+                    if d and t and d ~= current_date_key and t:lower():gsub("^%s*(.-)%s*$", "%1") == target_tag then
+                        past_days_time = past_days_time + (tonumber(val) or 0)
+                    end
+                end
+                idx = idx + 1
+            end
+            
+            display_seconds = math.max(0, total_time - past_days_time)
+        end
+
         local text_color = GetTagColor(current_tag, is_afk)
         local r, g, b, a = reaper.ImGui_ColorConvertU32ToDouble4(text_color)
-        local button_label = FormatTime(total_time)
         
         local text_a = 1.0
         local bg_a = 0.15
-        
+
         if blink_check and not is_afk then 
             if current_tag == "no tag" then
                 local time_now = reaper.time_precise()
                 local pulse = 0.65 + math.sin(time_now * math.pi * 2) * 0.35
-                
                 text_a = pulse
                 bg_a = 0.15 * pulse
             end
@@ -858,19 +1031,29 @@ function frame()
         local active_color = reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, 0.70)
 
         local target_font = font_timer or font
-        if target_font then reaper.ImGui_PushFont(ctx, target_font, font_size_timer) end
+        if target_font then reaper.ImGui_PushFont(ctx, target_font, 26) end
         
         reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), final_text_color)
         reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), bg_color)
         reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), hover_color)
         reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), active_color)
         
+        local button_label = FormatTime(display_seconds)
         local clicked = reaper.ImGui_Button(ctx, button_label, 0, 34)
-        
+
         local item_min_x, item_min_y = reaper.ImGui_GetItemRectMin(ctx)
         local item_max_x, item_max_y = reaper.ImGui_GetItemRectMax(ctx)
-        
         DrawAlertProgressBar(item_min_x, item_min_y, item_max_x, item_max_y)
+
+         if day_or_all_check then
+            local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+            
+            local circle_x = item_min_x + 1
+            local circle_y = item_min_y + 5
+            local circle_radius = 2.5 -- Радиус точки
+            
+            reaper.ImGui_DrawList_AddCircleFilled(draw_list, circle_x, circle_y, circle_radius, text_color)
+        end
         
         if alert_active and alert_time_left > 0 and reaper.ImGui_IsItemHovered(ctx) then
             reaper.ImGui_BeginTooltip(ctx)
@@ -881,14 +1064,17 @@ function frame()
             reaper.ImGui_EndTooltip(ctx)
         end
         
-        reaper.ImGui_PopStyleColor(ctx,4)
+        reaper.ImGui_PopStyleColor(ctx, 4)
         if target_font then reaper.ImGui_PopFont(ctx) end
         
-        if clicked then show_stats_window = not show_stats_window end
-        
-        if reaper.ImGui_IsItemClicked(ctx, reaper.ImGui_MouseButton_Right()) then
-            reaper.ImGui_OpenPopup(ctx, 'TimerContextMenu')
+        if clicked then 
+            if key_down()=="ctrl" then 
+                day_or_all_check = not day_or_all_check
+            else
+            show_stats_window = not show_stats_window
+            end
         end
+        if reaper.ImGui_IsItemClicked(ctx, reaper.ImGui_MouseButton_Right()) then reaper.ImGui_OpenPopup(ctx, 'TimerContextMenu') end
         
         local should_open_manage_modal = false
         
@@ -916,7 +1102,6 @@ function frame()
                 if reaper.ImGui_MenuItem(ctx, tag_name, nil, (current_tag == tag_name)) then
                     save_proj_time(current_proj_ptr, last_date_key, current_tag, total_time)
                     current_tag = tag_name
-                    -- total_time = load_proj_time(current_proj_ptr, last_date_key, current_tag)
                     total_time = load_total_tag_time(current_proj_ptr, current_tag)
                 end
                 reaper.ImGui_PopStyleColor(ctx,1)
@@ -963,8 +1148,6 @@ function frame()
                 local start_x1 = (popup_width - text_w) * 0.5
                 reaper.ImGui_SetCursorPosX(ctx, start_x1)
                 reaper.ImGui_TextColored(ctx, 0xFFCC00FF, status_text)
-                
-                -- reaper.ImGui_Spacing(ctx)
                 
                 local btn_w, _ = reaper.ImGui_CalcTextSize(ctx, reset_text)
                 local start_x2 = (popup_width - btn_w) * 0.5
@@ -1024,10 +1207,6 @@ function frame()
             reaper.ImGui_Separator(ctx)
             reaper.ImGui_Spacing(ctx)
 
-
-            -- local r_iok, new_color_input = reaper.ImGui_ColorEdit4(ctx, "##cp_" .. t_name, t_color, reaper.ImGui_ColorEditFlags_NoInputs())
-
-            
             reaper.ImGui_SetNextItemWidth(ctx, 160)
             local retval, text = reaper.ImGui_InputText(ctx, "##tag_name_field", new_tag_buf)
             
@@ -1081,6 +1260,7 @@ function frame()
     end
 end
 
+
 function DrawAlertProgressBar(item_min_x, item_min_y, item_max_x, item_max_y)
     if not alert_active or alert_time_left <= 0 or alert_duration <= 0 then return end
 
@@ -1110,7 +1290,6 @@ function loop()
     local title_active = 0x344236FF
     local border_color = 0x1C1D1EFF
 
-
      if is_untitled then
         bg_color = 0x00000000         -- Полностью прозрачный фон, если проект пустой
         title_bg = 0x00000000
@@ -1119,6 +1298,7 @@ function loop()
      end
 
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_WindowBg(),          bg_color)
+
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBg(),           title_bg)
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBgActive(),     title_active)
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_Border(),            border_color)
@@ -1148,21 +1328,26 @@ function loop()
     if open then reaper.defer(loop) end
 end
 
+
 load_global_tags()
 local start_proj, _ = reaper.EnumProjects(-1)
 if start_proj then
     last_project_ptr = start_proj
     last_date_key = GetCurrentDateKey()
-
-    local has_last_tag, last_tag_val = reaper.GetProjExtState(0, "TIME_TRACKER", "LAST_ACTIVE_TAG")
+    
+    local start_path = reaper.GetProjectPath()
+    last_project_path = start_path or ""
+    
+    local has_last_tag, last_tag_val = reaper.GetProjExtState(start_proj, "TIME_TRACKER", "LAST_ACTIVE_TAG")
     if has_last_tag and last_tag_val ~= "" then
         current_tag = last_tag_val:lower():gsub("^%s*(.-)%s*$", "%1")
     else
         current_tag = "no tag"
     end
-
-    total_time = load_total_tag_time(current_proj_ptr, current_tag)
+    
+    total_time = load_total_tag_time(last_project_ptr, current_tag)
 end
+
 
 load_settings()
 loop()
