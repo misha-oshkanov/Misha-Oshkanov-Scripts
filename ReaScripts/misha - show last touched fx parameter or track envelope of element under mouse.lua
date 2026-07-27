@@ -1,8 +1,11 @@
 -- @description Show last touched fx parameter or track envelope of element under mouse (volume, pan, width, send volume, fx wet)
 -- @author Misha Oshkanov
--- @version 1.2
+-- @version 1.3
 -- @about
 --    Show last touched fx parameter or track envelope of element under mouse
+
+
+CLOSE_FX = false -- Close fx window on fx parameter click
 
 function print(...)
     local values = {...}
@@ -12,9 +15,12 @@ function print(...)
 end
 
 local track, info = reaper.GetThingFromPoint(reaper.GetMousePosition())
+local is_mac = reaper.GetOS():match("OSX") or reaper.GetOS():match("macOS")
+
 local fxid = tonumber(info:match("fx:(%d+)"))
 local fxid2 = tonumber(info:match("fx_(%d+)"))
 local sendid = tonumber(info:match("send:(%d+)"))
+local fx_chain  = info == "fx_chain"
 
 function show_env(env)
     local retval, vis = reaper.GetSetEnvelopeInfo_String(env, 'VISIBLE', '', false)
@@ -54,19 +60,17 @@ elseif info:find("width") then
     if not reaper.ValidatePtr2(-1, track, 'MediaTrack*') then return end
     local env = reaper.GetMediaTrackInfo_Value(track, 'P_ENV:<WIDTHENV2')
     show_env(env)
- else
+else
   if track and fxid2 and reaper.TrackFX_GetOpen(track, fxid2) then
     local x, y = reaper.GetMousePosition()
-    local is_mac = reaper.GetOS():match("OSX") or reaper.GetOS():match("macOS")
     
     if is_mac then
       local _, _, _, _, _, _, _, max_y = reaper.my_getViewport(0, 0, 0, 0, 0, 0, 0, 0, false)
       y = max_y - y
     end
-    
+
     local fx_window = reaper.TrackFX_GetFloatingWindow(track, fxid2)
     local window_under_mouse = reaper.JS_Window_FromPoint(reaper.JS_Window_ScreenToClient(reaper.GetMainHwnd(), x, y))
-    
     if fx_window and window_under_mouse then
       local is_child = false
       local current = window_under_mouse
@@ -80,9 +84,13 @@ elseif info:find("width") then
       
       if is_child then
         reaper.Main_OnCommand(reaper.NamedCommandLookup('_S&M_MOUSE_L_CLICK'), 0)
-        reaper.TrackFX_SetOpen(track, fxid2, false)
+        if CLOSE_FX then reaper.TrackFX_SetOpen(track, fxid2, false) end
       end
     end
+  end
+  if fx_chain then 
+    reaper.Main_OnCommand(reaper.NamedCommandLookup('_S&M_MOUSE_L_CLICK'), 0)
+    if CLOSE_FX then reaper.TrackFX_Show(track, 0, 0) end
   end
   reaper.Main_OnCommand(41142, 1) -- show last touched env
 end
