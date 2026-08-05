@@ -1,6 +1,6 @@
 -- @description Project Work Timer: Smart time tracker with tags, afk and focus detection and alarms
 -- @author Misha Oshkanov
--- @version 2.9
+-- @version 2.9.1
 -- @about
 --  Tracks active work time per project tab in REAPER.
 --  Switches timers between tabs automatically.
@@ -1449,6 +1449,7 @@ function frame()
             if reaper.ImGui_Button(ctx, "Minimize", -1, 0 ) then
                 minimize_check = not minimize_check
                 save_settings()
+                reaper.ImGui_CloseCurrentPopup(ctx)
             end
 
             reaper.ImGui_PopFont(ctx)
