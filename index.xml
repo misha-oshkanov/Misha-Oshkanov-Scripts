@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="29dc065c180ac08b79e06253a3a5b68db196bdb5">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="6172a35640aea8eb890f69c2e29297c3410564c2">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -168,6 +168,9 @@
       </version>
       <version name="1.2" author="Misha Oshkanov" time="2026-07-09T09:41:12Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/7007a1738a52661909aa3c2a155e732fcadf4af7/ReaScripts/misha%20-%20show%20last%20touched%20fx%20parameter%20or%20track%20envelope%20of%20element%20under%20mouse.lua</source>
+      </version>
+      <version name="1.3" author="Misha Oshkanov" time="2026-07-27T07:43:16Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/d52160af73ac4e59e9d2b2ab931734da407cdece/ReaScripts/misha%20-%20show%20last%20touched%20fx%20parameter%20or%20track%20envelope%20of%20element%20under%20mouse.lua</source>
       </version>
     </reapack>
     <reapack name="misha - write latch automation value to current region.lua" type="script" desc="Write stored latch automation value to current region">
@@ -1137,6 +1140,9 @@
       </version>
       <version name="2.8" author="Misha Oshkanov" time="2026-07-24T15:52:34Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/29dc065c180ac08b79e06253a3a5b68db196bdb5/ReaScripts/UI%20Utilities/misha%20-%20project%20work%20timer.lua</source>
+      </version>
+      <version name="2.9" author="Misha Oshkanov" time="2026-08-05T08:19:46Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/6172a35640aea8eb890f69c2e29297c3410564c2/ReaScripts/UI%20Utilities/misha%20-%20project%20work%20timer.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Scroller.lua" type="script" desc="Scroller">
