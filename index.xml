@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="6172a35640aea8eb890f69c2e29297c3410564c2">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="331621bcda5adb0cb850d6bc8cd36f14e4ca1464">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -753,6 +753,9 @@
       <version name="1.0" author="Misha Oshkanov" time="2026-06-16T20:19:04Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/32ed5655c4bee12d6c0493b6bbaac721bbd6c1fe/ReaScripts/Track%20and%20items/misha%20-%20snap%20item%20edges%20to%20nearest%20markers%20(without%20moving%20content).lua</source>
       </version>
+      <version name="1.1" author="Misha Oshkanov" time="2026-08-09T10:38:08Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/331621bcda5adb0cb850d6bc8cd36f14e4ca1464/ReaScripts/Track%20and%20items/misha%20-%20snap%20item%20edges%20to%20nearest%20markers%20(without%20moving%20content).lua</source>
+      </version>
     </reapack>
   </category>
   <category name="ReaScripts/UI Utilities">
@@ -1143,6 +1146,9 @@
       </version>
       <version name="2.9" author="Misha Oshkanov" time="2026-08-05T08:19:46Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/6172a35640aea8eb890f69c2e29297c3410564c2/ReaScripts/UI%20Utilities/misha%20-%20project%20work%20timer.lua</source>
+      </version>
+      <version name="2.9.1" author="Misha Oshkanov" time="2026-08-05T08:24:03Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/5d752483ef25d982bca6d3b5e714e64f66478e9e/ReaScripts/UI%20Utilities/misha%20-%20project%20work%20timer.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Scroller.lua" type="script" desc="Scroller">
