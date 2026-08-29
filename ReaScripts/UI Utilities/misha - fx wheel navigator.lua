@@ -1,6 +1,6 @@
 -- @description FX Wheel Navigator
 -- @author Misha Oshkanov
--- @version 1.3
+-- @version 1.3.1
 -- @about
 --   # FX Scroller
 --   An interactive overlay utility for REAPER that simplifies plug-in chain management using ReaImGui.
@@ -20,8 +20,10 @@
 -- @changelog
 --  item fx support added
 --  more robust fx window detection
+--  font button fix
 
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
+
 
 package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua;' .. package.path
 local ImGui = require 'imgui' '0.10'
@@ -222,7 +224,6 @@ function Loop()
         end
     end
     
-    ImGui.PushFont(ctx, font, font_size_main)
 
     ImGui.SetNextWindowPos(ctx, last_win_x, last_win_y, ImGui.Cond_Always)
     ImGui.SetNextWindowSize(ctx, btn_w, btn_h)
@@ -234,7 +235,6 @@ function Loop()
     ImGui.PushStyleVar(ctx, ImGui.StyleVar_WindowPadding, 0, 0)
     local visible, _ = ImGui.Begin(ctx, '##FX_Wheel_Btn', true, window_flags)
     ImGui.PopStyleVar(ctx)
-    ImGui.PopFont(ctx)
 
     if visible then
         local btn_color = rgb(100, 100, 100)
@@ -251,9 +251,12 @@ function Loop()
         ImGui.PushStyleColor(ctx, ImGui.Col_Button, btn_color)
         ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered, btn_color)
         ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive, btn_color)
+        ImGui.PushFont(ctx, font, font_size_main)
 
         ImGui.Button(ctx, current_num, btn_w, btn_h)
-        
+
+        ImGui.PopFont(ctx)
+            
         if fx_found then
             local left_clicked = ImGui.IsItemClicked(ctx, ImGui.MouseButton_Left)
             local right_clicked = ImGui.IsItemClicked(ctx, ImGui.MouseButton_Right)
