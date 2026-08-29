@@ -1,6 +1,6 @@
 -- @description FX Wheel Navigator
 -- @author Misha Oshkanov
--- @version 1.2
+-- @version 1.3
 -- @about
 --   # FX Scroller
 --   An interactive overlay utility for REAPER that simplifies plug-in chain management using ReaImGui.
@@ -16,6 +16,10 @@
 --   - REAPER v7.06 or higher
 --   - ReaImGui extension (v0.10+)
 --   - js_ReaScriptAPI extension
+-- 
+-- @changelog
+--  item fx support added
+--  more robust fx window detection
 
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
 
@@ -30,6 +34,8 @@ local font_size_main = 14
 local last_win_x, last_win_y = 100, 100
 local last_valid_x, last_valid_y = 100, 100
 local last_fx_hwnd = nil
+local last_track = nil
+local last_fx_idx = nil
 
 local target_fx_idx = nil
 local should_reposition_window = false
@@ -114,72 +120,106 @@ function Loop()
     local fx_found = false
     local current_num = "-"
     local track, fx_idx, fx_count = nil, nil, 0
-    local is_wet_zero = false 
-     byp = nil
-    local retval, track_idx, _, _fx_idx = reaper.GetFocusedFX()
+    local is_wet_zero = false
+    local byp = nil
 
-    if retval == 1 then
-        fx_idx = _fx_idx
-        track = track_idx == 0 and reaper.GetMasterTrack(0) or reaper.GetTrack(0, track_idx-1)
+    -- GetThingFromPoint is the best source while the cursor is over an FX window.
+    -- Smaller FX windows may leave the cursor over empty space, so fall back to
+    -- REAPER's focused FX in that case.
+    local mx, my = reaper.GetMousePosition()
+    local detected_track, info = reaper.GetThingFromPoint(mx, my)
+    local detected_fxid = info and tonumber(info:match("fx_(%d+)")) or nil
 
-        if track then
-            fx_count = reaper.TrackFX_GetCount(track)
-            current_num = tostring(fx_idx + 1).."/"..fx_count
+    if detected_fxid and detected_track then
+        track = detected_track
+        fx_idx = detected_fxid
+    else
+        local focused_retval, focused_track_num, focused_item_num,
+              focused_take_num, focused_fx_idx = reaper.GetFocusedFX()
+        if focused_retval == 1 and focused_track_num >= 0 and
+           focused_item_num == -1 and focused_take_num == -1 and
+           focused_fx_idx >= 0 then
+            track = reaper.GetTrack(0, focused_track_num - 1)
+            fx_idx = focused_fx_idx
+        elseif last_fx_hwnd then
+            -- Overlay is covering the FX window, keep cached state
+            track = last_track
+            fx_idx = last_fx_idx
+        end
+    end
 
-            local wetparam = reaper.TrackFX_GetParamFromIdent(track, fx_idx, ":wet")
-            byp = reaper.TrackFX_GetEnabled(track, fx_idx) == false
-        
-            if wetparam ~= -1 then
-                local wet_val = reaper.TrackFX_GetParam(track, fx_idx, wetparam)
-                if wet_val <= 0.001 then is_wet_zero = true end
-            end
+    if track and fx_idx then
+        last_track = track
+        last_fx_idx = fx_idx
+    end
 
-            local fx_hwnd = reaper.TrackFX_GetFloatingWindow(track, fx_idx)
+    if track and fx_idx then
+        fx_count = reaper.TrackFX_GetCount(track)
+        current_num = tostring(fx_idx + 1) .. "/" .. fx_count
 
-            if fx_hwnd then
-                local _, l, t, r, b = reaper.JS_Window_GetRect(fx_hwnd)
-                if l then 
-                    if should_reposition_window and fx_idx == target_fx_idx then
-                        local new_w = r - l
-                        local half_btn_w = math.floor(btn_w / 2)
-                        local old_center_x, old_t_native = reaper.ImGui_PointConvertNative(ctx, last_valid_x + half_btn_w, last_valid_y - 5, true)
-                        
-                        local half_new_w = math.floor(new_w / 2)
-                        local new_l = math.floor(old_center_x - half_new_w)
-                        local new_t = math.floor(old_t_native)
-                        
-                        reaper.JS_Window_Move(fx_hwnd, new_l, new_t)
-                        reaper.JS_Window_SetFocus(fx_hwnd)
-                        
-                        _, l, t, r, b = reaper.JS_Window_GetRect(fx_hwnd)
-                        should_reposition_window = false
-                        target_fx_idx = nil
-                    end
+        local wetparam = reaper.TrackFX_GetParamFromIdent(track, fx_idx, ":wet")
+        byp = reaper.TrackFX_GetEnabled(track, fx_idx) == false
 
-                    local imgui_l, imgui_t = reaper.ImGui_PointConvertNative(ctx, l, t, false)
-                    local imgui_r, _       = reaper.ImGui_PointConvertNative(ctx, r, b, false)
-                    
-                    local imgui_w = imgui_r - imgui_l
-                    
-                    local half_imgui_w = math.floor(imgui_w / 2)
+        if wetparam ~= -1 then
+            local wet_val = reaper.TrackFX_GetParam(track, fx_idx, wetparam)
+            if wet_val <= 0.001 then is_wet_zero = true end
+        end
+
+        local fx_hwnd = reaper.TrackFX_GetFloatingWindow(track, fx_idx)
+
+        if fx_hwnd then
+            local _, l, t, r, b = reaper.JS_Window_GetRect(fx_hwnd)
+            if l then
+                if should_reposition_window and fx_idx == target_fx_idx then
+                    local new_w = r - l
                     local half_btn_w = math.floor(btn_w / 2)
-                    
-                    last_win_x = imgui_l + half_imgui_w - half_btn_w
-                    last_win_y = imgui_t + 5
+                    local old_center_x, old_t_native = reaper.ImGui_PointConvertNative(ctx, last_valid_x + half_btn_w, last_valid_y - 5, true)
 
-                    last_valid_x, last_valid_y = last_win_x, last_win_y
-                    fx_found = true
-                    last_fx_hwnd = fx_hwnd
+                    local half_new_w = math.floor(new_w / 2)
+                    local new_l = math.floor(old_center_x - half_new_w)
+                    local new_t = math.floor(old_t_native)
+
+                    reaper.JS_Window_Move(fx_hwnd, new_l, new_t)
+
+                    _, l, t, r, b = reaper.JS_Window_GetRect(fx_hwnd)
+                    should_reposition_window = false
+                    target_fx_idx = nil
                 end
+
+                local imgui_l, imgui_t = reaper.ImGui_PointConvertNative(ctx, l, t, false)
+                local imgui_r, _       = reaper.ImGui_PointConvertNative(ctx, r, b, false)
+
+                local imgui_w = imgui_r - imgui_l
+
+                local half_imgui_w = math.floor(imgui_w / 2)
+                local half_btn_w = math.floor(btn_w / 2)
+
+                last_win_x = imgui_l + half_imgui_w - half_btn_w
+                last_win_y = imgui_t + 5
+
+                last_valid_x, last_valid_y = last_win_x, last_win_y
+                last_track = track
+                last_fx_idx = fx_idx
+                fx_found = true
+                last_fx_hwnd = fx_hwnd
             end
         end
-    else
-        last_fx_hwnd = nil
+    end
+
+    if not fx_found and not last_fx_hwnd then
+        last_track = nil
+        last_fx_idx = nil
     end
 
     if not fx_found then
-        last_win_x = -100
-        last_win_y = -100
+        if should_reposition_window then
+            -- Keep overlay at last position during FX switch to avoid flashing
+            last_win_x = last_valid_x
+            last_win_y = last_valid_y
+        else
+            last_win_x = -100
+            last_win_y = -100
+        end
     end
     
     ImGui.PushFont(ctx, font, font_size_main)
@@ -194,6 +234,7 @@ function Loop()
     ImGui.PushStyleVar(ctx, ImGui.StyleVar_WindowPadding, 0, 0)
     local visible, _ = ImGui.Begin(ctx, '##FX_Wheel_Btn', true, window_flags)
     ImGui.PopStyleVar(ctx)
+    ImGui.PopFont(ctx)
 
     if visible then
         local btn_color = rgb(100, 100, 100)
@@ -214,23 +255,31 @@ function Loop()
         ImGui.Button(ctx, current_num, btn_w, btn_h)
         
         if fx_found then
-            if ImGui.IsItemClicked(ctx, ImGui.MouseButton_Left) then
+            local left_clicked = ImGui.IsItemClicked(ctx, ImGui.MouseButton_Left)
+            local right_clicked = ImGui.IsItemClicked(ctx, ImGui.MouseButton_Right)
+
+            if left_clicked then
                 local current_state = reaper.TrackFX_GetEnabled(track, fx_idx)
                 reaper.TrackFX_SetEnabled(track, fx_idx, not current_state)
                 local _, fx_name = reaper.TrackFX_GetFXName(track, fx_idx, "")
-                local status_msg = current_state and "Bypassed" or "Enabled"
                 reaper.Undo_OnStateChangeEx("Toggle Bypass for " .. fx_name, 2, -1)
-                
-                local x, y = reaper.GetMousePosition()
-                -- reaper.TrackCtl_SetToolTip(clean_fx_name(fx_name) .. " => " .. status_msg, x, y, true)
             end
-            
-            if ImGui.IsItemClicked(ctx, ImGui.MouseButton_Right) then
+
+            if right_clicked then
                 ToggleFXWet(track, fx_idx)
+            end
+
+            -- Release focus back to REAPER so hotkeys and window close work
+            if left_clicked or right_clicked then
+                if last_fx_hwnd then
+                    reaper.JS_Window_SetFocus(last_fx_hwnd)
+                else
+                    reaper.JS_Window_SetFocus(reaper.GetMainHwnd())
+                end
             end
         end
 
-        if fx_found and ImGui.IsItemHovered(ctx) then
+        if ImGui.IsItemHovered(ctx) then
             ImGui.PushFont(ctx, font, font_size_tooltip)
 
             ImGui.BeginTooltip(ctx)
@@ -261,6 +310,10 @@ function Loop()
             ImGui.PopFont(ctx)
             ImGui.EndTooltip(ctx)
 
+            -- Consume the wheel event before switching FX. REAPER can keep the
+            -- ImGui window in a non-updating hover state after TrackFX_Show;
+            -- forcing another frame makes the new focused FX and window rect
+            -- get processed immediately, without requiring cursor movement.
             local vertical = reaper.ImGui_GetMouseWheel(ctx)
             if INVERT_SCROLL then
                 vertical = vertical * -1
@@ -290,12 +343,14 @@ function Loop()
                     
                     reaper.TrackFX_Show(track, fx_idx, 2)
                     reaper.TrackFX_Show(track, target_fx_idx, 3)
+
+                    last_track = track
+                    last_fx_idx = target_fx_idx
                 end
             end
         end
 
         ImGui.PopStyleColor(ctx, 3)
-        ImGui.PopFont(ctx)
         ImGui.End(ctx)
     end
     reaper.defer(Loop)
