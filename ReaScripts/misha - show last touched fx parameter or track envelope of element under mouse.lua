@@ -1,8 +1,10 @@
 -- @description Show last touched fx parameter or track envelope of element under mouse (volume, pan, width, send volume, fx wet)
 -- @author Misha Oshkanov
--- @version 1.3
+-- @version 1.4
 -- @about
 --    Show last touched fx parameter or track envelope of element under mouse
+-- @changelog
+--  fix mac os fx window bug
 
 
 CLOSE_FX = false -- Close fx window on fx parameter click
@@ -15,7 +17,6 @@ function print(...)
 end
 
 local track, info = reaper.GetThingFromPoint(reaper.GetMousePosition())
-local is_mac = reaper.GetOS():match("OSX") or reaper.GetOS():match("macOS")
 
 local fxid = tonumber(info:match("fx:(%d+)"))
 local fxid2 = tonumber(info:match("fx_(%d+)"))
@@ -23,12 +24,12 @@ local sendid = tonumber(info:match("send:(%d+)"))
 local fx_chain  = info == "fx_chain"
 
 function show_env(env)
-    local retval, vis = reaper.GetSetEnvelopeInfo_String(env, 'VISIBLE', '', false)
-    local retval, act = reaper.GetSetEnvelopeInfo_String(env, 'ACTIVE', '', false)
+    local _, vis = reaper.GetSetEnvelopeInfo_String(env, 'VISIBLE', '', false)
+    local _, act = reaper.GetSetEnvelopeInfo_String(env, 'ACTIVE', '', false)
 
-    local retval, stringNeedBig = reaper.GetSetEnvelopeInfo_String(env, 'VISIBLE', vis=='0' and 1 or 0, true)
+    local _, _ = reaper.GetSetEnvelopeInfo_String(env, 'VISIBLE', vis=='0' and 1 or 0, true)
     if act == "0" then 
-        local retval, stringNeedBig = reaper.GetSetEnvelopeInfo_String(env, 'ACTIVE', 1, true)
+        local _, _ = reaper.GetSetEnvelopeInfo_String(env, 'ACTIVE', 1, true)
     end
     reaper.UpdateArrange()
     reaper.TrackList_AdjustWindows(false)
@@ -39,7 +40,7 @@ if fxid then
     local parameterindex = reaper.TrackFX_GetParamFromIdent(track, fxid, ":wet")
     local env = reaper.GetFXEnvelope(track, fxid, parameterindex, false)
     if not env then
-        local env = reaper.GetFXEnvelope(track, fxid, parameterindex, true)
+        local _ = reaper.GetFXEnvelope(track, fxid, parameterindex, true)
     else
         show_env(env)
     end
@@ -63,14 +64,9 @@ elseif info:find("width") then
 else
   if track and fxid2 and reaper.TrackFX_GetOpen(track, fxid2) then
     local x, y = reaper.GetMousePosition()
-    
-    if is_mac then
-      local _, _, _, _, _, _, _, max_y = reaper.my_getViewport(0, 0, 0, 0, 0, 0, 0, 0, false)
-      y = max_y - y
-    end
 
     local fx_window = reaper.TrackFX_GetFloatingWindow(track, fxid2)
-    local window_under_mouse = reaper.JS_Window_FromPoint(reaper.JS_Window_ScreenToClient(reaper.GetMainHwnd(), x, y))
+    local window_under_mouse = reaper.JS_Window_FromPoint(x, y)
     if fx_window and window_under_mouse then
       local is_child = false
       local current = window_under_mouse
@@ -81,7 +77,7 @@ else
         end
         current = reaper.JS_Window_GetParent(current)
       end
-      
+
       if is_child then
         reaper.Main_OnCommand(reaper.NamedCommandLookup('_S&M_MOUSE_L_CLICK'), 0)
         if CLOSE_FX then reaper.TrackFX_SetOpen(track, fxid2, false) end
