@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="2ccc6c3a36263d7e4b34590b3f31fb8e2cb0e67f">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="61fce92bbe1ed6e5e4ccc6fbdde1304c235b217f">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -175,6 +175,27 @@
       <version name="1.4" author="Misha Oshkanov" time="2026-08-29T13:40:56Z">
         <changelog><![CDATA[fix mac os fx window bug]]></changelog>
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/f6aecc8b6d0a9e3702ccef7715f60d124970fac9/ReaScripts/misha%20-%20show%20last%20touched%20fx%20parameter%20or%20track%20envelope%20of%20element%20under%20mouse.lua</source>
+      </version>
+    </reapack>
+    <reapack name="misha - Track selection follows item selection (Lokasenna mod).lua" type="script" desc="Track selection follows item selection">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Runs in the background and allows you to replicate a behavior from Cubase - when selecting items, the track selection is changed to match and the mixer view is scrolled to show the first selected track.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 To exit, open the Actions menu, and click on: Running script: Lokasenna_Track selection follows item selection.lua down at the bottom.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Note: This script is a rewrite of: tritonality_X-Raym_Cubase_Style_SelectTrack_On_ItemSelect.lua\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 It had a few bugs and I couldn't understand the original code well enough to fix them, so I opted to rewrite it from scratch.\par}
+}
+]]></description>
+        <link rel="website" href="http://forum.cockos.com/showthread.php?p=1583631">Forum Thread</link>
+        <link rel="website" href="http://forum.cockos.com/member.php?u=10417">Lokasenna's Website</link>
+        <link rel="donation">https://paypal.me/Lokasenna</link>
+      </metadata>
+      <version name="1.1.3" author="Lokasenna, Misha Oshkanov" time="2026-08-29T14:50:54Z">
+        <changelog><![CDATA[Fix: Setting the last touched track wasn't working]]></changelog>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/61fce92bbe1ed6e5e4ccc6fbdde1304c235b217f/ReaScripts/misha%20-%20Track%20selection%20follows%20item%20selection%20(Lokasenna%20mod).lua</source>
       </version>
     </reapack>
     <reapack name="misha - write latch automation value to current region.lua" type="script" desc="Write stored latch automation value to current region">
