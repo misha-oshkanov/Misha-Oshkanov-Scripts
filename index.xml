@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="61fce92bbe1ed6e5e4ccc6fbdde1304c235b217f">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="dc093ab2bc22349249881b14c5e657aa36447f3a">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -824,6 +824,11 @@
       </version>
       <version name="1.2" author="Misha Oshkanov" time="2026-07-08T15:52:44Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/bc97f5e4db1ad2103eaebf647565730dbe47e008/ReaScripts/UI%20Utilities/misha%20-%20fx%20wheel%20navigator.lua</source>
+      </version>
+      <version name="1.3" author="Misha Oshkanov" time="2026-08-29T17:48:23Z">
+        <changelog><![CDATA[item fx support added
+more robust fx window detection]]></changelog>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/dc093ab2bc22349249881b14c5e657aa36447f3a/ReaScripts/UI%20Utilities/misha%20-%20fx%20wheel%20navigator.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Item counter panel for selected tracks.lua" type="script" desc="Item counter panel for selected track">
