@@ -1,6 +1,6 @@
 -- @description Sender
 -- @author Misha Oshkanov
--- @version 2.4
+-- @version 2.5
 -- @about
 --   Ui panel for controlling sends for selected track
 --   You should create folder for sends in the project (Name in Sends, Rhythm Sends, Special FX and etc.)
@@ -11,7 +11,9 @@
 --   Relative control fader to adjust levels of all track sends at the same time
 --   Click on the track name button to pin the track. In pin mode script it will not follow track selection selection
 -- @changelog
---  slider for adjusting all track send reworked
+--  fixed bug with offline toggle 
+--  new filter section in popup
+--  new reverb macro section in popup
 
 function print(...)
     local values = {...}
@@ -58,12 +60,14 @@ if send_folders_raw_text == nil then
 end
 local send_folders = {}
 package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
-local ImGui = require 'imgui' '0.9.3'
+local ImGui = require 'imgui' '0.10'
 r = reaper
 
 local ctx = reaper.ImGui_CreateContext('Sender')
-local font = reaper.ImGui_CreateFont('arial', 15)
-local icon_font = reaper.ImGui_CreateFont('font-awesome', 15)
+-- local font = reaper.ImGui_CreateFont('arial', 15)
+local font = reaper.ImGui_CreateFont( "arial" )
+local font_size = 15
+-- local icon_font = reaper.ImGui_CreateFont('font-awesome', 15)
 -- local font = reaper.ImGui_CreateFont('Microsoft Sans Serif', 16)
 
 reaper.ImGui_Attach(ctx, font)
@@ -82,9 +86,9 @@ title_colors = {r=30,g=30,b=30}
 extname = "MISHA"
 local EXT_SECTION = "MISHA_XY_PAD"
 
-local last_click_time = 0
-local double_click_threshold = 0.3 -- 300 мс для двойного клика
-local is_double_click = false
+-- local last_click_time = 0
+-- local double_click_threshold = 0.3 -- 300 мс для двойного клика
+-- local is_double_click = false
 local selected_tracks = nil
 
 reaper.ImGui_SetConfigVar(ctx, reaper.ImGui_ConfigVar_WindowsMoveFromTitleBarOnly(), 1 )
@@ -93,7 +97,8 @@ window_flags =
 reaper.ImGui_WindowFlags_NoFocusOnAppearing() +
 reaper.ImGui_WindowFlags_NoNavFocus() +
 reaper.ImGui_WindowFlags_NoNavInputs() +
-reaper.ImGui_WindowFlags_NoScrollbar() 
+reaper.ImGui_WindowFlags_NoScrollbar()
+-- reaper.ImGui_WindowFlags_TopMost()
 -- reaper.ImGui_WindowFlags_NoMove()
 -- reaper.ImGui_WindowFlags_NoScrollWithMouse() 
 -- reaper.ImGui_WindowFlags_NoResize()
@@ -147,12 +152,6 @@ local Icon = {
     Trash   = "\xef\x80\x94", -- Корзина для удаления
     Offline = "\xef\x8a\x8c", -- Луна / Сон (для оффлайна)
 }
-
-local saved_mouse_x = nil
-local saved_mouse_y = nil
-local is_mouse_teleported = false
-
-
 
 local function ScanInstalledFX()
     if fx_list_scanned then return end
@@ -218,19 +217,6 @@ local function ScanInstalledFX()
 end
 
 ScanInstalledFX()
-
-local function SaveSettings()
-    local p_str = show_presets_checkbox and "1" or "0"
-    local a_str = show_allslider_checkbox and "1" or "0"
-    local x_str = show_xy_checkbox and "1" or "0"
-
-    reaper.SetExtState(EXT_SECTION, "send_folders_text", send_folders_raw_text,  true)
-    reaper.SetExtState(EXT_SECTION, "eq_fxname",         eq_fxname,              true)
-
-    reaper.SetExtState(EXT_SECTION, "show_presets",      p_str,   true)
-    reaper.SetExtState(EXT_SECTION, "show_allslider",    a_str,   true)
-    reaper.SetExtState(EXT_SECTION, "show_xy",           x_str,   true)
-end 
 
 local function UpdateSendFoldersList()
     send_folders = {}
@@ -618,10 +604,10 @@ function Convert_Fader2Val(fader_val)
     return val
 end
 
-
 function remove_arch_prefix(string)
     return string:gsub('_','')
 end
+
 
 function toggle_mute_all_sends(track, state)
     local sends = get_sends(track)
@@ -871,7 +857,7 @@ end
 
 function calculate_text_fxnames(dest_track)
     local fx_count = reaper.TrackFX_GetCount(dest_track)
-    local name_w = 90
+    local name_w = 100
     if fx_count > 0 then 
         for fx=1,fx_count do 
             local _, fx_name = reaper.TrackFX_GetFXName(dest_track, fx-1)
@@ -908,16 +894,17 @@ end
 
 function get_locked(tr)
   reaper.PreventUIRefresh(1)
-  local mute_st = reaper.GetMediaTrackInfo_Value(tr, 'B_MUTE')
+  local mute_state = reaper.GetMediaTrackInfo_Value(tr, 'B_MUTE')
   reaper.SetMediaTrackInfo_Value(tr, 'B_MUTE', mute_state ~ 1) -- flip the state
-  local mute_st_new = reaper.GetMediaTrackInfo_Value(tr, 'B_MUTE')
+  local mute_state_new = reaper.GetMediaTrackInfo_Value(tr, 'B_MUTE')
   local locked
-      if mute_st == mute_st_new then locked = 1 
-      else reaper.SetMediaTrackInfo_Value(tr, 'B_MUTE', mute_st) -- restore
+      if mute_state == mute_state_new then locked = 1 
+      else reaper.SetMediaTrackInfo_Value(tr, 'B_MUTE', mute_state) -- restore
       end
   reaper.PreventUIRefresh(-1)
   return locked
 end  
+
 
 function save_selected_tracks()
     selected_tracks = {}
@@ -964,6 +951,238 @@ function restore_solos()
     solos = {}
 end 
 
+-- ============ EQ FILTER KNOBS ============
+-- ReaEQ band types: 0=hipass(low cut), 1=loshelf, 2=band, 3=notch, 4=hishelf, 5=lopass(high cut)
+local EQ_LOWCUT_BANDTYPE  = 0
+local EQ_HICUT_BANDTYPE   = 5
+local EQ_FREQ_MIN, EQ_FREQ_MAX = 20, 24000 -- ReaEQ freq param range
+
+local function add_eq_fx(track)
+    -- local eq_fx = reaper.TrackFX_AddByName(track, "ReaEq", false, 1)
+    -- if eq_fx and eq_fx >= 0 then return eq_fx end
+
+    local float_setting = reaper.GetToggleCommandState(41078)
+    if float_setting == 1 then 
+        reaper.Main_OnCommand(41078, 0)
+    end
+    local eq_fx = reaper.TrackFX_GetEQ(track, true)
+    if reaper.TrackFX_GetOpen(track, eq_fx) then 
+        reaper.TrackFX_SetOpen(track, eq_fx, false)
+    end
+    if float_setting == 1 then 
+        reaper.Main_OnCommand(41078, 0)
+    end
+    if eq_fx and eq_fx >= 0 then return eq_fx end
+end
+
+local function find_eq_fx(track)
+
+    local eq_fx = reaper.TrackFX_GetEQ(track, false)
+    -- if eq_fx == -1 then eq_fx = add_eq_fx(track)
+    --  end
+    -- return eq_fx
+    if eq_fx and eq_fx >= 0 then return eq_fx end
+end
+
+
+
+-- returns param idx + normalized freq (ReaEQ params are 0..1) for first band matching band_type
+local function find_eq_band_param(track, eq_fx, band_type, param_type)
+    local num_params = reaper.TrackFX_GetNumParams(track, eq_fx)
+    for p=0, num_params-1 do 
+        local ok, bt, bi, pt, normval = reaper.TrackFX_GetEQParam(track, eq_fx, p)
+        if ok and bt == band_type and bi == 0 and pt == param_type then return p, normval end 
+    end 
+end 
+
+local EQ_DEFAULT_BW = 0.38
+
+-- read exact Hz for a param straight from the FX (avoids guessing the norm->Hz mapping)
+local function get_eq_param_hz(track, eq_fx, param_idx)
+    local _, buf = reaper.TrackFX_GetFormattedParamValue(track, eq_fx, param_idx)
+    local mult = buf:lower():find('k') and 1000 or 1
+    local num = tonumber(buf:match('[%d%.]+'))
+    return num and num*mult
+end
+
+-- set bandwidth of a band by absolute value, mapped through the param's real min/max range
+local function set_eq_band_bw(track, eq_fx, band_type, bw)
+    local bw_idx = find_eq_band_param(track, eq_fx, band_type, 2) -- paramtype 2 = Q/bandwidth
+    if not bw_idx then return end 
+    local _, minv, maxv = reaper.TrackFX_GetParamEx(track, eq_fx, bw_idx)
+    if maxv > minv then 
+        reaper.TrackFX_SetParam(track, eq_fx, bw_idx, VF_lim((bw - minv)/(maxv - minv), 0, 1))
+    end 
+end 
+
+-- format Hz compactly, no units: 5000 -> '5', 1500 -> '1.5', 200 -> '200'
+function fmt_freq(hz)
+    if not hz then return '' end 
+    if hz >= 1000 then 
+        return (string.format('%.1f', hz/1000):gsub('%.0$', ''))
+    end 
+    return string.format('%.0f', hz)
+end 
+
+-- shared round knob widget: draws knob + value arc + colored value text below, handles vertical drag
+-- returns frac, hovered, btn_active, btn_activated
+local function draw_round_knob(id_str, frac, dir, dimmed, accent_col, label_text)
+    local accent = accent_col or 0xB19102FF
+    local size = 30
+    local pos_x, pos_y = reaper.ImGui_GetCursorScreenPos(ctx)
+    local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+
+    local font_h = reaper.ImGui_GetFontSize(ctx)
+    local label_h = label_text and (font_h + 3) or 0
+    reaper.ImGui_InvisibleButton(ctx, id_str, size, size + label_h)
+
+    -- capture button state before any other item steals IsItem* queries
+    local btn_hovered   = reaper.ImGui_IsItemHovered(ctx)
+    local btn_active    = reaper.ImGui_IsItemActive(ctx)
+    local btn_activated = reaper.ImGui_IsItemActivated(ctx)
+
+    if not dimmed and btn_active then 
+        if btn_activated then 
+            reaper.ImGui_ResetMouseDragDelta(ctx)
+        end 
+        local drag_dx, drag_dy = reaper.ImGui_GetMouseDragDelta(ctx)
+        reaper.ImGui_ResetMouseDragDelta(ctx)
+        frac = VF_lim(frac - drag_dy*0.005, 0, 1)
+    end 
+
+    frac = VF_lim(frac, 0, 1)
+    local cx, cy = pos_x + size/2, pos_y + size/2
+    local radius = size/2 - 1
+    local ring_col = not dimmed and (btn_hovered and 0x928620FF or 0x666666FF) or 0x333333FF
+    local line_col = dimmed and 0x444444FF or accent
+
+    reaper.ImGui_DrawList_AddCircleFilled(draw_list, cx, cy, radius, 0x222222FF, 24)
+    reaper.ImGui_DrawList_AddCircle(draw_list, cx, cy, radius, ring_col, 24)
+
+    local a0 = dir == 'cw' and 3*math.pi/4 or math.pi/4 -- 0 at lower left / lower right
+    local sweep = frac*2*math.pi -- max one full circle
+    local a = dir == 'cw' and (a0 + sweep) or (a0 - sweep)
+    reaper.ImGui_DrawList_AddLine(draw_list,
+        cx + math.cos(a)*(radius-5), cy + math.sin(a)*(radius-5),
+        cx + math.cos(a)*radius,     cy + math.sin(a)*radius,
+        line_col, 2.5)
+
+    if frac > 0 then -- solid value arc on the rim from 0 to current value
+        local arc_a0, arc_a1 = dir == 'cw' and a0 or (a0 - sweep), dir == 'cw' and (a0 + sweep) or a0
+        reaper.ImGui_DrawList_PathArcTo(draw_list, cx, cy, radius-1, arc_a0, arc_a1, 32)
+        reaper.ImGui_DrawList_PathStroke(draw_list, accent, 0, 2.5)
+    end 
+
+    if label_text then -- value text centered below the knob, drawn directly so row layout stays intact
+        local col = dimmed and 0x777777FF or accent
+        local text_w = reaper.ImGui_CalcTextSize(ctx, label_text)
+        reaper.ImGui_DrawList_AddText(draw_list, pos_x + size/2 - text_w/2, pos_y + size + 3, col, label_text)
+    end 
+
+    return frac, btn_hovered, btn_active, btn_activated
+end
+
+function eq_filter_knob(track, id_str, dir, freq_min, freq_max) -- dir: 'cw' = low cut, 'ccw' = high cut
+    local band_type = dir == 'cw' and EQ_LOWCUT_BANDTYPE or EQ_HICUT_BANDTYPE
+    local eq_fx = find_eq_fx(track)
+    local param_idx, norm, band_enabled
+    if eq_fx then 
+        param_idx, norm = find_eq_band_param(track, eq_fx, band_type, 0)
+        if param_idx then 
+            band_enabled = reaper.TrackFX_GetEQBandEnabled(track, eq_fx, band_type, 0)
+        end 
+    end 
+
+    -- high cut is inverted: knob 0 = plugin 1 (24000 Hz), knob 1 = plugin 0 (20 Hz)
+    local frac = norm and (dir == 'cw' and norm or 1 - norm) or 0
+
+    -- exact Hz read from the plugin itself, so label/tooltip always match ReaEQ
+    local cur_freq = param_idx and get_eq_param_hz(track, eq_fx, param_idx)
+    local label = param_idx and fmt_freq(cur_freq) or '--'
+
+    frac, hovered, btn_active, btn_activated = draw_round_knob(id_str, frac, dir, not param_idx, nil, label)
+
+    if hovered and not eq_fx then 
+
+        eq_fx = add_eq_fx(track)
+    end
+
+    if param_idx and btn_active then 
+        if btn_activated then 
+            set_eq_band_bw(track, eq_fx, band_type, EQ_DEFAULT_BW)
+        end 
+        local out_norm = dir == 'cw' and frac or 1 - frac
+        reaper.TrackFX_SetEQParam(track, eq_fx, band_type, 0, 0, out_norm, true) -- isnorm=true: ReaEQ params are normalized 0..1
+
+        -- band off at extremes: low cut fully left / high cut fully right
+        local want_enabled
+        if dir == 'cw' then want_enabled = frac > 0.001 else want_enabled = frac < 0.999 end 
+        if band_enabled ~= want_enabled then 
+            reaper.TrackFX_SetEQBandEnabled(track, eq_fx, band_type, 0, want_enabled)
+            band_enabled = want_enabled
+        end 
+    end 
+
+    -- local tip
+    -- if not eq_fx then tip = 'No EQ on track'
+    
+    
+    -- elseif not param_idx then tip = 'No ' .. (dir == 'cw' and 'High Pass' or 'Low Pass') .. ' band in ReaEQ'
+    -- elseif not band_enabled then tip = string.format('%s: %s (disabled)', dir == 'cw' and 'Low Cut' or 'High Cut', cur_freq or '?')
+    -- else tip = string.format('%s: %.0f Hz', dir == 'cw' and 'Low Cut' or 'High Cut', cur_freq or 0)
+    -- end 
+    -- if hovered then reaper.ImGui_SetTooltip(ctx, tip) end 
+    -- if hovered and not param_idx  then reaper.ImGui_SetTooltip(ctx, 'No ' .. (dir == 'cw' and 'High Pass' or 'Low Pass') .. ' band in ReaEQ') end 
+end 
+
+-- find first FX param in the track chain whose name matches any pattern (spaces stripped, lowercase)
+local function find_param_in_chain(track, patterns)
+    for fx=0, reaper.TrackFX_GetCount(track)-1 do 
+        local num_params = reaper.TrackFX_GetNumParams(track, fx)
+        for p=0, num_params-1 do 
+            local _, pname = reaper.TrackFX_GetParamName(track, fx, p)
+            local lname = pname:lower():gsub('%s', '')
+            for _, pat in ipairs(patterns) do 
+                if lname:find(pat) then return fx, p end 
+            end 
+        end 
+    end 
+end 
+
+-- generic knob bound to a named parameter anywhere in the FX chain
+function param_knob(track, id_str, patterns, tooltip_name, accent_col)
+    local fx_idx, param_idx = find_param_in_chain(track, patterns)
+
+    local frac, minv, maxv, cur_text = 0, 0, 1
+    if param_idx then 
+        local value
+        value, minv, maxv = reaper.TrackFX_GetParamEx(track, fx_idx, param_idx)
+        if maxv > minv then 
+            frac = VF_lim((value-minv)/(maxv-minv), 0, 1)
+        else 
+            minv, maxv = 0, 1
+            frac = VF_lim(value, 0, 1)
+        end 
+        local _, buf = reaper.TrackFX_GetFormattedParamValue(track, fx_idx, param_idx)
+        cur_text = buf
+    end 
+
+    local label = param_idx and ((cur_text or '?'):gsub('[%a%s]', '')) or '--' -- strip units: '1.20 s' -> '1.20'
+    local new_frac, hovered = draw_round_knob(id_str, frac, 'cw', not param_idx, accent_col, label)
+
+    if param_idx and new_frac ~= frac then 
+        reaper.TrackFX_SetParam(track, fx_idx, param_idx, minv + new_frac*(maxv-minv))
+    end 
+
+    if hovered then 
+        if param_idx then 
+            reaper.ImGui_SetTooltip(ctx, tooltip_name .. ': ' .. (cur_text or '?'))
+        else 
+            reaper.ImGui_SetTooltip(ctx, 'No "' .. tooltip_name .. '" parameter found in FX chain')
+        end 
+    end 
+end 
+
 function send_slot(dest_track,sel_track)
     local _, name = reaper.GetTrackName(dest_track)
     local _, mute = reaper.GetTrackUIMute(dest_track)
@@ -990,6 +1209,9 @@ function send_slot(dest_track,sel_track)
     local is_offline = IsAllFXOffline(dest_track)
     local item_h = reaper.ImGui_GetFrameHeight(ctx) 
     local item_w = w-17
+    local found = false
+    local id = -1
+    local slider_retval = false
     
     if sel_track then 
         found = false
@@ -1035,6 +1257,7 @@ function send_slot(dest_track,sel_track)
         reaper.ImGui_PopItemWidth(ctx)
     else
         reaper.ImGui_Dummy(ctx, item_w, item_h)
+        slider_retval = false
         
         local dummy_min_x, dummy_min_y = reaper.ImGui_GetItemRectMin(ctx)
         local dummy_max_x, dummy_max_y = reaper.ImGui_GetItemRectMax(ctx)
@@ -1070,7 +1293,7 @@ function send_slot(dest_track,sel_track)
         reaper.ImGui_OpenPopup(ctx, 'fx_popup')    
     end
 
-    if reaper.ImGui_BeginPopup(ctx, 'fx_popup',reaper.ImGui_WindowFlags_NoMove()) then
+    if reaper.ImGui_BeginPopup(ctx, 'fx_popup', reaper.ImGui_WindowFlags_NoMove()) then
         -- pw, ph = reaper.ImGui_GetWindowSize(ctx)
         pw, ph = reaper.ImGui_GetContentRegionAvail(ctx)
         px, py = reaper.ImGui_GetWindowPos(ctx)
@@ -1098,8 +1321,8 @@ function send_slot(dest_track,sel_track)
             reaper.ImGui_SameLine(ctx)
             local eq_button = reaper.ImGui_Button(ctx, "EQ", buttons_widths, 20)
             if eq_button then 
-                eq = reaper.TrackFX_AddByName(dest_track, eq_fxname, false, 1000)
-                if eq then reaper.TrackFX_Show(dest_track, eq, 3) end
+                eq = reaper.TrackFX_GetEQ(dest_track, true)
+                if eq and eq >= 0 then reaper.TrackFX_Show(dest_track, eq, 3) end
             end 
             
             reaper.ImGui_PopStyleVar(ctx)
@@ -1119,6 +1342,7 @@ function send_slot(dest_track,sel_track)
             if send_retval then reaper.SetTrackSendInfo_Value(sel_track, 0, id, 'D_PAN', send_pan) end
             reaper.ImGui_PushStyleVar(ctx,  reaper.ImGui_StyleVar_ItemSpacing(),2,2)
             reaper.ImGui_PopStyleColor(ctx,4)
+
 
             if fx_count > 0 then 
                 for fx=1,fx_count do 
@@ -1230,7 +1454,32 @@ function send_slot(dest_track,sel_track)
             end
 
         end
+
         reaper.ImGui_Dummy(ctx, 2, 2)
+
+         -- ===== EQ FILTERS =====
+            -- reaper.ImGui_Separator(ctx)
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x888888FF)
+            reaper.ImGui_SeparatorText(ctx, 'Macros')
+            reaper.ImGui_PopStyleColor(ctx)
+            reaper.ImGui_PushFont(ctx, font, 10)
+
+            local knob_size = 30
+            local sp_x = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing()) -- measure real spacing
+            -- row = dummy + 4 knobs + dummy => 5 gaps of spacing_x between 6 items
+            local dummy_w = math.floor((pw - knob_size*4 - 5*sp_x)/2)
+            reaper.ImGui_Dummy(ctx, dummy_w, 1)
+            reaper.ImGui_SameLine(ctx)
+            eq_filter_knob(dest_track, '##eq_low_cut', 'cw', 20, 24000)
+            reaper.ImGui_SameLine(ctx)
+            eq_filter_knob(dest_track, '##eq_high_cut', 'ccw', 20, 24000)
+            reaper.ImGui_SameLine(ctx)
+            param_knob(dest_track, '##knob_decay', {'decay'}, 'Decay', 0xA3C7E8FF) -- pastel blue
+            reaper.ImGui_SameLine(ctx)
+            param_knob(dest_track, '##knob_predelay', {'predelay', 'pre%-delay'}, 'Pre-delay', 0xC5A8E8FF) -- pastel purple
+            reaper.ImGui_SameLine(ctx)
+            reaper.ImGui_Dummy(ctx, dummy_w, 1)
+            reaper.ImGui_PopFont( ctx )
 
         local receives = get_receives(dest_track)
         reaper.ImGui_SeparatorText( ctx, "Receives" )
@@ -1294,7 +1543,7 @@ function send_slot(dest_track,sel_track)
     end
     local current_time = reaper.time_precise()
 
-    if slider_retval and (key_down() == nil or key_down() == 1) then 
+    if not is_offline and slider_retval and (key_down() == nil or key_down() == 1) then 
         
         if found then 
             reaper.SetTrackSendInfo_Value(sel_track, 0, id, 'D_VOL', Convert_Fader2Val(slider_value))
@@ -1423,7 +1672,6 @@ function frame()
         reaper.ImGui_PushStyleVar(ctx,  reaper.ImGui_StyleVar_ItemSpacing(),2,2)
         local scroll_to_button = reaper.ImGui_Button(ctx, 'Go to track', w-17,  24)
 
-
         if mute_state then 
             reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_Text(),          0xFF6969FF)
             bypass_button_text = "Muted"
@@ -1435,6 +1683,12 @@ function frame()
         local remove_button = reaper.ImGui_Button(ctx, 'Clear all', w/2-10, 24)
        
         local current_folders = get_send_folders_data()
+
+        -- reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_SliderGrab(),              col(target_color,0.4))
+        -- reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_SliderGrabActive(),        col(target_color,0.5))
+        -- reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBg(),                 col(target_color,0.2))
+        -- reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBgHovered(),          col(target_color,0.4))
+        -- reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBgActive(),           col(target_color,0.5))
 
         if show_presets_checkbox then 
             reaper.ImGui_Dummy(ctx, 4, 4)
@@ -1539,7 +1793,7 @@ function frame()
         if show_xy_checkbox then 
             reaper.ImGui_Dummy(ctx, 4, 4)
             local xy = reaper.ImGui_TreeNode(ctx, "XY", xy_open_flags)
-            
+
             if reaper.ImGui_IsItemToggledOpen(ctx) then 
                 xy_folder_open_state = (xy_folder_open_state == 1) and 0 or 1
                 SaveXYPadState()    
@@ -1568,14 +1822,17 @@ function frame()
             reaper.Undo_EndBlock( 'Sender: Remove sends', -1)
         end
         reaper.ImGui_PopStyleVar(ctx)
+        -- reaper.ImGui_PopStyleColor(ctx,5)
         
         reaper.ImGui_Dummy(ctx, 4, 10)
         if track_button then 
             pinned_mode = not pinned_mode 
             pinned_track = target_track
         end 
+            -- reaper.ImGui_EndPopup(ctx)
         draw_send_folder_slots(current_folders, target_track)
         
+        -- reaper.ImGui_SetNextItemWidth(ctx, pw )
     end
 
     local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
@@ -1631,9 +1888,9 @@ function frame()
         reaper.ImGui_Dummy(ctx, 6,4)
         if reaper.ImGui_Button(ctx, "Close", 60) then reaper.ImGui_CloseCurrentPopup(ctx) end
         reaper.ImGui_EndPopup(ctx)
-
     end
 end 
+
 
 function save_sends_states(track)
     all_sends_vols = {}
@@ -2010,6 +2267,9 @@ function DrawXYPad(ctx, width, height, folder_data, sel_track, sel_track_color)
     local weight_BL = CalculateAdvancedWeight(w_BL)
     local weight_BR = CalculateAdvancedWeight(w_BR)
     
+    ---------------------------------------------------------------------------
+    -- ЗАПИСЬ В REAPER
+    ---------------------------------------------------------------------------
     if any_active and sel_track and reaper.ValidatePtr(sel_track, "MediaTrack*") then
         local function SetSendVol(target_track, weight)
             if not target_track then return end
@@ -2026,6 +2286,22 @@ function DrawXYPad(ctx, width, height, folder_data, sel_track, sel_track_color)
         SetSendVol(xy_send_BR, weight_BR)
         reaper.TrackList_AdjustWindows(false)
     end
+
+    -- local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+    -- local col_border = 0x5A5A5AFF 
+    -- local col_lines  = 0x404040FF 
+    -- local col_point  = 0xCCCCCCFF 
+    
+    -- if all_selected then 
+    --     reaper.ImGui_DrawList_AddRectFilled(draw_list, start_x, start_y, start_x + width, start_y + height, col(sel_track_color,0.03))
+    -- end
+    
+    -- reaper.ImGui_DrawList_AddLine(draw_list, start_x + width/2, start_y, start_x + width/2, start_y + height,  col(sel_track_color,0.5))
+    -- reaper.ImGui_DrawList_AddLine(draw_list, start_x, start_y + height/2, start_x + width, start_y + height/2,  col(sel_track_color,0.5))
+
+        ---------------------------------------------------------------------------
+    -- ОТРИСОВКА ГРАФИКИ (ФОН С ДИНАМИЧЕСКИМ ГРАДИЕНТОМ УГЛОВ)
+    ---------------------------------------------------------------------------
     local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
     local col_border = 0x000000FF 
     local col_lines  = 0x3D3D3D77 -- Сделаем осевые линии чуть прозрачнее (альфа 77 вместо FF), чтобы градиент лучше читался
@@ -2117,7 +2393,10 @@ function exit()
 end
 
 function loop()
-    reaper.ImGui_PushFont(ctx, font)
+    reaper.ImGui_PushFont(ctx, font, font_size)
+    -- reaper.ImGui_PushFont(ctx, icon_font)
+
+    -- reaper.ImGui_SetConfigVar(ctx, reaper.ImGui_ConfigVar_WindowsMoveFromTitleBarOnly(), 1 )
 
     reaper.ImGui_PushStyleVar  (ctx,  reaper.ImGui_StyleVar_WindowTitleAlign(),   0.5, 0.5)
     reaper.ImGui_PushStyleVar  (ctx,  reaper.ImGui_StyleVar_SeparatorTextAlign(),  0.5,0.5)
@@ -2131,8 +2410,11 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_TitleBgActive(),    0x441D1EFF)
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBg(),          0x6D6D6D99)      
 
+    -- reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_SliderGrab(),       0xB19102FF)   -- pan
+    
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_SliderGrab(),              0x8F8F8FFF)
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_SliderGrabActive(),        0x9F9F9FFF)
+    -- reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBg(),                 0x69696999)
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBgHovered(),          0x575757FF)
     reaper.ImGui_PushStyleColor(ctx,  reaper.ImGui_Col_FrameBgActive(),           0x5A5A5AFF)
 

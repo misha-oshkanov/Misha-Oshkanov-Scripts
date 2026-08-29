@@ -1,6 +1,6 @@
 -- @description Project Work Timer: Smart time tracker with tags, afk and focus detection and alarms
 -- @author Misha Oshkanov
--- @version 2.9.1
+-- @version 3.0
 -- @about
 --  Tracks active work time per project tab in REAPER.
 --  Switches timers between tabs automatically.
@@ -12,8 +12,6 @@
 --------------------------------------------------------------------- 
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
-
-
 function print(msg) 
     if msg==nil then msg="da" end
     reaper.ShowConsoleMsg(tostring(msg) .. '\n') 
@@ -501,8 +499,10 @@ function DrawStatsWindow(proj_ptr)
         total_project_time = 0
         
         for t_name, total_sec in pairs(total_per_tag) do
-            if t_name ~= "rendering" or rendertime_check then
-                total_project_time = total_project_time + total_sec
+            if t_name ~= "afk" then
+                if t_name ~= "rendering" or rendertime_check then
+                    total_project_time = total_project_time + total_sec
+                end
             end
         end
         
@@ -563,7 +563,7 @@ function DrawStatsWindow(proj_ptr)
                 
                 reaper.ImGui_PopStyleColor(ctx, 4)
                 
-                if tag_clicked and tag_name ~= "rendering" then
+                if tag_clicked and tag_name ~= "rendering" and tag_name ~= "afk" then
                     local current_date_key = GetCurrentDateKey()
                     save_proj_time(proj_ptr, current_date_key, current_tag, total_time)
                     
@@ -637,7 +637,8 @@ function DrawStatsWindow(proj_ptr)
             local time_string = FormatTime(day_sec)
             local text_w, _ = reaper.ImGui_CalcTextSize(ctx, time_string)
             local is_overlapping = false
-            local target_same_line_x = absolute_right_edge - text_w - 14
+            local x_btn_width = 24  -- space reserved for X button on the right
+            local target_same_line_x = absolute_right_edge - x_btn_width - text_w - 10
 
             if is_node_open then
                 is_overlapping = (target_same_line_x < date_right_edge + 13)
@@ -653,7 +654,36 @@ function DrawStatsWindow(proj_ptr)
                     target_move_date = date
                     open_move_popup = true
                 end
-                -- reaper.ImGui_Text(ctx, time_string)
+            end
+            -- Remove all button (X) - always visible on right edge
+            do
+                local x_btn_x = absolute_right_edge - x_btn_width
+                reaper.ImGui_SameLine(ctx, x_btn_x)
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), 0xFF333340)
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), 0xFF333366)
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0xFF8888FF)
+                if reaper.ImGui_Button(ctx, "X##del_" .. date, 20, 22) then
+                    -- Collect all tags for this date and remove them
+                    local del_idx = 0
+                    local keys_to_delete = {}
+                    local prefix = "TOTAL_TIME_" .. date .. "_"
+                    local exact_key = "TOTAL_TIME_" .. date
+                    while true do
+                        local d_r, d_key, d_val = reaper.EnumProjExtState(proj_ptr, "TIME_TRACKER", del_idx)
+                        if not d_r then break end
+                        if d_key and (d_key:find(prefix, 1, true) == 1 or d_key == exact_key) then
+                            table.insert(keys_to_delete, d_key)
+                        end
+                        del_idx = del_idx + 1
+                    end
+                    for _, dk in ipairs(keys_to_delete) do
+                        reaper.SetProjExtState(proj_ptr, "TIME_TRACKER", dk, "")
+                    end
+                    total_time = load_total_tag_time(proj_ptr, current_tag)
+                    reaper.MarkProjectDirty(proj_ptr)
+                end
+                reaper.ImGui_PopStyleColor(ctx, 3)
+                reaper.ImGui_SetItemTooltip( ctx, "Remove all time for this day" )
             end
 
             if is_node_open then
@@ -880,6 +910,33 @@ function DrawStatsWindow(proj_ptr)
             reaper.ImGui_Spacing(ctx)
             reaper.ImGui_Separator(ctx)
             reaper.ImGui_Spacing(ctx)
+
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), 0xFF333340)
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), 0xFF333366)
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0xFF8888FF)
+            if reaper.ImGui_Button(ctx, "Remove All##rmv_all", 120, 24) then
+                local del_idx = 0
+                local keys_to_delete = {}
+                local prefix = "TOTAL_TIME_" .. move_date_context .. "_"
+                local exact_key = "TOTAL_TIME_" .. move_date_context
+                while true do
+                    local d_r, d_key, d_val = reaper.EnumProjExtState(proj_ptr, "TIME_TRACKER", del_idx)
+                    if not d_r then break end
+                    if d_key and (d_key:find(prefix, 1, true) == 1 or d_key == exact_key) then
+                        table.insert(keys_to_delete, d_key)
+                    end
+                    del_idx = del_idx + 1
+                end
+                for _, dk in ipairs(keys_to_delete) do
+                    reaper.SetProjExtState(proj_ptr, "TIME_TRACKER", dk, "")
+                end
+                total_time = load_total_tag_time(proj_ptr, current_tag)
+                reaper.MarkProjectDirty(proj_ptr)
+                move_hours_buf, move_mins_buf, move_secs_buf = "0", "0", "0"
+                reaper.ImGui_CloseCurrentPopup(ctx)
+            end
+            reaper.ImGui_PopStyleColor(ctx, 3)
+            reaper.ImGui_SameLine(ctx)
 
             if reaper.ImGui_Button(ctx, "OK", 80, 24) then
                 local input_hours = tonumber(move_hours_buf) or 0
@@ -1442,9 +1499,8 @@ function frame()
                 reaper.ImGui_Separator(ctx)
             end
 
-                reaper.ImGui_Dummy( ctx, 10, 10 )
+            reaper.ImGui_Dummy( ctx, 10, 10 )
             reaper.ImGui_PushFont(ctx, nil, 14 )
-
 
             if reaper.ImGui_Button(ctx, "Minimize", -1, 0 ) then
                 minimize_check = not minimize_check

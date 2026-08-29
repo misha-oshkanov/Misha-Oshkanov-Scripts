@@ -1,18 +1,26 @@
 -- @description Monitor Volume Controller
 -- @author Misha Oshkanov
--- @version 4.4
+-- @version 5.0
 -- @about
 --  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. 
 --  If you need more levels or change db values you can edit buttons table.
 --  Use right click to change modes between volume control and listen filters
 -- @changelog
---  fixed Use Metric AB instead of JS setting save
+--  big ui overhaul
+--  new meter module
+--  new monitoring fx module (create custom buttons in settings to float fx on monitoring fx chain)
+--  new settings and sliders
+--  FTC gridbox support as module (use mousewheel)
+--  Use mousewheel to change tracks in MetricAB
+--  Use mousewheel to change ref tracks 
+--  many bug fixes
 
 -----------------------------------------------------------------------------
 REF_FOLDER_NAME = 'Refs'
 USE_METRIC_IN_MONITORINGFX = true
 METRIC_AB = 'ADPTR MetricAB'
 CORRECTION_CONTAINER_NAME = "Corrections"
+ROW_TAIL_GAP = 1
 
 buttons = {} -- presets in dB
 SLOPE = 2 -- 1 = 12db, 2 = 24db, 3 = 36db, 4 = 48db,5 = 60db, 6 = 72db 
@@ -31,6 +39,11 @@ local layers = {
   [2] = { vol = false, lis = false,  corr = true,  ref = true,   ab = false },
   [3] = { vol = false, lis = true,   corr = false, ref = false,  ab = false },
 }
+
+for i = 1, 3 do
+  layers[i].grid = i <= 2
+  layers[i].mtr = true
+end
 
 
 function rgba(r, g, b, a)
@@ -199,6 +212,9 @@ function SaveSettings()
     SHOW_CORRECTION_BTN = SHOW_CORRECTION_BTN and '1' or '0',
     USE_ITEM_COUNT = USE_ITEM_COUNT and '1' or '0',
     USE_MONFX = USE_MONFX and '1' or '0',
+    USE_GRID_BOX = USE_GRID_BOX and '1' or '0',
+    DISABLE_CORR_ON_START = DISABLE_CORR_ON_START and '1' or '0',
+    FREE_MODE_TOP = FREE_MODE_TOP and '1' or '0',
 
     pw = tostring(math.floor(pw or 600))
   }
@@ -207,21 +223,30 @@ function SaveSettings()
     reaper.SetExtState(SECTION, key, value, true)
   end
   reaper.SetExtState(SECTION, 'BUTTONS_LIST', ButtonsToString(buttons), true)
+  local mfx_parts = {}
+  for _, p in ipairs(mon_fx_presets or {}) do
+    mfx_parts[#mfx_parts + 1] = tostring(p.fx) .. '|' .. tostring(p.name) .. '|' ..
+      tostring(tonumber(p.w) or 20) .. '|' .. string.format('%08x', p.col_u32 or 0x6CAEEBFF)
+  end
+  reaper.SetExtState(SECTION, 'MON_FX_PRESETS', table.concat(mfx_parts, ';'), true)
   reaper.SetExtState(SECTION, 'METRIC_MON', USE_METRIC_IN_MONITORINGFX and '1' or '0', true)
   -- reaper.SetExtState(SECTION, 'USE_METRICAB', USE_METRICAB and '1' or '0', true)
   reaper.SetExtState(SECTION, 'REF_NAME', REF_FOLDER_NAME, true)
   reaper.SetExtState(SECTION, 'SLOPE', tostring(SLOPE), true)
   reaper.SetExtState(SECTION, 'SCROLL', tostring(scroll_accuracy), true)
   reaper.SetExtState(SECTION, 'BTN_H', tostring(button_h), true)
+  reaper.SetExtState(SECTION, 'GRID_W', tostring(grid_width), true)
+  reaper.SetExtState(SECTION, 'TAIL_GAP', tostring(ROW_TAIL_GAP), true)
+  reaper.SetExtState(SECTION, 'METER_W', tostring(meter_width), true)
 
   reaper.SetExtState(SECTION, 'MAX_LAYERS', tostring(MAX_LAYERS), true)
   reaper.SetExtState(SECTION, 'CURRENT_LAYER', tostring(current_layer), true)
   
-  for i = 1, 2 do
+  for i = 1, #layers do
     local l = layers[i]
-    local str = string.format("%d,%d,%d,%d,%d,%d,%d", 
-        l.vol and 1 or 0, l.lis and 1 or 0, l.corr and 1 or 0, 
-        l.ref and 1 or 0, l.ab and 1 or 0, l.item_count and 1 or 0,l.monfx and 1 or 0)
+    local str = string.format("%d,%d,%d,%d,%d,%d,%d,%d,%d",
+        l.vol and 1 or 0, l.lis and 1 or 0, l.corr and 1 or 0,
+        l.ref and 1 or 0, l.ab and 1 or 0, l.item_count and 1 or 0, l.monfx and 1 or 0, l.grid and 1 or 0, l.mtr and 1 or 0)
     reaper.SetExtState(SECTION, "LAYER_"..i, str, true)
   end
 end
@@ -242,6 +267,7 @@ function LoadSettings()
   USE_METRIC_IN_MONITORINGFX = get_bool('METRIC_MON', true)
   USE_ITEM_COUNT = get_bool('USE_ITEM_COUNT', true)
   USE_MONFX = get_bool('USE_MONFX', true)
+  USE_GRID_BOX = get_bool('USE_GRID_BOX', true)
 
   REF_FOLDER_NAME = reaper.GetExtState(SECTION, 'REF_NAME')
   if REF_FOLDER_NAME == '' then REF_FOLDER_NAME = 'Refs' end
@@ -249,6 +275,11 @@ function LoadSettings()
   SLOPE = tonumber(reaper.GetExtState(SECTION, 'SLOPE')) or 2
   scroll_accuracy = tonumber(reaper.GetExtState(SECTION, 'SCROLL')) or 1.2
   button_h = tonumber(reaper.GetExtState(SECTION, 'BTN_H')) or 24
+  grid_width = tonumber(reaper.GetExtState(SECTION, 'GRID_W')) or 60
+  ROW_TAIL_GAP = tonumber(reaper.GetExtState(SECTION, 'TAIL_GAP')) or 1
+  meter_width = tonumber(reaper.GetExtState(SECTION, 'METER_W')) or 70
+  DISABLE_CORR_ON_START = get_bool('DISABLE_CORR_ON_START', false)
+  FREE_MODE_TOP = get_bool('FREE_MODE_TOP', false)
 
   local saved_buttons = reaper.GetExtState(SECTION, 'BUTTONS_LIST')
   if saved_buttons ~= "" then
@@ -258,14 +289,36 @@ function LoadSettings()
     buttons = {-32, -24, -14, -8, -4, 0, 4, 12, 18} -- дефолт
   end
 
-  local saved_pw = tonumber(reaper.GetExtState(SECTION, 'pw'))
-  if saved_pw and saved_pw > 100 then pw = saved_pw end
+  mon_fx_presets = {}
+  local saved_mfx = reaper.GetExtState(SECTION, 'MON_FX_PRESETS')
+  for entry in saved_mfx:gmatch('[^;]+') do
+    local fx, nm, w, cl = entry:match('^(.-)|(.-)|(.-)|(.+)$')
+    if not fx then fx, nm, w = entry:match('^(.-)|(.-)|(.+)$') end
+    if fx then
+      local cu32
+      if cl and cl ~= '' then
+        cu32 = tonumber(cl, 16)
+        if #cl == 6 then cu32 = cu32 * 256 + 255 end
+      end
+      mon_fx_presets[#mon_fx_presets + 1] =
+        { fx = fx, name = nm, w = tonumber(w) or 20, col_u32 = cu32 or 0x6CAEEBFF }
+    end
+  end
 
-  for i = 1, 2 do
+  local saved_pw = tonumber(reaper.GetExtState(SECTION, 'pw'))
+  if saved_pw then pw = saved_pw end
+
+  for i = 1, #layers do
     local str = reaper.GetExtState(SECTION, "LAYER_"..i)
     if str ~= "" then
-        local v, li, c, r, a, ic, mf = str:match("(%d),(%d),(%d),(%d),(%d),(%d),(%d)")
-        layers[i] = { vol = v=='1', lis = li=='1', corr = c=='1', ref = r=='1', ab = a=='1', item_count = ic=='1', monfx=mf =='1' }
+        local v, li, c, r, a, ic, mf, gr, mt = str:match("(%d),(%d),(%d),(%d),(%d),(%d),(%d),?(%d?),?(%d?)")
+        if v then
+          local l = { vol = v=='1', lis = li=='1', corr = c=='1', ref = r=='1', ab = a=='1',
+                      item_count = ic=='1', monfx = mf=='1', grid = layers[i].grid, mtr = layers[i].mtr }
+          if gr ~= '' then l.grid = gr=='1' end
+          if mt ~= '' and mt ~= nil then l.mtr = mt=='1' end
+          layers[i] = l
+        end
     end
   end
 end
@@ -422,6 +475,472 @@ function get_children(parent)
   end
 end
 
+------------------------------------------------------------------------------------
+-- Grid Box module (logic ported from FeedTheCat's Gridbox / Adaptive Grid, MIT)
+
+GRID_EXT = 'FTC.AdaptiveGrid'
+
+local _, grid_script_path = reaper.get_action_context()
+local grid_dir = grid_script_path:match('^(.+)[\\/]')
+local function gpath(...)
+  return table.concat({...}, package.config:sub(1, 1))
+end
+local grid_adapt_script = gpath(grid_dir, '..', '..', 'FTC Tools', 'Adaptive grid', 'Adapt grid to zoom level.lua')
+local grid_service_script = gpath(grid_dir, '..', '..', 'FTC Tools', 'Adaptive grid', 'Adaptive grid (background service).lua')
+local grid_has_adaptive = reaper.file_exists(grid_adapt_script) and reaper.file_exists(grid_service_script)
+
+grid_text = '1/4'
+grid_hovered = false
+
+local function GridGetMultiplier(is_midi)
+  return tonumber(reaper.GetExtState(GRID_EXT, is_midi and 'midi_mult' or 'main_mult')) or 0
+end
+
+local function GridSetMultiplier(mult, is_midi)
+  reaper.SetExtState(GRID_EXT, is_midi and 'midi_mult' or 'main_mult', tostring(mult), true)
+end
+
+local function GridServiceRunning()
+  return reaper.GetExtState(GRID_EXT, 'is_service_running') ~= ''
+end
+
+local function GridRunAdapt(is_midi)
+  if is_midi and not reaper.MIDIEditor_GetActive() then return end
+  local env = setmetatable({ _G = { mode = is_midi and 2 or 1 } }, { __index = _G })
+  local chunk = loadfile(grid_adapt_script, 'bt', env)
+  if chunk then chunk() end
+end
+
+local function GridStartService()
+  if not reaper.file_exists(grid_service_script) then return end
+  local cmd = reaper.AddRemoveReaScript(true, 0, grid_service_script, true)
+  reaper.Main_OnCommand(cmd, 0)
+  reaper.AddRemoveReaScript(false, 0, grid_service_script, true)
+end
+
+local function DecimalToFraction(x, error)
+  error = error or 0.0000000001
+  local n = math.floor(x)
+  x = x - n
+  if x < error then return n, 1 end
+  if 1 - error < x then return n + 1, 1 end
+  local lower_n, lower_d = 0, 1
+  local upper_n, upper_d = 1, 1
+  while true do
+    local middle_n = lower_n + upper_n
+    local middle_d = lower_d + upper_d
+    if middle_d * (x + error) < middle_n then
+      upper_n, upper_d = middle_n, middle_d
+    elseif middle_n < (x - error) * middle_d then
+      lower_n, lower_d = middle_n, middle_d
+    else
+      return n * middle_d + middle_n, middle_d
+    end
+  end
+end
+
+local function curr_grid_div() return select(2, reaper.GetSetProjectGrid(0, 0)) end
+
+local function IsStraightGrid(d)
+  d = d or curr_grid_div()
+  return math.log(d, 2) % 1 == 0
+end
+
+local function IsTripletGrid(d)
+  d = d or curr_grid_div()
+  if d > 1 then return 2 * d % (2 / 3) == 0 else return 2 / d % 3 == 0 end
+end
+
+local function IsQuintupletGrid(d)
+  d = d or curr_grid_div()
+  if d > 1 then return 4 * d % (4 / 5) == 0 else return 4 / d % 5 == 0 end
+end
+
+local function IsSeptupletGrid(d)
+  d = d or curr_grid_div()
+  if d > 1 then return 4 * d % (4 / 7) == 0 else return 4 / d % 7 == 0 end
+end
+
+local function IsDottedGrid(d)
+  d = d or curr_grid_div()
+  if d > 1 then return 2 * d % 3 == 0 else return 2 / d % (2 / 3) == 0 end
+end
+
+local function ClosestStraightGrid(d)
+  d = d or curr_grid_div()
+  return 2 ^ math.floor(math.log(d, 2) + 0.5)
+end
+
+local function StraightenDiv(d)
+  if IsStraightGrid(d) then return d end
+  if IsTripletGrid(d) then return d * (3 / 2) end
+  if IsQuintupletGrid(d) then return d * (5 / 4) end
+  if IsSeptupletGrid(d) then return d * (7 / 4) end
+  if IsDottedGrid(d) then return d * (2 / 3) end
+  return ClosestStraightGrid(d)
+end
+
+local function SaveProjGridType(d, swing, amt)
+  if reaper.GetExtState(GRID_EXT, 'preserve_grid_type') ~= '1' then return end
+  local sd = StraightenDiv(d)
+  if not sd then return end
+  local state = ''
+  if swing == 1 and amt then state = 's' .. amt
+  elseif sd ~= d then state = ('%.32f'):format(d) end
+  reaper.SetProjExtState(0, GRID_EXT, sd, state)
+end
+
+local function LoadProjGridType(d)
+  if reaper.GetExtState(GRID_EXT, 'preserve_grid_type') ~= '1' then return false end
+  local sd = StraightenDiv(d)
+  if not sd then return false end
+  local _, state = reaper.GetProjExtState(0, GRID_EXT, sd)
+  local swing, amt = 0, nil
+  d = sd
+  if state ~= '' then
+    if state:sub(1, 1) == 's' then
+      swing, amt = 1, tonumber(state:sub(2))
+    else
+      d = tonumber(state)
+    end
+  end
+  reaper.GetSetProjectGrid(0, 1, d, swing, amt)
+  return true
+end
+
+local function GridSetStraight()
+  local _, d, _, amt = reaper.GetSetProjectGrid(0, 0)
+  if not IsStraightGrid(d) then
+    d = StraightenDiv(d)
+    reaper.GetSetProjectGrid(0, 1, d, 0, amt)
+    SaveProjGridType(d, 0, amt)
+  end
+end
+
+local function GridSetKind(target)
+  local _, d, _, amt = reaper.GetSetProjectGrid(0, 0)
+  local cur_t, cur_q = IsTripletGrid(d), IsQuintupletGrid(d)
+  local cur_s, cur_do = IsSeptupletGrid(d), IsDottedGrid(d)
+  local has = ({ triplet = cur_t, quint = cur_q, sept = cur_s, dotted = cur_do })[target]
+  if has then return end
+  local f = ({ triplet = 2 / 3, quint = 4 / 5, sept = 4 / 7, dotted = 3 / 2 })[target]
+  if cur_t then d = d * (3 / 2) * f
+  elseif cur_q then d = d * (5 / 4) * f
+  elseif cur_s then d = d * (7 / 4) * f
+  elseif cur_do then d = d * (2 / 3) * f
+  else d = ClosestStraightGrid(d) * f end
+  reaper.GetSetProjectGrid(0, 1, d, 0, amt)
+  SaveProjGridType(d, 0, amt)
+end
+
+local function GridSwingEnabled()
+  local _, _, s, a = reaper.GetSetProjectGrid(0, 0)
+  return s == 1 and (a or 0) ~= 0
+end
+
+local function GridSetSwing(on)
+  local _, d, _, a = reaper.GetSetProjectGrid(0, 0)
+  reaper.GetSetProjectGrid(0, 1, d, on and 1 or 0, a)
+  SaveProjGridType(d, on and 1 or 0, a)
+end
+
+local function GridSetSwingAmount(pct)
+  GridSetStraight()
+  local _, d = reaper.GetSetProjectGrid(0, 0)
+  reaper.GetSetProjectGrid(0, 1, nil, 1, pct / 100)
+  SaveProjGridType(d, 1, pct / 100)
+end
+
+local function GridSetFixed(div)
+  if reaper.GetToggleCommandState(41885) == 1 then reaper.Main_OnCommand(41885, 0) end
+  if reaper.GetToggleCommandState(40725) == 1 then reaper.Main_OnCommand(40725, 0) end
+  if reaper.GetToggleCommandState(40145) == 0 then reaper.Main_OnCommand(40145, 0) end
+  GridSetMultiplier(0, false)
+  if LoadProjGridType(div) then return end
+  local _, d, s, a = reaper.GetSetProjectGrid(0, 0)
+  if IsTripletGrid(d) then div = div * 2 / 3 end
+  if IsQuintupletGrid(d) then div = div * 4 / 5 end
+  if IsSeptupletGrid(d) then div = div * 4 / 7 end
+  if IsDottedGrid(d) then div = div * 3 / 2 end
+  reaper.GetSetProjectGrid(0, 1, div, s, a)
+end
+
+local function GridCheckFixed(div)
+  if reaper.GetToggleCommandState(41885) == 1 or reaper.GetToggleCommandState(40725) == 1 then return false end
+  if reaper.GetToggleCommandState(40145) == 0 or GridGetMultiplier(false) ~= 0 then return false end
+  local _, d = reaper.GetSetProjectGrid(0, 0)
+  if IsTripletGrid(d) then div = div * 2 / 3 end
+  if IsQuintupletGrid(d) then div = div * 4 / 5 end
+  if IsSeptupletGrid(d) then div = div * 4 / 7 end
+  if IsDottedGrid(d) then div = div * 3 / 2 end
+  return div == d
+end
+
+local function GridPromptSpacing(is_midi)
+  local key = is_midi and 'midi_custom_spacing' or 'custom_spacing'
+  local cur = reaper.GetExtState(GRID_EXT, key)
+  local ret, val = reaper.GetUserInputs('Adaptive Grid', 1, 'Minimum grid spacing in pixels:', cur)
+  if not ret then return false end
+  val = tonumber(val)
+  if not val or val <= 0 then return false end
+  reaper.SetExtState(GRID_EXT, key, tostring(val), true)
+  return true
+end
+
+local function GridSetAdaptive(mult, is_midi)
+  if mult == -1 and not GridPromptSpacing(is_midi) then return end
+  if GridGetMultiplier(is_midi) == mult then mult = 0 end
+  if not is_midi then
+    if reaper.GetToggleCommandState(41885) == 1 then reaper.Main_OnCommand(41885, 0) end
+    if reaper.GetToggleCommandState(40725) == 1 then reaper.Main_OnCommand(40725, 0) end
+    if reaper.GetToggleCommandState(40145) == 0 then reaper.Main_OnCommand(40145, 0) end
+  else
+    local ed = reaper.MIDIEditor_GetActive()
+    if ed and reaper.GetToggleCommandStateEx(32060, 1017) == 0 then
+      reaper.MIDIEditor_OnCommand(ed, 1017)
+    end
+  end
+  GridSetMultiplier(mult, is_midi)
+  if mult ~= 0 then
+    GridRunAdapt(is_midi)
+    if not GridServiceRunning() then GridStartService() end
+  end
+end
+
+local function GridChangeDivision(wph)
+  local factor = tonumber(reaper.GetExtState(GRID_EXT, 'zoom_div')) or 2
+  local _, d, s, a = reaper.GetSetProjectGrid(0, 0)
+  if d ~= d then d = 1 end
+  SaveProjGridType(d, s, a)
+  d = wph < 0 and d * factor or d / factor
+  if d > 8 then d = 8 elseif d < 1 / 32 then d = 1 / 32 end
+  if not LoadProjGridType(d) then
+    reaper.GetSetProjectGrid(0, 1, d, s, a)
+  end
+end
+
+local function GridAdjustSwing(wph)
+  local _, d, s, a = reaper.GetSetProjectGrid(0, 0)
+  if s == 0 then
+    GridSetStraight()
+    s, a = 1, 0.5
+  end
+  a = a + wph * 0.02
+  if a <= 0.005 then s, a = 0, 0
+  elseif a > 1 then a = 1 end
+  a = math.floor(a * 100 + 0.5) / 100
+  reaper.GetSetProjectGrid(0, 1, nil, s, a)
+  SaveProjGridType(d, s, a)
+end
+
+local function GridUpdateText()
+  local _, d, s = reaper.GetSetProjectGrid(0, 0)
+  if d ~= d then d = 1 end
+  local t
+  if reaper.GetToggleCommandState(40904) == 1 then
+    t = 'Frame'
+  elseif s == 3 then
+    t = 'Meas'
+  else
+    local num, denom = DecimalToFraction(d)
+    local suf = ''
+    local is_t, is_q, is_s, is_do
+    if d > 1 then
+      is_t = 2 * d % (2 / 3) == 0
+      is_q = 4 * d % (4 / 5) == 0
+      is_s = 4 * d % (4 / 7) == 0
+      is_do = 2 * d % 3 == 0
+    else
+      is_t = 2 / d % 3 == 0
+      is_q = 4 / d % 5 == 0
+      is_s = 4 / d % 7 == 0
+      is_do = 2 / d % (2 / 3) == 0
+    end
+    if is_t then suf = 'T'; denom = denom * 2 / 3
+    elseif is_q then suf = 'Q'; denom = denom * 4 / 5
+    elseif is_s then suf = 'S'; denom = denom * 4 / 7
+    elseif is_do then suf = 'D'; denom = denom / 2; num = num / 3 end
+    if num > 1 then
+      local rest = denom % num
+      if rest == 0 then denom = denom / num; num = 1 end
+    end
+    if num >= denom and num % denom == 0 then
+      t = ('%.0f%s'):format(num / denom, suf)
+    else
+      t = ('%.0f/%.0f%s'):format(num, denom, suf)
+    end
+  end
+  grid_text = t
+end
+
+local b_col   = rgba(82, 81, 77, 0.7)
+local bh_col  = rgba(88, 73, 55, 0.9)
+local ba_col  = rgba(192, 157, 13, 0.4)
+local t_col   = rgba(205, 175, 50, 1)
+
+function draw_grid_button()
+  GridUpdateText()
+  local snap =  reaper.GetToggleCommandState(1157) == 1
+
+  local label = grid_text
+  if GridGetMultiplier(false) ~= 0 then label = 'A ' .. label end
+  if grid_hovered then
+    local _, _, s, a = reaper.GetSetProjectGrid(0, 0)
+    if s == 1 and (a or 0) ~= 0 then
+      label = ('sw %d%%'):format(math.floor(a * 100 + 0.5))
+    end
+  end
+
+  if not snap then 
+    b_col   = rgba(82, 81, 77, 0.7)
+    bh_col  = rgba(88, 73, 55, 0.9)
+    ba_col  = rgba(98, 83, 65, 1)
+    t_col   = rgba(215, 185, 60, 1)
+  else 
+    b_col   = rgba(38, 117, 149, 0.4)
+    bh_col  = rgba(38, 117, 149, 0.6)
+    ba_col  = rgba(192, 157, 13, 0.4)
+    t_col   = rgba(106, 198, 235, 1)
+  end
+  ImGui.PushStyleColor(ctx, ImGui.Col_Button(),        b_col)
+  ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered(), bh_col)
+  ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive(),  ba_col)
+  ImGui.PushStyleColor(ctx, ImGui.Col_Text(),          t_col)
+
+  -- reaper.ImGui_PushFont(ctx, font, 12)
+
+  
+  -- reaper.ImGui_PushStyleVar( ctx, reaper.ImGui_StyleVar_FramePadding(), 0, 5)
+  -- reaper.ImGui_AlignTextToFramePadding( ctx )
+
+  ImGui.Button(ctx, label .. '##grid', grid_width, button_h)
+  -- reaper.ImGui_PopFont( ctx )
+  -- reaper.ImGui_PopStyleVar( ctx )
+
+
+  if ImGui.IsItemClicked(ctx, 1) then
+    ImGui.OpenPopup(ctx, 'grid_settings_menu')
+  end
+  -- if ImGui.IsItemClicked(ctx, 0) then
+  --   reaper.Main_OnCommand(1157, 0)
+  -- end
+  ImGui.PopStyleColor(ctx, 4)
+
+  -- if snap then
+  --   local min_x, min_y = ImGui.GetItemRectMin(ctx)
+  --   local max_x, max_y = ImGui.GetItemRectMax(ctx)
+  --   local draw_list = ImGui.GetWindowDrawList(ctx)
+  --   ImGui.DrawList_AddRect(draw_list, min_x, min_y, max_x, max_y, rgba(38,176,167,1), 0, 0, 1)
+  -- end
+
+  grid_hovered = reaper.ImGui_IsItemHovered(ctx)
+
+  if grid_hovered and not ImGui.IsPopupOpen(ctx, 'grid_settings_menu') then
+    local vertical, horizontal = reaper.ImGui_GetMouseWheel(ctx)
+    if vertical ~= 0 then GridChangeDivision(vertical) end
+    if horizontal ~= 0 then GridAdjustSwing(horizontal) end
+  end
+
+  if reaper.ImGui_IsMouseClicked( ctx, reaper.ImGui_MouseButton_Left() ) and grid_hovered then 
+      reaper.Main_OnCommand(1157, 0)
+  end
+
+
+  if ImGui.BeginPopup(ctx, 'grid_settings_menu') then
+    local _, d, s, a = reaper.GetSetProjectGrid(0, 0)
+
+    local type_w = 60
+    local types = {
+      { 'Straight', IsStraightGrid(d), GridSetStraight },
+      { 'Triplet',  IsTripletGrid(d),  function() GridSetKind('triplet') end },
+      { 'Dotted',   IsDottedGrid(d),   function() GridSetKind('dotted') end },
+    }
+    for ti, t in ipairs(types) do
+      if t[2] then
+        ImGui.PushStyleColor(ctx, ImGui.Col_Button(),         rgba(195,105,105,0.6))
+        ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered(),  rgba(205,105,105,0.8))
+        ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive(),   rgba(205,105,105,1))
+        ImGui.PushStyleColor(ctx, ImGui.Col_Text(),           rgba(224,224,224,1))
+      else
+        ImGui.PushStyleColor(ctx, ImGui.Col_Button(),         rgba(100,100,100,0.5))
+        ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered(),  rgba(120,120,120,0.6))
+        ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive(),   rgba(140,140,140,0.7))
+      end
+      if ImGui.Button(ctx, t[1], type_w) then t[3]() end
+      ImGui.PopStyleColor(ctx, t[2] and 4 or 3)
+      if ti < #types then ImGui.SameLine(ctx) end
+    end
+    ImGui.Separator(ctx)
+
+    if ImGui.BeginMenu(ctx, 'Swing') then
+      local swing_on = s == 1 and (a or 0) ~= 0
+      if ImGui.Selectable(ctx, 'Off', not swing_on) then GridSetSwing(false) end
+      ImGui.Separator(ctx)
+      for _, pct in ipairs({53, 55, 57, 59, 61, 64, 67, 70, 73, 75}) do
+        if ImGui.Selectable(ctx, pct .. '%', swing_on and math.floor(a * 100 + 0.5) == pct) then
+          GridSetSwingAmount(pct)
+        end
+      end
+      ImGui.Separator(ctx)
+      if ImGui.Selectable(ctx, 'Other...') then
+        local ret, val = reaper.GetUserInputs('Set swing', 1, 'Amount: (-100% to 100%)', '')
+        val = ret and tonumber(val) or nil
+        if val and val >= -100 and val <= 100 and val ~= 0 then GridSetSwingAmount(val) end
+      end
+      ImGui.EndMenu(ctx)
+    end
+
+    ImGui.Separator(ctx)
+    ImGui.TextDisabled(ctx, 'Fixed')
+    for _, f in ipairs({
+      {'1/128', 0.0078125}, {'1/64', 0.015625}, {'1/32', 0.03125},
+      {'1/16', 0.0625}, {'1/8', 0.125}, {'1/4', 0.25}, {'1/2', 0.5},
+      {'1', 1}, {'2', 2}, {'4', 4},
+    }) do
+      if ImGui.Selectable(ctx, f[1], GridCheckFixed(f[2])) then GridSetFixed(f[2]) end
+    end
+
+    if grid_has_adaptive then
+      ImGui.Separator(ctx)
+      ImGui.TextDisabled(ctx, 'Adaptive')
+      for _, m in ipairs({{'Narrowest', 1}, {'Narrow', 2}, {'Medium', 3}, {'Wide', 4}, {'Widest', 6}}) do
+        if ImGui.Selectable(ctx, m[1], GridGetMultiplier(false) == m[2]) then
+          GridSetAdaptive(m[2], false)
+        end
+      end
+      if ImGui.Selectable(ctx, 'Custom', GridGetMultiplier(false) == -1) then
+        GridSetAdaptive(-1, false)
+      end
+
+      if ImGui.BeginMenu(ctx, 'MIDI editor') then
+        if ImGui.Selectable(ctx, 'Fixed', GridGetMultiplier(true) == 0) then
+          GridSetAdaptive(0, true)
+        end
+        ImGui.Separator(ctx)
+        for _, m in ipairs({{'Narrowest', 1}, {'Narrow', 2}, {'Medium', 3}, {'Wide', 4}, {'Widest', 6}}) do
+          if ImGui.Selectable(ctx, m[1], GridGetMultiplier(true) == m[2]) then
+            GridSetAdaptive(m[2], true)
+          end
+        end
+        if ImGui.Selectable(ctx, 'Custom', GridGetMultiplier(true) == -1) then
+          GridSetAdaptive(-1, true)
+        end
+        ImGui.EndMenu(ctx)
+      end
+    end
+
+    ImGui.Separator(ctx)
+    local preserve = reaper.GetExtState(GRID_EXT, 'preserve_grid_type') == '1'
+    if ImGui.Selectable(ctx, 'Preserve grid type per size', preserve) then
+      reaper.SetExtState(GRID_EXT, 'preserve_grid_type', preserve and '0' or '1', true)
+    end
+
+    ImGui.EndPopup(ctx)
+  end
+
+  
+end
+
 function toggle_monitor_fx(fxname)
   index = reaper.TrackFX_AddByName(master, fxname, true, 0)
   is_open = reaper.TrackFX_GetOpen(master, mon+index)
@@ -468,13 +987,7 @@ function draw_item_count()
     local width3, height3 = reaper.ImGui_CalcTextSize(ctx, num3_str)
     local width4, height4 = reaper.ImGui_CalcTextSize(ctx, num4_str)
 
-    -- local spacing_x, spacing_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
-    item_count_total_width =
-    dummy_spacing1 +
-    (width3*1.3) +
-    dummy_spacing1 +
-    (width4) +
-    dummy_spacing1 
+    item_count_total_width = width3 + width4 + 15
     -- spacing_x * 2  -- запас между элементами
     -- -10           -- немного дополнительного отsступа
 
@@ -621,14 +1134,7 @@ function draw_correction_single_button(w)
         ImGui.PushStyleColor(ctx, ImGui.Col_Text(),    rgba(180, 70, 70, 0.8)) 
 
         if ImGui.Selectable(ctx, "OFF", active_name == "OFF") then
-            local fx_container = reaper.TrackFX_AddByName(master, CORRECTION_CONTAINER_NAME, true, 0)
-            if fx_container ~= -1 then
-                local _, count = reaper.TrackFX_GetNamedConfigParm(master, fx_container+(0x1000000), "container_count")
-                for i = 0, tonumber(count or 0)-1 do
-                    local _, item = reaper.TrackFX_GetNamedConfigParm(master, fx_container+(0x1000000), "container_item."..i)
-                    reaper.TrackFX_SetEnabled(master, item, false)
-                end
-            end
+            disable_corrections()
         end
         ImGui.PopStyleColor(ctx, 4)
         ImGui.EndPopup(ctx)
@@ -644,7 +1150,7 @@ function draw_correction_single_button(w)
 
 end
 
-function draw_free_mode_slider(master)
+function draw_free_mode_slider(master, w)
   if not free_mode then return end
 
   local minFreq, maxFreq = 20, 22000
@@ -678,7 +1184,7 @@ function draw_free_mode_slider(master)
   ImGui.PushStyleColor(ctx, ImGui.Col_FrameBgActive(),       rgba(100,72,72,0.8))
   ImGui.PushStyleColor(ctx, ImGui.Col_FrameBgHovered(),      rgba(100,72,72,0.6))
 
-  reaper.ImGui_PushItemWidth(ctx, -1) 
+  reaper.ImGui_PushItemWidth(ctx, w or -1)
   local range_retval
   range_retval, slider_range = reaper.ImGui_SliderInt(ctx, '##free_slider', slider_range, 20, 20000, formatIn, reaper.ImGui_SliderFlags_Logarithmic())
   
@@ -734,6 +1240,22 @@ function draw_ab_button(master, w)
       local index = reaper.TrackFX_AddByName(master, METRIC_AB, USE_METRIC_IN_MONITORINGFX, 0)
       if not USE_METRIC_IN_MONITORINGFX then mon = 0 else mon = (0x1000000) end
       reaper.TrackFX_SetOpen(master, index+mon, not reaper.TrackFX_GetOpen(master, index+mon))
+  end
+
+  if ab_hovered and ab_state == 1 then
+    local wheel = reaper.ImGui_GetMouseWheel(ctx)
+    if wheel ~= 0 then
+      local index = reaper.TrackFX_AddByName(master, METRIC_AB, USE_METRIC_IN_MONITORINGFX, 0)
+      if index ~= -1 then
+        local mon = USE_METRIC_IN_MONITORINGFX and 0x1000000 or 0
+        local val = reaper.TrackFX_GetParam(master, index + mon, 4)
+        local cur = math.floor(val * 15 + 0.5)
+        cur = cur + (wheel > 0 and 1 or -1)
+        if cur < 0 then cur = 15 end
+        if cur > 15 then cur = 0 end
+        reaper.TrackFX_SetParam(master, index + mon, 4, cur / 15)
+      end
+    end
   end
   
   ImGui.PopStyleColor(ctx, 3)
@@ -931,123 +1453,164 @@ function save_last_ref_solo(value)
   reaper.SetProjExtState(0, 'MISHA_MONITOR', 'LAST_SOLO', value)
 end
 
+local function get_reference_tracks()
+  local refs = {}
+  local count = reaper.CountTracks(0)
+  for i = 0, count - 1 do
+    local folder = reaper.GetTrack(0, i)
+    local _, name = reaper.GetTrackName(folder)
+    if name == REF_FOLDER_NAME then
+      refs = get_children_refs(folder) or {}
+      break
+    end
+  end
+  return refs
+end
+
+local function is_any_ref_soloed()
+  local refs = get_reference_tracks()
+  for _, r in ipairs(refs) do
+    if r.solo then return true end
+  end
+  return false
+end
+
+local function toggle_solo_last_reference()
+  local refs = get_reference_tracks()
+  if #refs == 0 then return end
+
+  -- If any ref is currently soloed, restore the previous project solo state.
+  if is_any_ref_soloed() then
+    for _, ref in ipairs(refs) do
+      if ref.solo then
+        reaper.SetMediaTrackInfo_Value(ref.track, 'I_SOLO', 0)
+      end
+    end
+    restore_solos()
+    return
+  end
+
+  -- Find the last-used reference and solo it.
+  local _, guid = reaper.GetProjExtState(0, 'MISHA_MONITOR', 'LAST_SOLO')
+  for i, ref in ipairs(refs) do
+    if guid ~= '' and reaper.GetTrackGUID(ref.track) == guid then
+      save_solos()
+      unsolo_all_tracks()
+      reaper.SetMediaTrackInfo_Value(ref.track, 'I_SOLO', 2)
+      save_last_ref_solo(reaper.GetTrackGUID(ref.track))
+      return
+    end
+  end
+
+  -- Fallback: solo the last ref in the folder.
+  save_solos()
+  unsolo_all_tracks()
+  reaper.SetMediaTrackInfo_Value(refs[#refs].track, 'I_SOLO', 2)
+  save_last_ref_solo(reaper.GetTrackGUID(refs[#refs].track))
+end
+
+local function solo_reference_at(index)
+  local refs = get_reference_tracks()
+  if #refs == 0 then return end
+  index = ((index - 1) % #refs) + 1
+  save_solos()
+  unsolo_all_tracks()
+  reaper.SetMediaTrackInfo_Value(refs[index].track, 'I_SOLO', 2)
+  save_last_ref_solo(reaper.GetTrackGUID(refs[index].track))
+end
+
+local function solo_adjacent_reference(direction)
+  local refs = get_reference_tracks()
+  if #refs == 0 then return end
+  local _, guid = reaper.GetProjExtState(0, 'MISHA_MONITOR', 'LAST_SOLO')
+  local current = 0
+  for i, ref in ipairs(refs) do
+    if guid ~= '' and reaper.GetTrackGUID(ref.track) == guid then current = i; break end
+  end
+  if current == 0 then current = direction > 0 and #refs or 1 end
+  solo_reference_at(current + direction)
+end
+
 function draw_refs_button(w)
   if not USE_REFS_SWITCH then return end
 
-  -- Проверяем, есть ли хоть один активный реф для цвета кнопки
-  local any_solo = false
-  if ref_data then
-    for _, r in ipairs(ref_data) do if r.solo then any_solo = true; break end end
-  end
+  -- Use live track state, not the potentially stale global ref_data.
+  local any_solo = is_any_ref_soloed()
 
   if any_solo then 
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), rgba(112, 229, 150, 0.6)) 
   end
 
   if reaper.ImGui_Button(ctx, "REF", w, button_h) then
-    show_refs_panel = not show_refs_panel
-    
+    toggle_solo_last_reference()
   end
-
-  if any_solo then reaper.ImGui_PopStyleColor(ctx) end
-end
-
-function get_max_refs_width()
-  local max_w = 150
-  if not ref_data or #ref_data == 0 then return max_w end
-  for _, ref in ipairs(ref_data) do
-    local text_w, _ = reaper.ImGui_CalcTextSize(ctx, ref.name)
-    local total_w = text_w + 80 
-    if total_w > max_w then max_w = total_w end
-  end
-  return max_w
-end
-
-function DrawRefsWindow()
-  local required_w = get_max_refs_width()
-  local flags = reaper.ImGui_WindowFlags_AlwaysAutoResize() | 
-                reaper.ImGui_WindowFlags_NoScrollbar()
-
-  reaper.ImGui_SetNextWindowSize(ctx, required_w, 20*#ref_data, reaper.ImGui_Cond_FirstUseEver())
-  local visible, open = reaper.ImGui_Begin(ctx, 'Reference Tracks', true)
   
-  if visible then
-    local lufs_string = ""
-    local ref_folder_track = nil
-    
-    local count = reaper.CountTracks(0)
-    for i = 0, count - 1 do 
-      local track = reaper.GetTrack(0, i) 
-      local _, name = reaper.GetTrackName(track)
-      if name == REF_FOLDER_NAME then 
-        ref_folder_track = track
-        
-        if reaper.GetMediaTrackInfo_Value(track, 'B_MUTE') == 1 then 
-          reaper.SetMediaTrackInfo_Value(track, "B_MUTE", 0)
-        end
-        if reaper.GetMediaTrackInfo_Value(track, 'B_MAINSEND') == 1 then 
-          reaper.CreateTrackSend(track, nil) 
-          reaper.SetMediaTrackInfo_Value(track, 'B_MAINSEND', 0)
-        end
 
-        local fx = reaper.TrackFX_AddByName(track, 'Loudness Meter', false, 1)
-        if fx ~= -1 and reaper.GetPlayState() == 1 then 
-          local meter_lufs = reaper.TrackFX_GetParam(track, fx, 19) -- параметр 19 (LUFS-S)
-          if meter_lufs > -40 then
-            lufs_string = string.format("%.1f", meter_lufs)
-          end
-        end
-        
-        ref_data = get_children_refs(track)
-        break
-      end 
+  local hovered = reaper.ImGui_IsItemHovered(ctx)
+  if hovered and reaper.ImGui_IsMouseClicked(ctx, reaper.ImGui_MouseButton_Right()) then
+    ImGui.OpenPopup(ctx, 'ref_list_popup')
+  end
+  ref_data = get_reference_tracks()
+  -- Calculate popup width from the longest ref name.
+  local popup_w = 150
+  if ref_data then
+    for _, ref in ipairs(ref_data) do
+      local tw, _ = reaper.ImGui_CalcTextSize(ctx, ref.name)
+      if tw + 40 > popup_w then popup_w = tw + 40 end
     end
-
+  end
+  reaper.ImGui_SetNextWindowSize(ctx, popup_w, 0, reaper.ImGui_Cond_Always())
+  if ImGui.BeginPopup(ctx, 'ref_list_popup') then
     if ref_data and #ref_data > 0 then
       for k, ref in ipairs(ref_data) do
-        reaper.ImGui_PushID(ctx, k)
-      
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), col(ref.color, 0.3))
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), col(ref.color, 0.5))
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), col(ref.color, 0.6))
-
-        if reaper.ImGui_Button(ctx, ref.name .. "##btn", -1, 26) then
+        ImGui.PushID(ctx, k)
+        ImGui.PushStyleColor(ctx, ImGui.Col_Button(),        col(ref.color, 0.3))
+        ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered(), col(ref.color, 0.5))
+        ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive(),  col(ref.color, 0.6))
+        if ImGui.Button(ctx, ref.name .. "##btn", popup_w - 10, 26) then
           if ref.solo then
+            for _, r in ipairs(ref_data) do
+              if r.solo then reaper.SetMediaTrackInfo_Value(r.track, 'I_SOLO', 0) end
+            end
             restore_solos()
-            unsolo_all_tracks()
           else
             save_last_ref_solo(reaper.GetTrackGUID(ref.track))
             save_solos()
             unsolo_all_tracks()
             reaper.SetMediaTrackInfo_Value(ref.track, 'I_SOLO', 2)
-            if ref.donotmute then solo_children(ref.track, true) end
           end
         end
-
         if ref.solo then
-          local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
-          local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
-          local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-          
-          reaper.ImGui_DrawList_AddCircleFilled(draw_list, min_x + 10, min_y + 13, 3, rgba(229,201,112,1))
-          
-          if lufs_string ~= "" then
-            local tw, _ = reaper.ImGui_CalcTextSize(ctx, lufs_string)
-            reaper.ImGui_DrawList_AddText(draw_list, max_x - tw - 10, min_y + 3, rgba(244, 234, 123, 1), lufs_string)
-          end
+          local min_x, min_y = ImGui.GetItemRectMin(ctx)
+          local dl = ImGui.GetWindowDrawList(ctx)
+          ImGui.DrawList_AddCircleFilled(dl, min_x + 10, min_y + 13, 3, rgba(229, 201, 112, 1))
         end
-
-        reaper.ImGui_PopStyleColor(ctx, 3)
-        reaper.ImGui_PopID(ctx)
+        ImGui.PopStyleColor(ctx, 3)
+        ImGui.PopID(ctx)
       end
     else
-      reaper.ImGui_Text(ctx, "Ref folder not found or empty")
+      ImGui.Text(ctx, "Ref folder not found or empty")
     end
-    
-    reaper.ImGui_End(ctx)
+    ImGui.EndPopup(ctx)
+  end
+  if hovered then
+    local wheel = reaper.ImGui_GetMouseWheel(ctx)
+    if wheel > 0 then solo_adjacent_reference(1)
+    elseif wheel < 0 then solo_adjacent_reference(-1) end
   end
 
-  if not open then show_refs_panel = false end
+  if any_solo then reaper.ImGui_PopStyleColor(ctx) end
+end
+
+function disable_corrections()
+  local fx_container = reaper.TrackFX_AddByName(master, CORRECTION_CONTAINER_NAME, true, 0)
+  if fx_container ~= -1 then
+    local _, count = reaper.TrackFX_GetNamedConfigParm(master, fx_container+(0x1000000), "container_count")
+    for i = 0, tonumber(count or 0)-1 do
+      local _, item = reaper.TrackFX_GetNamedConfigParm(master, fx_container+(0x1000000), "container_item."..i)
+      reaper.TrackFX_SetEnabled(master, item, false)
+    end
+  end
 end
 
 function get_active_correction_name()
@@ -1202,6 +1765,26 @@ function DrawSettingsWindow()
         local l = layers[i]
         if i == current_layer then a = 0.4 else a = 0.2 end
         reaper.ImGui_TableSetBgColor(ctx, reaper.ImGui_TableBgTarget_CellBg(), rgba(c.r,c.g,c.b,a))
+        if reaper.ImGui_Checkbox(ctx, "Grid Box##"..i, l.grid) then l.grid = not l.grid; should_resize = true; SaveSettings() end
+      end
+
+      reaper.ImGui_TableNextRow(ctx)
+      for i = 1, #layers do
+        reaper.ImGui_TableSetColumnIndex(ctx, i-1)
+        local c = layer_colors[i]
+        local l = layers[i]
+        if i == current_layer then a = 0.4 else a = 0.2 end
+        reaper.ImGui_TableSetBgColor(ctx, reaper.ImGui_TableBgTarget_CellBg(), rgba(c.r,c.g,c.b,a))
+        if reaper.ImGui_Checkbox(ctx, "Meter##"..i, l.mtr) then l.mtr = not l.mtr; should_resize = true; SaveSettings() end
+      end
+
+      reaper.ImGui_TableNextRow(ctx)
+      for i = 1, #layers do
+        reaper.ImGui_TableSetColumnIndex(ctx, i-1)
+        local c = layer_colors[i]
+        local l = layers[i]
+        if i == current_layer then a = 0.4 else a = 0.2 end
+        reaper.ImGui_TableSetBgColor(ctx, reaper.ImGui_TableBgTarget_CellBg(), rgba(c.r,c.g,c.b,a))
         if reaper.ImGui_Checkbox(ctx, "Monitoring FX##"..i, l.monfx) then l.monfx = not l.monfx; should_resize = true; SaveSettings() end
       end
 
@@ -1253,13 +1836,69 @@ function DrawSettingsWindow()
       local changed, new_text = reaper.ImGui_InputText(ctx, "Volume Buttons", buttons_text)
       if changed then buttons_text = new_text end
 
-      local changed, new_mon_text = reaper.ImGui_InputText(ctx, "Monitor FX Buttons", mon_buttons_text)
-      if changed then mon_buttons_text = new_mon_text end
+      reaper.ImGui_Dummy(ctx,20,20)
+      reaper.ImGui_Separator(ctx)
+      reaper.ImGui_Text(ctx, "Monitoring FX buttons")
+      if reaper.ImGui_BeginTable(ctx, "MonFxPresets", 5, reaper.ImGui_TableFlags_BordersInnerV() + reaper.ImGui_TableFlags_RowBg()) then
+        reaper.ImGui_TableSetupColumn(ctx, "Plugin name")
+        reaper.ImGui_TableSetupColumn(ctx, "Button name")
+        reaper.ImGui_TableSetupColumn(ctx, "Width", reaper.ImGui_TableColumnFlags_WidthFixed(), 100)
+        reaper.ImGui_TableSetupColumn(ctx, "Color", reaper.ImGui_TableColumnFlags_WidthFixed(), 36)
+        reaper.ImGui_TableSetupColumn(ctx, "", reaper.ImGui_TableColumnFlags_WidthFixed(), 26)
+        reaper.ImGui_TableHeadersRow(ctx)
+
+        for i, p in ipairs(mon_fx_presets) do
+          reaper.ImGui_TableNextRow(ctx)
+          reaper.ImGui_PushID(ctx, "mfx" .. i)
+          reaper.ImGui_SetNextItemWidth( ctx, -1 )
+
+          reaper.ImGui_TableSetColumnIndex(ctx, 0)
+          local ch_fx, v_fx = reaper.ImGui_InputText(ctx, "##mfx_fx", p.fx)
+          p.fx = ch_fx and v_fx or p.fx
+
+          reaper.ImGui_TableSetColumnIndex(ctx, 1)
+          reaper.ImGui_SetNextItemWidth( ctx, -1 )
+          local ch_nm, v_nm = reaper.ImGui_InputText(ctx, "##mfx_name", p.name)
+          p.name = ch_nm and v_nm or p.name
+
+          reaper.ImGui_TableSetColumnIndex(ctx, 2)
+          reaper.ImGui_SetNextItemWidth( ctx, 100 )
+
+          local ch_w, v_w = reaper.ImGui_InputInt(ctx, "##mfx_w", tonumber(p.w) or 24)
+          p.w = ch_w and v_w or p.w
+
+          reaper.ImGui_TableSetColumnIndex(ctx, 3)
+          local ch_c, new_col = reaper.ImGui_ColorEdit4(ctx, '##mfx_col',
+            p.col_u32 or 0x6CAEEBFF,
+            reaper.ImGui_ColorEditFlags_NoInputs() + reaper.ImGui_ColorEditFlags_NoAlpha())
+          if ch_c then p.col_u32 = new_col end
+
+          reaper.ImGui_TableSetColumnIndex(ctx, 4)
+          if reaper.ImGui_Button(ctx, "-", -1, 0) then
+            table.remove(mon_fx_presets, i)
+            SaveSettings()
+          end
+
+          reaper.ImGui_PopID(ctx)
+        end
+        reaper.ImGui_EndTable(ctx)
+      end
+      if reaper.ImGui_Button(ctx, "+ Add") then
+        mon_fx_presets[#mon_fx_presets + 1] = { fx = '', name = '', w = 20, col_u32 = 0xB37474FF }
+        SaveSettings()
+      end
+      reaper.ImGui_Dummy(ctx,20,20)
+
 
       reaper.ImGui_PushItemWidth(ctx, 120)
       local slopes_txt = {"12dB", "24dB", "36dB", "48dB", "60dB", "72dB"}
       local rv_sl, new_sl = reaper.ImGui_SliderInt(ctx, "Listen Filter Slope", SLOPE, 1, 6, slopes_txt[SLOPE])
-      if rv_sl then SLOPE = new_sl; SaveSettings() end
+      if rv_sl then
+        SLOPE = new_sl
+        base_slope_ext = SLOPE
+        reaper.SetExtState('MISHA_MONITOR', 'BASE_SLOPE', tostring(SLOPE), true)
+        SaveSettings()
+      end
 
       local rv_sc, new_sc = reaper.ImGui_SliderDouble(ctx, "Scroll Speed in free mode", scroll_accuracy, 0.1, 5.0, "%.1f")
       if rv_sc then scroll_accuracy = new_sc; SaveSettings() end
@@ -1269,6 +1908,21 @@ function DrawSettingsWindow()
 
       local rv_bh, new_bh = reaper.ImGui_SliderInt(ctx, "Global Button Height", button_h, 16, 50)
       if rv_bh then button_h = new_bh; should_resize = false; SaveSettings() end
+
+      local rv_gw, new_gw = reaper.ImGui_SliderInt(ctx, "Grid Button Width", grid_width, 20, 150)
+      if rv_gw then grid_width = new_gw; should_resize = false; SaveSettings() end
+
+      local rv_mw, new_mw = reaper.ImGui_SliderInt(ctx, "Meter Width", meter_width, 20, 250)
+      if rv_mw then meter_width = new_mw; should_resize = false; SaveSettings() end
+
+      local changed_dco, dco = reaper.ImGui_Checkbox(ctx, "Disable corrections on start", DISABLE_CORR_ON_START)
+      if changed_dco then DISABLE_CORR_ON_START = dco; SaveSettings() end
+
+      local changed_fmt, fmt = reaper.ImGui_Checkbox(ctx, "Free mode slider on first row", FREE_MODE_TOP)
+      if changed_fmt then FREE_MODE_TOP = fmt; should_resize = true; SaveSettings() end
+
+      -- local rv_tg, new_tg = reaper.ImGui_SliderInt(ctx, "End Gap", ROW_TAIL_GAP, 0, 30)
+      -- if rv_tg then ROW_TAIL_GAP = new_tg; should_resize = false; SaveSettings() end
 
       reaper.ImGui_Separator(ctx)
 
@@ -1294,10 +1948,16 @@ function DrawSettingsWindow()
         SLOPE = 2
         scroll_accuracy = 1.2
         button_h = 24
+        grid_width = 60
+        ROW_TAIL_GAP = 1
+        meter_width = 70
+        DISABLE_CORR_ON_START = false
+        FREE_MODE_TOP = false
         buttons = {-32, -24, -14, -8, -4, 0, 4, 12, 18}
         buttons_text = ButtonsToString(buttons)
         USE_METRICAB = false
         USE_METRIC_IN_MONITORINGFX = true
+        USE_GRID_BOX = true
         pw = 600
         should_resize = true
         SaveSettings()
@@ -1317,16 +1977,279 @@ function draw_settings_button(settings_w)
   end
 end
 
+function toggle_mon_fx_plugin(fxname)
+  if not fxname or fxname == '' then return end
+  local m = reaper.GetMasterTrack()
+  local index = reaper.TrackFX_AddByName(m, fxname, true, 0)
+  if index == -1 then return end
+  local mon = (0x1000000)
+  local is_open = reaper.TrackFX_GetOpen(m, mon + index)
+  reaper.TrackFX_Show(m, mon + index, is_open and 2 or 3)
+  reaper.TrackFX_SetEnabled(m, mon + index, is_open and 0 or 1)
+  reaper.SetCursorContext(1, nil)
+end
+
+------------------------------------------------------------------------------------
+-- Track Meter module (logic from ineed_slick track meter.lua)
+
+local MTR_QUIET = -12
+local MTR_HOLD_TIME = 0.7
+local mtr_track = nil
+local mtr_p1, mtr_p2 = 0, 0
+local mtr_d1, mtr_d2 = -150, -150
+local mtr_h1, mtr_h2 = -150, -150
+local mtr_pk1, mtr_pk2 = -150, -150
+local mtr_t1, mtr_t2 = reaper.time_precise(), reaper.time_precise()
+local mtr_text = ''
+local mtr_show_now = false
+local mtr_prev_shown = false
+
+local function mtr_should_show()
+  return USE_METER
+    and reaper.GetPlayState() ~= 0
+    and mtr_text ~= '-inf'
+end
+
+function mtr_val2db(v)
+  if v and v > 0.0000000298023223876953125 then return 20 * math.log(v, 10) end
+  return -150.0
+end
+
+function mtr_db_norm(dB)
+  return 10 ^ (dB / 20)
+end
+
+local MTR_MID_DB, MTR_MID_FRAC = -6, 0.7
+local MTR_FLOOR_DB = -60
+
+function mtr_db_to_frac(db)
+  if db >= 0 then return 1 end
+  if db >= MTR_MID_DB then
+    return 1 + db * ((1 - MTR_MID_FRAC) / (0 - MTR_MID_DB))
+  end
+  local f = MTR_MID_FRAC * (db - MTR_FLOOR_DB) / (MTR_MID_DB - MTR_FLOOR_DB)
+  if f < 0 then return 0 end
+  if f > MTR_MID_FRAC then f = MTR_MID_FRAC end
+  return f
+end
+
+function mtr_update()
+  local track = reaper.GetSelectedTrack(0, 0)
+  if not track then track = mtr_track end
+  if not track or not reaper.ValidatePtr(track, 'MediaTrack*') then
+    mtr_track = nil
+    return
+  end
+
+  mtr_track = track
+
+  if reaper.GetPlayState() == 0 then
+    reaper.Track_GetPeakHoldDB(track, 0, true)
+    reaper.Track_GetPeakHoldDB(track, 1, true)
+    mtr_p1, mtr_p2 = 0, 0
+    mtr_d1, mtr_d2 = -150, -150
+    mtr_h1, mtr_h2 = -150, -150
+    mtr_pk1, mtr_pk2 = -150, -150
+    mtr_text = '-inf'
+    return
+  end
+
+  mtr_p1 = reaper.Track_GetPeakInfo(track, 0)
+  mtr_p2 = reaper.Track_GetPeakInfo(track, 1)
+  mtr_d1 = mtr_val2db(mtr_p1)
+  mtr_d2 = mtr_val2db(mtr_p2)
+  mtr_h1 = reaper.Track_GetPeakHoldDB(track, 0, false)
+  mtr_h2 = reaper.Track_GetPeakHoldDB(track, 1, false)
+
+  local now = reaper.time_precise()
+  if mtr_d1 > mtr_pk1 or now - mtr_t1 >= MTR_HOLD_TIME then mtr_pk1 = mtr_d1; mtr_t1 = now end
+  if mtr_d2 > mtr_pk2 or now - mtr_t2 >= MTR_HOLD_TIME then mtr_pk2 = mtr_d2; mtr_t2 = now end
+
+  local peak = math.max(mtr_pk1, mtr_pk2)
+  mtr_text = peak > -50 and tostring(trunc(peak, 1)) or '-inf'
+end
+
+function mtr_peak_rgb(db)
+  if db > 0 then return 209, 105, 105 end
+  -- if db > -3 then return 219, 172, 90 end
+  if db > -6 then return 232, 204, 132 end
+  if db > -18 then return 220, 218, 217 end
+  if db > -30 then return 90, 219, 149 end
+  return 114, 178, 255
+end
+
+function draw_meter()
+  local mw = math.max(8, (meter_width or 70) - 4)
+  local bh = math.max(4, math.floor(((button_h or 24)) / 2)) + 1
+
+  local dl = reaper.ImGui_GetWindowDrawList(ctx)
+  local x0, y0 = reaper.ImGui_GetCursorScreenPos(ctx)
+  reaper.ImGui_Dummy(ctx, mw, bh * 2)
+
+  for ch = 1, 2 do
+    local d = (ch == 1) and mtr_d1 or mtr_d2
+    local p = (ch == 1) and mtr_p1 or mtr_p2
+    local h = (ch == 1) and mtr_h1 or mtr_h2
+    local y = y0 + (ch - 1) * bh
+
+    local quiet = d < MTR_QUIET
+
+    local c_bg = quiet and rgba(8, 8, 8, 0.9) or rgba(22, 22, 22, 1)
+    reaper.ImGui_DrawList_AddRectFilled(dl, x0, y, x0 + mw, y + bh, c_bg)
+
+    -- Peak bar with tiered color.
+    local pw = math.min(mtr_db_to_frac(d), 1) * mw
+    if pw > 0 then
+      local r, g, b = mtr_peak_rgb(d)
+      reaper.ImGui_DrawList_AddRectFilled(dl, x0, y, x0 + pw, y + bh,
+        rgba(r, g, b, quiet and 0.20 or 0.25))
+    end
+
+    -- Hold indicator.
+    local hw = math.min(mtr_db_to_frac(h), 1) * mw
+    if hw > 0 then
+      reaper.ImGui_DrawList_AddRectFilled(dl, x0, y, x0 + hw, y + bh,
+        rgba(140, 140, 140, 0.15))
+    end
+  end
+
+  if mtr_text ~= '' then
+    local tw, th = reaper.ImGui_CalcTextSize(ctx, mtr_text)
+    local tx = x0 + 4
+    local ty = y0 + math.floor((bh * 2 - th) / 2)
+
+    local pk_db = math.max(mtr_d1, mtr_d2)
+    local r, g, b = mtr_peak_rgb(pk_db)
+    local col_txt = rgba(r, g, b, 1)
+
+    -- reaper.ImGui_DrawList_AddText(dl, tx + 1, ty + 1, rgba(200, 200, 200, 0.3), mtr_text)
+    reaper.ImGui_DrawList_AddText(dl, tx, ty, rgba(r, g, b, 1), mtr_text)
+  end
+end
+
+local ROW_SPACING, ROW_GAP =2, 1
+local SETTINGS_W, AB_REF_W = 16, 30
+local ui_unit
+
+local function row_layout()
+  local fixed = SETTINGS_W
+  local units = 0
+  local add_fixed = 0
+  local has_item = true -- settings button is always drawn
+
+  local function same_line()
+    if has_item then
+      fixed = fixed + ROW_SPACING
+    end
+    has_item = true
+  end
+
+  local function add_fixed_item(w)
+    fixed = fixed + (tonumber(w) or 0)
+    has_item = true
+  end
+
+  local function add_unit_item(u)
+    units = units + (tonumber(u) or 0)
+    has_item = true
+  end
+
+  local function add_lead_gap()
+    fixed = fixed + ROW_GAP
+    same_line()
+  end
+
+  if SHOW_CORRECTION_BTN then
+    same_line()
+    add_fixed_item(get_correction_button_width(master)+10)
+    same_line() -- Main() calls SameLine() after corrections.
+  end
+
+  if USE_VOLUME_BUTTONS then
+    add_lead_gap()
+    add_unit_item(#buttons)
+    add_fixed = add_fixed + math.max(0, #buttons - 1) * ROW_SPACING
+    same_line() -- Main() calls SameLine() after the volume group.
+  end
+
+  if USE_LISTEN_BANDS then
+    add_lead_gap()
+    add_unit_item(#listen_buttons * 1.5)
+    add_fixed = add_fixed + math.max(0, #listen_buttons - 1) * ROW_SPACING
+    same_line()
+  end
+
+  if USE_GRID_BOX then
+    add_lead_gap()
+    add_fixed_item(grid_width)
+    same_line()
+  end
+
+  local has_switches =
+    USE_METRICAB_SWITCH
+    or USE_REFS_SWITCH
+    or (USE_MONFX and #mon_fx_presets > 0)
+
+  if has_switches then
+    add_lead_gap()
+
+    if USE_METRICAB_SWITCH then
+      add_fixed_item(AB_REF_W)
+      same_line()
+    end
+
+    if USE_MONFX and #mon_fx_presets > 0 then
+      for _, p in ipairs(mon_fx_presets) do
+        if p.name ~= '' then
+          add_fixed_item(tonumber(p.w) or 20)
+          same_line()
+        end
+      end
+    end
+
+    if USE_REFS_SWITCH then
+      add_fixed_item(AB_REF_W)
+      if USE_ITEM_COUNT then
+        same_line()
+      end
+    end
+  end
+
+  if USE_ITEM_COUNT then
+    add_fixed_item(item_count_total_width)
+  end
+
+  if mtr_show_now then
+    same_line()
+    add_fixed_item(ROW_GAP)
+    same_line()
+    add_fixed_item(meter_width or 70)
+  end
+
+  return fixed + add_fixed, units, 0
+end
+
 function Main(unit_w, settings_w, corr_w, ab_ref_w, gap)
+  -- reaper.ImGui_Dummy(ctx,1,1)
+  -- reaper.ImGui_SameLine(ctx)
   
   local c = layer_colors[current_layer]
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        rgba(c.r,c.g,c.b,0.7))
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), rgba(c.r,c.g,c.b,1))
-  
-  
+
+  if free_mode and FREE_MODE_TOP then
+    draw_free_mode_slider(master)
+    reaper.ImGui_Spacing(ctx)
+  end
+
   state = get_state(master)
   ext = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'LISTEN'))
   if ext == nil then ext = 0 end 
+
+  local function lead_gap()
+    reaper.ImGui_Dummy(ctx, ROW_GAP, 0)
+    reaper.ImGui_SameLine(ctx)
+  end
 
   draw_settings_button(settings_w)
   reaper.ImGui_SameLine(ctx)
@@ -1338,40 +2261,82 @@ function Main(unit_w, settings_w, corr_w, ab_ref_w, gap)
   end
 
   if USE_VOLUME_BUTTONS then
-      reaper.ImGui_Dummy(ctx, gap, 1)
-      reaper.ImGui_SameLine(ctx)
-      draw_volume_buttons(master, unit_w)
-      reaper.ImGui_SameLine(ctx)
+    lead_gap()
+    draw_volume_buttons(master, unit_w)
+    reaper.ImGui_SameLine(ctx)
   end
-  
+
   if USE_LISTEN_BANDS then
-      reaper.ImGui_Dummy(ctx, gap, 1)
-      reaper.ImGui_SameLine(ctx)
-      draw_listen_buttons(master, unit_w * 1.5)
-      reaper.ImGui_SameLine(ctx)
-  end
-
-  if USE_METRICAB_SWITCH then
-    reaper.ImGui_Dummy(ctx, gap, 1)
-    reaper.ImGui_SameLine(ctx)
-    draw_ab_button(master, ab_ref_w)
+    lead_gap()
+    draw_listen_buttons(master, unit_w * 1.5)
     reaper.ImGui_SameLine(ctx)
   end
 
-  if USE_REFS_SWITCH then
-    if not USE_METRICAB_SWITCH then 
-      reaper.ImGui_Dummy(ctx, gap, 1)
+  if USE_GRID_BOX then
+    lead_gap()
+    draw_grid_button()
+    reaper.ImGui_SameLine(ctx)
+  end
+
+  if USE_METRICAB_SWITCH or USE_REFS_SWITCH or (USE_MONFX and #mon_fx_presets > 0) then
+    lead_gap()
+
+    if USE_METRICAB_SWITCH then
+      draw_ab_button(master, ab_ref_w)
       reaper.ImGui_SameLine(ctx)
     end
-    draw_refs_button(ab_ref_w)
-  end
-  if USE_ITEM_COUNT then 
-    reaper.ImGui_SameLine(ctx)
-    item_count_total_width = draw_item_count()
-    -- print(item_count_total_width)
-  end 
 
-  if free_mode then
+    if USE_MONFX and #mon_fx_presets > 0 then
+      for _, mp in ipairs(mon_fx_presets) do
+        if mp.name ~= '' then
+          local _, dr, dg, db = reaper.ImGui_ColorConvertU32ToDouble4(mp.col_u32 or 0x6CAEEBFF)
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(),             reaper.ImGui_ColorConvertDouble4ToU32(dr, dg, db, 1))
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),           reaper.ImGui_ColorConvertDouble4ToU32(dr, dg, db, 0.25))
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(),    reaper.ImGui_ColorConvertDouble4ToU32(dr, dg, db, 0.4))
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),     reaper.ImGui_ColorConvertDouble4ToU32(dr, dg, db, 0.6))
+
+          if reaper.ImGui_Button(ctx, mp.name, tonumber(mp.w) or 20, button_h) then
+            toggle_mon_fx_plugin(mp.fx)
+          end
+          reaper.ImGui_SameLine(ctx)
+          reaper.ImGui_PopStyleColor( ctx,4 )
+        end
+      end
+    end
+
+    if USE_REFS_SWITCH then
+      draw_refs_button(ab_ref_w)
+      if USE_ITEM_COUNT then reaper.ImGui_SameLine(ctx) end
+    end
+  end
+
+  if USE_ITEM_COUNT then
+    item_count_total_width = draw_item_count()
+  end
+
+  if mtr_show_now then
+    local prev_bare = USE_ITEM_COUNT or USE_REFS_SWITCH
+    if prev_bare then reaper.ImGui_SameLine(ctx) end
+    reaper.ImGui_Dummy(ctx, ROW_GAP, 0)
+    reaper.ImGui_SameLine(ctx)
+    draw_meter()
+  end
+
+  -- local has_modules = SHOW_CORRECTION_BTN or USE_VOLUME_BUTTONS or USE_LISTEN_BANDS
+  --   or USE_GRID_BOX or USE_METRICAB_SWITCH or USE_REFS_SWITCH or USE_ITEM_COUNT
+  --   or (USE_MONFX and #mon_fx_presets > 0)
+  -- local last_sl = true
+  -- if USE_ITEM_COUNT then
+  --   last_sl = false
+  -- elseif USE_REFS_SWITCH then
+  --   last_sl = false
+  -- end
+  -- if has_modules then
+  --   if not last_sl then reaper.ImGui_SameLine(ctx) end
+  --   reaper.ImGui_Dummy(ctx, ROW_TAIL_GAP, 0)
+  -- end
+
+  if free_mode and not FREE_MODE_TOP then
     reaper.ImGui_Spacing(ctx)
     draw_free_mode_slider(master)
   end
@@ -1420,32 +2385,39 @@ function loop()
     USE_REFS_SWITCH     = layout.ref
     USE_METRICAB_SWITCH = layout.ab
     USE_ITEM_COUNT      = layout.item_count
+    USE_GRID_BOX        = layout.grid
+    USE_MONFX           = layout.monfx
+    USE_METER           = layout.mtr
+    mtr_update()
+    mtr_show_now = mtr_should_show()
+    if mtr_show_now ~= mtr_prev_shown then
+      mtr_prev_shown = mtr_show_now
+      should_resize = true
+    end
     -- -----------------------
 
     local window_h = button_h + 10 + (free_mode and 26 or 0)
-    
+    local snap_f, snap_u, snap_a = row_layout()
+
+    -- Keep the resize calculation valid even when every optional module is off.
+    -- In that state there may be no content width to contribute to the layout.
+    snap_f = tonumber(snap_f) or 0
+    snap_u = tonumber(snap_u) or 0
+    snap_a = tonumber(snap_a) or 0
+
     if should_resize then
-        local base_unit = unit_w or 45
-        local settings_w, ab_ref_w, gap, spacing = 16, 30, 1, 1
-        local target_pw = settings_w + 22
-        
-        if SHOW_CORRECTION_BTN then target_pw = target_pw + get_correction_button_width(master) + spacing end
-        -- if USE_VOLUME_BUTTONS then target_pw = target_pw + gap + (#buttons * base_unit) + ((#buttons-1) * spacing) end
-        if USE_VOLUME_BUTTONS then target_pw = target_pw + gap + (#buttons * base_unit) + ((#buttons-1) * spacing) end
-        if USE_LISTEN_BANDS then target_pw = target_pw + gap + (#listen_buttons * base_unit * 1.5) + ((#listen_buttons-1) * spacing) + 35 + spacing end
-        if USE_METRICAB_SWITCH or USE_REFS_SWITCH then
-            target_pw = target_pw + gap + 10
-            if USE_METRICAB_SWITCH then target_pw = target_pw + ab_ref_w + spacing end
-            if USE_REFS_SWITCH then target_pw = target_pw + ab_ref_w + spacing end
-        end
-        if USE_ITEM_COUNT then 
-          target_pw = target_pw + gap + item_count_total_width
-        end
+        local u = tonumber(ui_unit or unit_w) or 45
+        local target_pw = math.floor(snap_f + snap_u * u + snap_a + 10 + 0.5)
+        if target_pw < 60 then target_pw = 60 end
         reaper.ImGui_SetNextWindowSize(ctx, target_pw, window_h, reaper.ImGui_Cond_Always())
         pw = target_pw
-        should_resize = false 
+        should_resize = false
     else
-        reaper.ImGui_SetNextWindowSize(ctx, pw, window_h, reaper.ImGui_Cond_Always())
+        if not pw or pw <= 0 then
+            local u = tonumber(ui_unit or unit_w) or 45
+            pw = math.floor(snap_f + snap_u * u + snap_a + 10 + 0.5)
+            reaper.ImGui_SetNextWindowSize(ctx, pw, window_h, reaper.ImGui_Cond_Always())
+        end
     end
 
     reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding(), 5, 4) 
@@ -1454,8 +2426,10 @@ function loop()
 
     local visible, open = reaper.ImGui_Begin(ctx, 'Monitor Controller', true, window_flags)
     local real_pw, real_ph = reaper.ImGui_GetWindowSize(ctx)
-    if real_pw > 50 and not should_resize then 
+    if real_pw > 50 and not should_resize and ui_unit then 
         pw = real_pw 
+    else 
+      pw = 40
     end
     
     local win_content_w = pw - 10
@@ -1468,45 +2442,18 @@ function loop()
             SaveSettings()
         end
 
-        local settings_w, ab_ref_w, gap, spacing = 16, 30, 1, 2
         local corr_w = SHOW_CORRECTION_BTN and get_correction_button_width(master) or 0
-        
-        local occupied = settings_w + spacing
-        if SHOW_CORRECTION_BTN then occupied = occupied + corr_w + spacing end
-        
-        if USE_METRICAB_SWITCH or USE_REFS_SWITCH then
-            occupied = occupied + gap
-            if USE_METRICAB_SWITCH then occupied = occupied + ab_ref_w + 6  end
-            if USE_REFS_SWITCH then 
-                local internal_s = USE_METRICAB_SWITCH and spacing  or 6
-                occupied = occupied + internal_s + ab_ref_w 
-            end
-        end
-        if USE_LISTEN_BANDS then occupied = occupied + spacing + gap end
 
-        local units, add_fixed = 0, 0
-        if USE_VOLUME_BUTTONS then 
-            units = units + #buttons 
-            add_fixed = add_fixed + ((#buttons - 1) * spacing)
-        end
-        if USE_LISTEN_BANDS then 
-            units = units + (#listen_buttons * 1.5) 
-            add_fixed = add_fixed + ((#listen_buttons - 1) * spacing)
-        end
-        if USE_ITEM_COUNT then 
-          occupied = occupied + item_count_total_width + spacing + gap
-        end
-
-        local dynamic_area = win_content_w - (occupied + add_fixed + 2)
-        unit_w = (units > 0) and (dynamic_area / units) or 45 
+        local dynamic_area = win_content_w - (snap_f + snap_a)
+        unit_w = (snap_u > 0) and (dynamic_area / snap_u) or 45
         if unit_w < 10 then unit_w = 10 end
+        ui_unit = unit_w
 
-        Main(unit_w, settings_w, corr_w, ab_ref_w, gap)  
+        Main(unit_w, SETTINGS_W, corr_w, AB_REF_W, ROW_GAP)
         reaper.ImGui_End(ctx)
     end
 
     if show_settings_window then DrawSettingsWindow() end
-    if show_refs_panel then DrawRefsWindow() end
 
     if reaper.ImGui_IsMouseReleased(ctx, 0) then SaveSettings() end
 
@@ -1517,4 +2464,16 @@ function loop()
 end
 
 --master = reaper.GetMasterTrack()
+
+if DISABLE_CORR_ON_START then
+  master = reaper.GetMasterTrack()
+  disable_corrections()
+end
+
+reaper.atexit(function()
+  if pw then
+    reaper.SetExtState(SECTION, 'pw', tostring(math.floor(pw)), true)
+  end
+end)
+
 loop()
