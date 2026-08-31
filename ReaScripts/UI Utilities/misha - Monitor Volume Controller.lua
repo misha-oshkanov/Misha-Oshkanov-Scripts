@@ -1,19 +1,12 @@
 -- @description Monitor Volume Controller
 -- @author Misha Oshkanov
--- @version 5.0
+-- @version 5.0.1
 -- @about
---  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels. 
+--  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels.
 --  If you need more levels or change db values you can edit buttons table.
 --  Use right click to change modes between volume control and listen filters
 -- @changelog
---  big ui overhaul
---  new meter module
---  new monitoring fx module (create custom buttons in settings to float fx on monitoring fx chain)
---  new settings and sliders
---  FTC gridbox support as module (use mousewheel)
---  Use mousewheel to change tracks in MetricAB
---  Use mousewheel to change ref tracks 
---  many bug fixes
+--  grid box path fixes
 
 -----------------------------------------------------------------------------
 REF_FOLDER_NAME = 'Refs'
@@ -23,7 +16,7 @@ CORRECTION_CONTAINER_NAME = "Corrections"
 ROW_TAIL_GAP = 1
 
 buttons = {} -- presets in dB
-SLOPE = 2 -- 1 = 12db, 2 = 24db, 3 = 36db, 4 = 48db,5 = 60db, 6 = 72db 
+SLOPE = 2 -- 1 = 12db, 2 = 24db, 3 = 36db, 4 = 48db,5 = 60db, 6 = 72db
 
 listen_buttons = {
   {str = 'Sub',  l = 20,    h = 60   ,col = {81,100,123,0.8}},
@@ -48,8 +41,8 @@ end
 
 function rgba(r, g, b, a)
     b = b/255
-    g = g/255 
-    r = r/255 
+    g = g/255
+    r = r/255
     local b = math.floor(b * 255) * 256
     local g = math.floor(g * 255) * 256 * 256
     local r = math.floor(r * 255) * 256 * 256 * 256
@@ -65,7 +58,7 @@ end
 
 
 local layer_colors = {
-  [1] = {r=70, g=105, b=126}, 
+  [1] = {r=70, g=105, b=126},
   [2] = {r=86, g=133, b=80},
   [3] = {r=126,g=71,  b=70},
 }
@@ -92,7 +85,7 @@ end
 function print_name(track)
     _, buf = reaper.GetTrackName(track)
     return buf
-end 
+end
 
 function ButtonsToString(tbl)
   return table.concat(tbl, ", ")
@@ -144,7 +137,7 @@ local pdc_button_idx = tonumber(reaper.GetExtState(SECTION, 'PDC_IDX')) or 0
 local last_regular_idx = tonumber(reaper.GetExtState(SECTION, 'LAST_REG_IDX')) or 1
 local current_volume_idx = 1 -- текущая активная кнопка (виртуальная)
 
-if ext_folder_name ~= REF_FOLDER_NAME then 
+if ext_folder_name ~= REF_FOLDER_NAME then
   reaper.SetExtState( 'MISHA_MONITOR', 'REF_FOLDER', REF_FOLDER_NAME, true)
 end
 
@@ -155,12 +148,12 @@ if base_slope_ext == nil then base_slope_ext = SLOPE end
 
 slider_range = base_freq_ext
 
-window_flags =  reaper.ImGui_WindowFlags_NoTitleBar() +  
+window_flags =  reaper.ImGui_WindowFlags_NoTitleBar() +
                 -- reaper.ImGui_WindowFlags_NoDocking() +
-                reaper.ImGui_WindowFlags_NoScrollbar() + 
+                reaper.ImGui_WindowFlags_NoScrollbar() +
                 -- reaper.ImGui_WindowFlags_NoResize() +
-                reaper.ImGui_WindowFlags_NoScrollWithMouse() 
-                
+                reaper.ImGui_WindowFlags_NoScrollWithMouse()
+
 local ImGui = {}
 for name, func in pairs(reaper) do
   name = name:match('^ImGui_(.+)$')
@@ -174,7 +167,7 @@ function update_pdc_logic(master)
   -- 0 = выкл, 1 = вкл. Используем GetConfigVar
   local auto_bypass_pdc = reaper.SNM_GetIntConfigVar("pdcbypass", -1) == 1
   print(auto_bypass_pdc)
-  
+
   -- Проверяем, есть ли хоть один трек на записи
   local any_record_arm = false
   for i = 0, reaper.CountTracks(0) - 1 do
@@ -218,7 +211,7 @@ function SaveSettings()
 
     pw = tostring(math.floor(pw or 600))
   }
-  
+
   for key, value in pairs(settings) do
     reaper.SetExtState(SECTION, key, value, true)
   end
@@ -241,7 +234,7 @@ function SaveSettings()
 
   reaper.SetExtState(SECTION, 'MAX_LAYERS', tostring(MAX_LAYERS), true)
   reaper.SetExtState(SECTION, 'CURRENT_LAYER', tostring(current_layer), true)
-  
+
   for i = 1, #layers do
     local l = layers[i]
     local str = string.format("%d,%d,%d,%d,%d,%d,%d,%d,%d",
@@ -350,35 +343,35 @@ function get_listen_freq(master)
   low_retval,  _, _ = reaper.TrackFX_GetParam(master, index+(0x1000000), 2)
   high_retval, _, _ = reaper.TrackFX_GetParam(master, index+(0x1000000), 3)
   return low_retval, high_retval
-end 
+end
 
 function get_listen_state(master)
   index = reaper.TrackFX_AddByName(master, controller_fx, true, 0)
   enabled,  _, _ = reaper.TrackFX_GetParam(master, index+(0x1000000), 0)
   return enabled
-end 
+end
 
 function get_ab_state(master)
     local index = reaper.TrackFX_AddByName(master, METRIC_AB, USE_METRIC_IN_MONITORINGFX, 0)
-    if index then 
+    if index then
       if not USE_METRIC_IN_MONITORINGFX then mon = 0 else mon = (0x1000000) end
       return reaper.TrackFX_GetParam(master, index+mon, 0)
-    end        
-end 
+    end
+end
 
 function set_listen_state(master,state)
-  if USE_METRICAB then 
+  if USE_METRICAB then
       local index = reaper.TrackFX_AddByName(master, METRIC_AB, USE_METRIC_IN_MONITORINGFX, 0)
-      if index then 
+      if index then
         if not USE_METRIC_IN_MONITORINGFX then mon = 0 else mon = (0x1000000) end
         reaper.TrackFX_SetParam(master, index+mon, 16, state)
-      end 
-  else 
+      end
+  else
     index = reaper.TrackFX_AddByName(master, controller_fx, true, 0)
     reaper.TrackFX_SetParam(master, index+(0x1000000), 0, state)
   end
   -- enabled = reaper.TrackFX_SetEnabled(master, index+mon, state)
-end 
+end
 
 function trunc(num, digits)
   local mult = 10^(digits)
@@ -389,39 +382,39 @@ function frequency_to_normalized(f)
     local f_min = 10
     local f_mid = 2637
     local f_max = 22050
-    
+
     local t = math.log(f / f_min) / math.log(f_mid / f_min)
-    
+
     -- Проверяем СНАЧАЛА самые высокие частоты!
     if f >= 4000 then
         -- print('da')  -- Теперь это сработает для f >= 4000
         t = t ^ 2.302
-    elseif f >= 801 then 
+    elseif f >= 801 then
         t = t ^ 2.374
     elseif f >= 301 then
-        t = t ^ 2.59 
+        t = t ^ 2.59
     elseif f >= 61 then
-        t = t ^ 2.68  
+        t = t ^ 2.68
     elseif f >= 41 then
-        t = t ^ 2.51 
+        t = t ^ 2.51
     elseif f >= 10 then
-        t = t ^ 2.1 
+        t = t ^ 2.1
     end
-    
+
     return 0.5 * t
 end
 
 function set_param_freq(master,param,value)
-  if USE_METRICAB then 
+  if USE_METRICAB then
     if param == 2 then param = 19
-    elseif param == 3 then param = 20 
-    end 
+    elseif param == 3 then param = 20
+    end
     local index = reaper.TrackFX_AddByName(master, METRIC_AB, USE_METRIC_IN_MONITORINGFX, 0)
-    if index then 
+    if index then
       if not USE_METRIC_IN_MONITORINGFX then mon = 0 else mon = (0x1000000) end
       reaper.TrackFX_SetParam(master, index+mon, param, frequency_to_normalized(value))
-    end 
-  else 
+    end
+  else
     listen_index = reaper.TrackFX_AddByName(master, controller_fx, true, 100)
     value = (math.log(value) - math.log(min_hz)) * (100 - 0) / (math.log(max_hz) - math.log(min_hz)) + 0
     reaper.TrackFX_SetParam(master, listen_index+(0x1000000), param, value)
@@ -432,37 +425,37 @@ function count_playing_items_in_lanes(track)
     local items = reaper.CountTrackMediaItems(track)
     num = 0
     not_playing_num = 0
-    for i=0,items-1 do 
+    for i=0,items-1 do
         local item = reaper.GetTrackMediaItem(track, i)
         is_mute = reaper.GetMediaItemInfo_Value(item, 'B_MUTE') == 1
-        local lane_plays = reaper.GetMediaItemInfo_Value(item, 'C_LANEPLAYS') > 0 
-        if not is_mute then 
+        local lane_plays = reaper.GetMediaItemInfo_Value(item, 'C_LANEPLAYS') > 0
+        if not is_mute then
             if lane_plays then num = num + 1 else not_playing_num = not_playing_num + 1 end
         else not_playing_num = not_playing_num + 1 end
     end
     return num, not_playing_num
-end 
+end
 
 function count_child_playing_items(track)
     local is_folder = reaper.GetMediaTrackInfo_Value(track, 'I_FOLDERDEPTH')==1
     local num = 0
     local not_playing_num = 0
-    if is_folder then 
+    if is_folder then
         local children = get_children(track)
-        for c=1,#children do 
+        for c=1,#children do
             local child = children[c]
-            if not reaper.IsTrackSelected(child) then 
+            if not reaper.IsTrackSelected(child) then
                 child_playing, child_not_playing = count_playing_items_in_lanes(child)
                 num = num + child_playing
                 not_playing_num = not_playing_num + child_not_playing
             end
-        end 
+        end
     end
     return num, not_playing_num
 end
 
 function get_children(parent)
-  if parent then 
+  if parent then
     local parentdepth = reaper.GetTrackDepth(parent)
     local parentnumber = reaper.GetMediaTrackInfo_Value(parent, "IP_TRACKNUMBER")
     local children = {}
@@ -485,10 +478,23 @@ local grid_dir = grid_script_path:match('^(.+)[\\/]')
 local function gpath(...)
   return table.concat({...}, package.config:sub(1, 1))
 end
-local grid_adapt_script = gpath(grid_dir, '..', '..', 'FTC Tools', 'Adaptive grid', 'Adapt grid to zoom level.lua')
-local grid_service_script = gpath(grid_dir, '..', '..', 'FTC Tools', 'Adaptive grid', 'Adaptive grid (background service).lua')
-local grid_has_adaptive = reaper.file_exists(grid_adapt_script) and reaper.file_exists(grid_service_script)
-
+-- Locate FTC Tools/Adaptive grid by walking up from the script's folder,
+-- so the controller works no matter how deep it is installed
+-- (was a fixed '../..' climb that only matched a 2-level-deep install).
+local grid_adapt_script, grid_service_script
+do
+  local dir = grid_dir
+  while dir and dir ~= '' do
+    local adapt = gpath(dir, 'FTC Tools', 'Adaptive grid', 'Adapt grid to zoom level.lua')
+    local service = gpath(dir, 'FTC Tools', 'Adaptive grid', 'Adaptive grid (background service).lua')
+    if reaper.file_exists(adapt) and reaper.file_exists(service) then
+      grid_adapt_script, grid_service_script = adapt, service
+      break
+    end
+    dir = dir:match('^(.+)[\\/]') -- strip one path component (nil at drive root)
+  end
+end
+local grid_has_adaptive = grid_adapt_script ~= nil
 grid_text = '1/4'
 grid_hovered = false
 
@@ -505,6 +511,7 @@ local function GridServiceRunning()
 end
 
 local function GridRunAdapt(is_midi)
+  if not grid_adapt_script then return end
   if is_midi and not reaper.MIDIEditor_GetActive() then return end
   local env = setmetatable({ _G = { mode = is_midi and 2 or 1 } }, { __index = _G })
   local chunk = loadfile(grid_adapt_script, 'bt', env)
@@ -512,8 +519,8 @@ local function GridRunAdapt(is_midi)
 end
 
 local function GridStartService()
-  if not reaper.file_exists(grid_service_script) then return end
-  local cmd = reaper.AddRemoveReaScript(true, 0, grid_service_script, true)
+  if not grid_service_script or not reaper.file_exists(grid_service_script) then return end
+    local cmd = reaper.AddRemoveReaScript(true, 0, grid_service_script, true)
   reaper.Main_OnCommand(cmd, 0)
   reaper.AddRemoveReaScript(false, 0, grid_service_script, true)
 end
@@ -791,12 +798,12 @@ function draw_grid_button()
     end
   end
 
-  if not snap then 
+  if not snap then
     b_col   = rgba(82, 81, 77, 0.7)
     bh_col  = rgba(88, 73, 55, 0.9)
     ba_col  = rgba(98, 83, 65, 1)
     t_col   = rgba(215, 185, 60, 1)
-  else 
+  else
     b_col   = rgba(38, 117, 149, 0.4)
     bh_col  = rgba(38, 117, 149, 0.6)
     ba_col  = rgba(192, 157, 13, 0.4)
@@ -809,7 +816,7 @@ function draw_grid_button()
 
   -- reaper.ImGui_PushFont(ctx, font, 12)
 
-  
+
   -- reaper.ImGui_PushStyleVar( ctx, reaper.ImGui_StyleVar_FramePadding(), 0, 5)
   -- reaper.ImGui_AlignTextToFramePadding( ctx )
 
@@ -841,7 +848,7 @@ function draw_grid_button()
     if horizontal ~= 0 then GridAdjustSwing(horizontal) end
   end
 
-  if reaper.ImGui_IsMouseClicked( ctx, reaper.ImGui_MouseButton_Left() ) and grid_hovered then 
+  if reaper.ImGui_IsMouseClicked( ctx, reaper.ImGui_MouseButton_Left() ) and grid_hovered then
       reaper.Main_OnCommand(1157, 0)
   end
 
@@ -938,7 +945,7 @@ function draw_grid_button()
     ImGui.EndPopup(ctx)
   end
 
-  
+
 end
 
 function toggle_monitor_fx(fxname)
@@ -947,35 +954,35 @@ function toggle_monitor_fx(fxname)
   reaper.TrackFX_Show(master, mon+index, is_open and 2 or 3)
   reaper.TrackFX_SetEnabled( master, mon+index, is_open and 0 or 1 )
   reaper.SetCursorContext(1,nil)
-end 
+end
 
 function draw_item_count()
     local num3 = 0
     local num4 = 0
     local num1_lanes_found  = false
     local num2_lanes_found  = false
-    local color = '28290987' 
+    local color = '28290987'
 
     local count = reaper.CountSelectedTracks(0)
-    if count > 0 then 
+    if count > 0 then
         local folder_found = false
-        for i2=0,count-1 do 
+        for i2=0,count-1 do
             local track = reaper.GetSelectedTrack(0, i2)
             local other_playing, other_not_playing = count_playing_items_in_lanes(track)
             local other_child_playing, other_child_not_playing = count_child_playing_items(track)
-            
+
             num3 = num3 + other_playing + other_child_playing
             num4 = num4 + other_not_playing + other_child_not_playing
         end
     end
-    if num3 ~= '' then 
+    if num3 ~= '' then
         dummy_spacing1 = 3  -- между группами
         reaper.ImGui_Dummy(ctx, dummy_spacing1, 1 )
         reaper.ImGui_SameLine(ctx)
-    end 
+    end
 
     reaper.ImGui_TextColored(ctx, rgba(200, 200, 200, 1), num3)
-    if 1 then 
+    if 1 then
         reaper.ImGui_SameLine(ctx)
         reaper.ImGui_Dummy(ctx, 2, 1 )
         reaper.ImGui_SameLine(ctx)
@@ -993,7 +1000,7 @@ function draw_item_count()
 
     return item_count_total_width
 
-end 
+end
 
 function draw_volume_buttons(master,w)
   for i,b in ipairs(buttons) do
@@ -1018,17 +1025,17 @@ function draw_volume_buttons(master,w)
         ImGui.PushStyleColor(ctx, ImGui.Col_Text(),           rgba(224,224,224,1))
     end
     b_button = ImGui.Button(ctx, tostring(b), w, button_h)
-    
+
     if i < #buttons then ImGui.SameLine(ctx) end
     ImGui.PopID(ctx)
     ImGui.PopStyleColor(ctx, 4)
-    
+
     if b_button then
       -- local modifiers = reaper.JS_Mouse_GetState(-1)
       -- if modifiers == 4 then -- CTRL + ЛКМ
-      --   if pdc_button_idx == i then 
+      --   if pdc_button_idx == i then
       --     pdc_button_idx = 0 -- Сброс PDC
-      --   else 
+      --   else
       --     pdc_button_idx = i -- Установка PDC
       --   end
       --   reaper.SetExtState(SECTION, 'PDC_IDX', tostring(pdc_button_idx), true)
@@ -1047,7 +1054,7 @@ function draw_volume_buttons(master,w)
     --   local draw_list = ImGui.GetWindowDrawList(ctx)
     --   ImGui.DrawList_AddText(draw_list, min_x + 2, min_y + 2, rgba(255, 255, 255, 0.8), "PDC")
     -- end
-    
+
       -- if reaper.ImGui_IsMouseClicked( ctx, reaper.ImGui_MouseButton_Right() ) and reaper.ImGui_IsItemHovered(ctx) then
       --   USE_LISTEN_BANDS = not USE_LISTEN_BANDS
       --   should_resize = true
@@ -1056,7 +1063,7 @@ function draw_volume_buttons(master,w)
   end
   if free_mode then free_mode = false end
 
-end 
+end
 
 function set_correction(master, name, state)
   local fx = reaper.TrackFX_AddByName(master, CORRECTION_CONTAINER_NAME, true, 0)
@@ -1065,7 +1072,7 @@ function set_correction(master, name, state)
     local _, item = reaper.TrackFX_GetNamedConfigParm(master, fx+(0x1000000), "container_item."..i)
     local _, fxname = reaper.TrackFX_GetFXName(master, item)
     local enabled = reaper.TrackFX_GetEnabled(master, item)
-    if fxname == name then 
+    if fxname == name then
       reaper.TrackFX_SetEnabled(master, item, state)
     else
       reaper.TrackFX_SetEnabled(master, item, not state)
@@ -1087,15 +1094,15 @@ function draw_correction_single_button(w)
     if ImGui.BeginPopup(ctx, 'corr_popup_menu') then
 
 
-        
+
 
         -- 2. Список плагинов
         local fx_container = reaper.TrackFX_AddByName(master, CORRECTION_CONTAINER_NAME, true, 0)
         if fx_container ~= -1 then
             local _, count_str = reaper.TrackFX_GetNamedConfigParm(master, fx_container+(0x1000000), "container_count")
             local count = tonumber(count_str) or 0
-            
-            if count == 0 then 
+
+            if count == 0 then
                 ImGui.Text(ctx, "(Container is empty)")
             end
 
@@ -1108,7 +1115,7 @@ function draw_correction_single_button(w)
                 local _, item = reaper.TrackFX_GetNamedConfigParm(master, fx_container+(0x1000000), "container_item."..i)
                 local _, full_fxname = reaper.TrackFX_GetFXName(master, item)
                 local clean_name = full_fxname:gsub("^%w+:%s*", "")
-                
+
                 local is_selected = (active_name == clean_name)
 
                 if ImGui.Selectable(ctx, clean_name .. "##" .. i, is_selected) then
@@ -1118,7 +1125,7 @@ function draw_correction_single_button(w)
                     end
                 end
             end
-                        
+
             ImGui.PopStyleColor(ctx, 3)
         else
             ImGui.Text(ctx, "Container not found")
@@ -1131,7 +1138,7 @@ function draw_correction_single_button(w)
         ImGui.PushStyleColor(ctx, ImGui.Col_Header(),         rgba(150, 50, 50, 0.4)) -- Фоновый цвет если выбрано
         ImGui.PushStyleColor(ctx, ImGui.Col_HeaderHovered(),  rgba(180, 60, 60, 0.6)) -- Цвет при наведении
         ImGui.PushStyleColor(ctx, ImGui.Col_HeaderActive(),   rgba(200, 70, 70, 0.8)) -- Цвет при клике
-        ImGui.PushStyleColor(ctx, ImGui.Col_Text(),    rgba(180, 70, 70, 0.8)) 
+        ImGui.PushStyleColor(ctx, ImGui.Col_Text(),    rgba(180, 70, 70, 0.8))
 
         if ImGui.Selectable(ctx, "OFF", active_name == "OFF") then
             disable_corrections()
@@ -1142,11 +1149,11 @@ function draw_correction_single_button(w)
 
     local corr_hovered = reaper.ImGui_IsItemHovered(ctx)
 
-  if reaper.ImGui_IsMouseClicked( ctx, reaper.ImGui_MouseButton_Right() ) and corr_hovered then 
+  if reaper.ImGui_IsMouseClicked( ctx, reaper.ImGui_MouseButton_Right() ) and corr_hovered then
       local index = reaper.TrackFX_AddByName(master, CORRECTION_CONTAINER_NAME, true, 0)
       reaper.TrackFX_SetOpen(master, index+mon, not reaper.TrackFX_GetOpen(master, index+mon))
   end
-  
+
 
 end
 
@@ -1154,7 +1161,7 @@ function draw_free_mode_slider(master, w)
   if not free_mode then return end
 
   local minFreq, maxFreq = 20, 22000
-  
+
   lowCut  = slider_range / (2 ^ (base_width_ext / 2))
   highCut = slider_range * (2 ^ (base_width_ext / 2))
   lowCut  = math.max(lowCut, minFreq)
@@ -1162,9 +1169,9 @@ function draw_free_mode_slider(master, w)
 
   local vertical = reaper.ImGui_GetMouseWheel(ctx)
   if vertical ~= 0 then
-    local dir = vertical > 0 and 1 or -1 
-    local is_ctrl = reaper.JS_Mouse_GetState(-1) == 4 
-    
+    local dir = vertical > 0 and 1 or -1
+    local is_ctrl = reaper.JS_Mouse_GetState(-1) == 4
+
     if is_ctrl then
       base_width_ext = math.min(math.max(base_width_ext + (0.3 * dir), 0.4), 10)
       reaper.SetExtState('MISHA_MONITOR', 'BASE_WIDTH', base_width_ext, true)
@@ -1187,8 +1194,8 @@ function draw_free_mode_slider(master, w)
   reaper.ImGui_PushItemWidth(ctx, w or -1)
   local range_retval
   range_retval, slider_range = reaper.ImGui_SliderInt(ctx, '##free_slider', slider_range, 20, 20000, formatIn, reaper.ImGui_SliderFlags_Logarithmic())
-  
-  if range_retval then 
+
+  if range_retval then
     reaper.SetExtState('MISHA_MONITOR', 'BASE_FREQ', slider_range, true)
     set_param_freq(master, 2, lowCut)
     set_param_freq(master, 3, highCut)
@@ -1198,13 +1205,13 @@ function draw_free_mode_slider(master, w)
   local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
   local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
   local w = max_x - min_x
-  
+
   local function freq_to_pos(f) return (math.log(f) - math.log(20)) / (math.log(20000) - math.log(20)) end
   local low_x = min_x + (freq_to_pos(lowCut) * w)
   local high_x = min_x + (freq_to_pos(highCut) * w)
 
   reaper.ImGui_DrawList_AddRectFilled(draw_list, low_x, min_y, high_x, max_y, rgba(200,200,200,0.2), 2)
-  
+
   ImGui.PopStyleColor(ctx, 5)
   reaper.ImGui_PopItemWidth(ctx)
 end
@@ -1214,10 +1221,10 @@ function draw_ab_button(master, w)
 
   local ab_state = get_ab_state(master)
   local ab_col = {}
-  
-  if ab_state == 1 then 
+
+  if ab_state == 1 then
     ab_col = {r=225, g=176, b=116} -- Оранжевый (Активен)
-  else 
+  else
     ab_col = {r=26, g=148, b=225}  -- Синий (Выключен)
   end
 
@@ -1225,18 +1232,18 @@ function draw_ab_button(master, w)
   ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered(),  rgba(ab_col.r, ab_col.g, ab_col.b, 0.8))
   ImGui.PushStyleColor(ctx, ImGui.Col_Button(),         rgba(ab_col.r, ab_col.g, ab_col.b, 0.6))
 
-  if ImGui.Button(ctx, 'AB', w, button_h) then 
+  if ImGui.Button(ctx, 'AB', w, button_h) then
     local index = reaper.TrackFX_AddByName(master, METRIC_AB, USE_METRIC_IN_MONITORINGFX, 0)
     if index ~= -1 then
       local mon = USE_METRIC_IN_MONITORINGFX and 0x1000000 or 0
       reaper.TrackFX_SetParam(master, index + mon, 0, ab_state == 1 and 0 or 1)
       reaper.SetExtState('MISHA_MONITOR', 'AB', ab_state == 1 and '0' or '1', true)
-    end  
+    end
   end
 
   ab_hovered = reaper.ImGui_IsItemHovered(ctx)
 
-  if reaper.ImGui_IsMouseClicked( ctx, reaper.ImGui_MouseButton_Right() ) and ab_hovered then 
+  if reaper.ImGui_IsMouseClicked( ctx, reaper.ImGui_MouseButton_Right() ) and ab_hovered then
       local index = reaper.TrackFX_AddByName(master, METRIC_AB, USE_METRIC_IN_MONITORINGFX, 0)
       if not USE_METRIC_IN_MONITORINGFX then mon = 0 else mon = (0x1000000) end
       reaper.TrackFX_SetOpen(master, index+mon, not reaper.TrackFX_GetOpen(master, index+mon))
@@ -1257,11 +1264,11 @@ function draw_ab_button(master, w)
       end
     end
   end
-  
+
   ImGui.PopStyleColor(ctx, 3)
-  
-  if ab_state == 1 and draw_color then 
-    draw_color(rgba(242,170,81,1), 1) 
+
+  if ab_state == 1 and draw_color then
+    draw_color(rgba(242,170,81,1), 1)
   end
 end
 
@@ -1289,42 +1296,42 @@ function draw_listen_buttons(master,w)
     ImGui.PopID(ctx)
     ImGui.PopFont(ctx)
     ImGui.PopStyleColor(ctx, 3)
-    
-    if listen_button then 
-      if ext == 0 or (ext > 0 and ext ~= i2) then 
+
+    if listen_button then
+      if ext == 0 or (ext > 0 and ext ~= i2) then
         reaper.SetExtState('MISHA_MONITOR', 'LISTEN', i2, true)
         set_listen_state(master,base_slope_ext)
-      elseif ext == i2 then 
+      elseif ext == i2 then
         set_listen_state(master,0)
         reaper.SetExtState('MISHA_MONITOR', 'LISTEN', '0', true)
       end
 
-      if lb.str == 'Free' then 
+      if lb.str == 'Free' then
         lowCut  = slider_range / (2 ^ (base_width_ext / 2))
         highCut = slider_range * (2 ^ (base_width_ext / 2))
         set_param_freq(master,2,lowCut)
         set_param_freq(master,3,highCut)
-      else 
+      else
         set_param_freq(master,2,lb.l)
         set_param_freq(master,3,lb.h)
-      end 
+      end
     end
 
-    if ext == #listen_buttons then free_mode = true else free_mode = false end 
-  
+    if ext == #listen_buttons then free_mode = true else free_mode = false end
+
   end
 
-  if reaper.ImGui_IsMouseClicked( ctx, reaper.ImGui_MouseButton_Right() ) then 
-    if ab_hovered then 
+  if reaper.ImGui_IsMouseClicked( ctx, reaper.ImGui_MouseButton_Right() ) then
+    if ab_hovered then
       local index = reaper.TrackFX_AddByName(master, METRIC_AB, USE_METRIC_IN_MONITORINGFX, 0)
       if not USE_METRIC_IN_MONITORINGFX then mon = 0 else mon = (0x1000000) end
       reaper.TrackFX_SetOpen(master, index+mon, not reaper.TrackFX_GetOpen(master, index+mon))
     end
   end
-end 
+end
 
 function solo_children(parent,state)
-  if parent then 
+  if parent then
       local parentdepth = reaper.GetTrackDepth(parent)
       local parentnumber = reaper.GetMediaTrackInfo_Value(parent, "IP_TRACKNUMBER")
       local children = {}
@@ -1343,7 +1350,7 @@ function solo_children(parent,state)
 end
 
 function get_children_refs(parent)
-    if parent then 
+    if parent then
       local parentdepth = reaper.GetTrackDepth(parent)
       local parentnumber = reaper.GetMediaTrackInfo_Value(parent, "IP_TRACKNUMBER")
       local children = {}
@@ -1357,19 +1364,19 @@ function get_children_refs(parent)
         local mute = reaper.GetMediaTrackInfo_Value(track, 'B_MUTE')
         local _, name = reaper.GetTrackName(track)
         local is_folder = reaper.GetMediaTrackInfo_Value(track, "I_FOLDERDEPTH" ) == 1
-        if is_folder and reaper.CountTrackMediaItems(track) == 0 then 
+        if is_folder and reaper.CountTrackMediaItems(track) == 0 then
           donotmute = true
           name = name ..' (folder)'
         end
 
         data.track = track
-        data.color = color 
-        data.solo = solo 
+        data.color = color
+        data.solo = solo
         data.name = name
         data.donotmute = donotmute
-        
+
         if depth > parentdepth then
-          if donotmute then 
+          if donotmute then
             if mute == 1 then reaper.SetMediaTrackInfo_Value(track, 'B_MUTE', 0) end
           else
             if mute == 0 then reaper.SetMediaTrackInfo_Value(track, 'B_MUTE', 1) end
@@ -1388,36 +1395,36 @@ solos = {}
 
 function save_solos()
   local count = reaper.CountTracks(0)
-  for k,v in ipairs(ref_data) do 
-    if v.solo then 
+  for k,v in ipairs(ref_data) do
+    if v.solo then
       is_ref_soloed = true
-    end 
+    end
   end
   if not is_ref_soloed then solos = {} end
-  for i=0,count-1 do 
-    local track = reaper.GetTrack(0, i) 
+  for i=0,count-1 do
+    local track = reaper.GetTrack(0, i)
     local solo = reaper.GetMediaTrackInfo_Value(track, 'I_SOLO')
-    if solo > 0 then 
+    if solo > 0 then
       is_ref = false
-      is_ref_soloed = false 
-      for k,v in ipairs(ref_data) do 
-        -- if v.solo then 
-        --   is_ref_soloed = true 
-        -- end 
-        if v.track == track then 
+      is_ref_soloed = false
+      for k,v in ipairs(ref_data) do
+        -- if v.solo then
+        --   is_ref_soloed = true
+        -- end
+        if v.track == track then
           is_ref = true
-        end 
+        end
       end
-      if not is_ref then 
+      if not is_ref then
         local data = {}
-        data.solo = solo 
-        data.track = track 
+        data.solo = solo
+        data.track = track
         table.insert(solos, data)
-      end 
+      end
     end
-  end 
+  end
   write_solos_to_ext()
-end 
+end
 
 function write_solos_to_ext()
   local parts = {}
@@ -1431,23 +1438,23 @@ end
 
 function unsolo_all_tracks()
   local count = reaper.CountTracks(0)
-  for i=0,count-1 do 
-    local track = reaper.GetTrack(0, i) 
+  for i=0,count-1 do
+    local track = reaper.GetTrack(0, i)
     local solo = reaper.GetMediaTrackInfo_Value(track, 'I_SOLO')
-    if solo > 0 then 
+    if solo > 0 then
       reaper.SetMediaTrackInfo_Value(track, 'I_SOLO',0)
-    end  
-  end 
-end 
+    end
+  end
+end
 
 function restore_solos()
   unsolo_all_tracks()
-  if #solos < 0 then return end  
-  for k,v in ipairs(solos) do 
+  if #solos < 0 then return end
+  for k,v in ipairs(solos) do
       reaper.SetMediaTrackInfo_Value(v.track, 'I_SOLO',v.solo)
   end
   reaper.SetProjExtState(0, "MISHA_MONITOR", "SOLOS", "")
-end 
+end
 
 function save_last_ref_solo(value)
   reaper.SetProjExtState(0, 'MISHA_MONITOR', 'LAST_SOLO', value)
@@ -1537,14 +1544,14 @@ function draw_refs_button(w)
   -- Use live track state, not the potentially stale global ref_data.
   local any_solo = is_any_ref_soloed()
 
-  if any_solo then 
-    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), rgba(112, 229, 150, 0.6)) 
+  if any_solo then
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), rgba(112, 229, 150, 0.6))
   end
 
   if reaper.ImGui_Button(ctx, "REF", w, button_h) then
     toggle_solo_last_reference()
   end
-  
+
 
   local hovered = reaper.ImGui_IsItemHovered(ctx)
   if hovered and reaper.ImGui_IsMouseClicked(ctx, reaper.ImGui_MouseButton_Right()) then
@@ -1616,24 +1623,24 @@ end
 function get_active_correction_name()
   local fx = reaper.TrackFX_AddByName(master, CORRECTION_CONTAINER_NAME, true, 0)
   if fx == -1 then return "OFF" end
-  
+
   local _, container_count = reaper.TrackFX_GetNamedConfigParm(master, fx+(0x1000000), "container_count")
   container_count = tonumber(container_count) or 0
-  
+
   for i = 0, container_count - 1 do
     local _, item = reaper.TrackFX_GetNamedConfigParm(master, fx+(0x1000000), "container_item."..i)
     if reaper.TrackFX_GetEnabled(master, item) then
       local _, fxname = reaper.TrackFX_GetFXName(master, item)
-      return fxname:gsub("^%w+:%s*", "") 
+      return fxname:gsub("^%w+:%s*", "")
     end
   end
-  
+
   return "OFF"
 end
 
 function get_correction_button_width()
     if not SHOW_CORRECTION_BTN then return 0 end
-    local name = get_active_correction_name() 
+    local name = get_active_correction_name()
     local text_w, _ = reaper.ImGui_CalcTextSize(ctx, name)
     return text_w + 10
 end
@@ -1641,7 +1648,7 @@ end
 function check_or_create_correction_container()
   local fx_index = reaper.TrackFX_AddByName(master, "Corrections", true, 0)
   local _, fx_name = reaper.TrackFX_GetFXName(master, fx_index+mon)
-  
+
   if not fx_name:find("Corrections") then
     local new_fx = reaper.TrackFX_AddByName(master, "Container", true, 1000)
     reaper.TrackFX_SetNamedConfigParm(master, new_fx+mon, "renamed_name", "Corrections")
@@ -1656,7 +1663,7 @@ function DrawSettingsWindow()
 
   local visible, open = reaper.ImGui_Begin(ctx, 'Monitor Settings', true, reaper.ImGui_WindowFlags_None())
   if visible then
-    
+
     if reaper.ImGui_BeginTable(ctx, "LayersTable", 3, reaper.ImGui_TableFlags_BordersInnerV()) then
 
       -- for i = 1, MAX_LAYERS do
@@ -1670,7 +1677,7 @@ function DrawSettingsWindow()
       --   reaper.ImGui_TableNextRow(ctx)
       --   for i = 1, MAX_LAYERS do
       --       reaper.ImGui_TableSetColumnIndex(ctx, i-1)
-            
+
       --       -- Подсветка активной колонки
       --       if current_layer == i then
       --           local c = layer_colors[i]
@@ -1679,10 +1686,10 @@ function DrawSettingsWindow()
       --       end
 
       --       local l = layers[i]
-      --       if reaper.ImGui_Checkbox(ctx, row_names[r].."##"..i, l[row_keys[r]]) then 
+      --       if reaper.ImGui_Checkbox(ctx, row_names[r].."##"..i, l[row_keys[r]]) then
       --           l[row_keys[r]] = not l[row_keys[r]]
       --           should_resize = true
-      --           SaveSettings() 
+      --           SaveSettings()
       --       end
       --   end
       -- end
@@ -1702,10 +1709,10 @@ function DrawSettingsWindow()
         reaper.ImGui_TableSetBgColor(ctx, reaper.ImGui_TableBgTarget_CellBg(), rgba(c.r,c.g,c.b,a))
         if reaper.ImGui_Checkbox(ctx, "Volume##"..i, l.vol) then l.vol = not l.vol; should_resize = true; SaveSettings() end
       end
-      
+
       -- 2-я строка: Listen
       reaper.ImGui_TableNextRow(ctx)
-      
+
       for i = 1, #layers do
         reaper.ImGui_TableSetColumnIndex(ctx, i-1)
         local c = layer_colors[i]
@@ -1794,7 +1801,7 @@ function DrawSettingsWindow()
     reaper.ImGui_Separator(ctx)
 
     -- local function Toggle(label, var_name)
-    --     local current_val = _G[var_name] 
+    --     local current_val = _G[var_name]
     --     local changed, new_val = reaper.ImGui_Checkbox(ctx, label, current_val)
     --     if changed then
     --         _G[var_name] = new_val
@@ -1814,11 +1821,11 @@ function DrawSettingsWindow()
       reaper.ImGui_Spacing(ctx)
 
       local rv_ml, new_ml = reaper.ImGui_SliderInt(ctx, "Active Layers", MAX_LAYERS, 1, 3)
-      if rv_ml then 
-          MAX_LAYERS = new_ml 
+      if rv_ml then
+          MAX_LAYERS = new_ml
           if current_layer > MAX_LAYERS then current_layer = 1 end
           should_resize = false
-          SaveSettings() 
+          SaveSettings()
       end
 
       local changed_useab, new_useab = reaper.ImGui_Checkbox(ctx, "Use Metric AB instead of JS", USE_METRICAB)
@@ -1832,7 +1839,7 @@ function DrawSettingsWindow()
         USE_METRIC_IN_MONITORINGFX = new_mon
         SaveSettings()
       end
-      
+
       local changed, new_text = reaper.ImGui_InputText(ctx, "Volume Buttons", buttons_text)
       if changed then buttons_text = new_text end
 
@@ -1929,12 +1936,12 @@ function DrawSettingsWindow()
       reaper.ImGui_PopItemWidth(ctx)
 
       local reset_btn_w = 50
-      
+
       if reaper.ImGui_Button(ctx, "Save", -reset_btn_w - 4) then
         buttons = StringToButtons(buttons_text)
-        should_resize = true 
-      end 
-      
+        should_resize = true
+      end
+
       reaper.ImGui_SameLine(ctx)
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), rgba(150, 50, 50, 0.6))
       if reaper.ImGui_Button(ctx, "RESET", reset_btn_w) then
@@ -2232,7 +2239,7 @@ end
 function Main(unit_w, settings_w, corr_w, ab_ref_w, gap)
   -- reaper.ImGui_Dummy(ctx,1,1)
   -- reaper.ImGui_SameLine(ctx)
-  
+
   local c = layer_colors[current_layer]
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        rgba(c.r,c.g,c.b,0.7))
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), rgba(c.r,c.g,c.b,1))
@@ -2244,7 +2251,7 @@ function Main(unit_w, settings_w, corr_w, ab_ref_w, gap)
 
   state = get_state(master)
   ext = tonumber(reaper.GetExtState( 'MISHA_MONITOR', 'LISTEN'))
-  if ext == nil then ext = 0 end 
+  if ext == nil then ext = 0 end
 
   local function lead_gap()
     reaper.ImGui_Dummy(ctx, ROW_GAP, 0)
@@ -2341,8 +2348,8 @@ function Main(unit_w, settings_w, corr_w, ab_ref_w, gap)
     draw_free_mode_slider(master)
   end
 
-  if reaper.ImGui_IsMouseReleased(ctx, 0) and ImGui.IsWindowFocused(ctx) then 
-    reaper.SetCursorContext(1, nil) 
+  if reaper.ImGui_IsMouseReleased(ctx, 0) and ImGui.IsWindowFocused(ctx) then
+    reaper.SetCursorContext(1, nil)
   end
 end
 
@@ -2351,13 +2358,13 @@ function GetClientBounds(hwnd)
     return left, top, right-left, bottom-top
 end
 
-function FindChildByClass(hwnd, classname, occurance) 
+function FindChildByClass(hwnd, classname, occurance)
     local arr = reaper.new_array({}, 255)
     reaper.JS_Window_ArrayAllChild(hwnd, arr)
-    local adr = arr.table() 
+    local adr = arr.table()
     local control_occurance = 0
     for j = 1, #adr do
-        local hwnd = reaper.JS_Window_HandleFromAddress(adr[j]) 
+        local hwnd = reaper.JS_Window_HandleFromAddress(adr[j])
         if reaper.JS_Window_GetClassName(hwnd)== classname then
             control_occurance = control_occurance + 1
             if occurance == control_occurance then return hwnd end
@@ -2376,7 +2383,7 @@ function get_bounds(hwnd)
   return left, top, right, bottom
 end
 
-function loop()  
+function loop()
     master = reaper.GetMasterTrack()
     local layout = layers[current_layer]
     USE_VOLUME_BUTTONS  = layout.vol
@@ -2420,18 +2427,18 @@ function loop()
         end
     end
 
-    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding(), 5, 4) 
-    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), 2, 2) 
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding(), 5, 4)
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), 2, 2)
     reaper.ImGui_PushFont(ctx, nil, font_size1)
 
     local visible, open = reaper.ImGui_Begin(ctx, 'Monitor Controller', true, window_flags)
     local real_pw, real_ph = reaper.ImGui_GetWindowSize(ctx)
-    if real_pw > 50 and not should_resize and ui_unit then 
-        pw = real_pw 
-    else 
+    if real_pw > 50 and not should_resize and ui_unit then
+        pw = real_pw
+    else
       pw = 40
     end
-    
+
     local win_content_w = pw - 10
 
     if visible then
