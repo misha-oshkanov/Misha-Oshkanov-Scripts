@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="f7895e8495c2ae4cdd04ac06bc8f2b68d31b5762">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="866c616f90bd608b7979727971f639ee18d970c3">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -1157,6 +1157,10 @@ Use mousewheel to change tracks in MetricAB
 Use mousewheel to change ref tracks 
 many bug fixes]]></changelog>
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/2ccc6c3a36263d7e4b34590b3f31fb8e2cb0e67f/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller.lua</source>
+      </version>
+      <version name="5.0.1" author="Misha Oshkanov" time="2026-08-31T18:42:50Z">
+        <changelog><![CDATA[grid box path fixes]]></changelog>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/866c616f90bd608b7979727971f639ee18d970c3/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller.lua</source>
       </version>
     </reapack>
     <reapack name="misha - project work timer.lua" type="script" desc="Project Work Timer: Smart time tracker with tags, afk and focus detection and alarms">
