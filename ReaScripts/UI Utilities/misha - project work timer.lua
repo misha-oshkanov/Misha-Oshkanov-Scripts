@@ -1,6 +1,6 @@
 -- @description Project Work Timer: Smart time tracker with tags, afk and focus detection and alarms
 -- @author Misha Oshkanov
--- @version 3.0
+-- @version 3.1
 -- @about
 --  Tracks active work time per project tab in REAPER.
 --  Switches timers between tabs automatically.
@@ -8,6 +8,9 @@
 --  Create and color code tags to mark time
 --  Right click to open tag window and alarm settings
 --  Left click to open statistics
+-- @changelog
+-- font save fixed
+-- do not start timer if no tag fixed
 
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
@@ -1239,7 +1242,6 @@ function frame()
         local current_proj_path = reaper.GetProjectPath()
 
         if current_proj_ptr ~= last_project_ptr or current_date_key ~= last_date_key or current_proj_path ~= last_project_path then
-
             if last_project_ptr and last_date_key ~= "" and current_proj_path == last_project_path then
                 save_proj_time(last_project_ptr, last_date_key, current_tag, total_time)
             end
@@ -1259,6 +1261,8 @@ function frame()
             last_save = now
         end
 
+        stop_if_notag_nocoutn = notag_nocoutn_check == true and current_tag == "no tag"
+
         local is_afk = false
         if IsReaperFocused() or IsPlayingOrRecording() and not notag_nocoutn_check then
             local mouse_x, mouse_y = reaper.GetMousePosition()
@@ -1275,7 +1279,7 @@ function frame()
 
             is_afk = (now - last_input_time) > AFK_THRESHOLD
 
-            if delta < 60 and not is_afk then
+            if delta < 60 and not is_afk and not stop_if_notag_nocoutn then
                  if rendertime_check and is_rendering then
                     local render_day_sec = load_proj_time(current_proj_ptr, current_date_key, "rendering")
                     render_day_sec = render_day_sec + delta
