@@ -9,8 +9,8 @@
 --  Right click to open tag window and alarm settings
 --  Left click to open statistics
 -- @changelog
--- font save fixed
--- do not start timer if no tag fixed
+--  # font save fixed
+--  # do not start timer if no tag fixed
 
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
