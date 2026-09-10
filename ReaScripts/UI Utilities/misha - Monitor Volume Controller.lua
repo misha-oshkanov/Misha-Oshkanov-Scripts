@@ -1,13 +1,12 @@
 -- @description Monitor Volume Controller
 -- @author Misha Oshkanov
--- @version 5.1
+-- @version 5.2
 -- @about
 --  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels.
 --  If you need more levels or change db values you can edit buttons table.
 --  Use right click to change modes between volume control and listen filters
 -- @changelog
---  # free mode positioning fixes
---  # new free mode settings and new placement variant
+--  # script width saved on close now
 
 -----------------------------------------------------------------------------
 REF_FOLDER_NAME = 'Refs'
@@ -109,6 +108,9 @@ local is_linux           = os:match('Other')
 local font_size1         = 14
 local font_size2         = 14
 local unit_w             = 45 -- начальное значение по умолчанию
+-- Shared button-unit width (total = fixed + units * unit). Declared early so
+-- SaveSettings/DrawSettingsWindow/loop all see the same local.
+local ui_unit
 local buttons_text       = ButtonsToString(buttons)
 
 local ctx                = reaper.ImGui_CreateContext('Monitor Controller')
@@ -208,7 +210,8 @@ function SaveSettings()
         DISABLE_CORR_ON_START      = DISABLE_CORR_ON_START and '1' or '0',
         FREE_MODE_POS              = tostring(FREE_MODE_POS or 1),
 
-        pw                         = tostring(math.floor(pw or 600))
+        pw                         = tostring(math.floor(pw or 600)),
+        UNIT_W                     = string.format('%.3f', tonumber(ui_unit or unit_w) or 45),
     }
 
     for key, value in pairs(settings) do
@@ -316,6 +319,12 @@ function LoadSettings()
 
     local saved_pw = tonumber(reaper.GetExtState(SECTION, 'pw'))
     if saved_pw then pw = saved_pw end
+
+    -- Unit width of the dynamic buttons. Persisted so the total window width
+    -- (which is derived as fixed + units * unit) survives restarts and still
+    -- adapts to currently active modules + meter visibility.
+    local saved_uw = tonumber(reaper.GetExtState(SECTION, 'UNIT_W'))
+    if saved_uw and saved_uw >= 10 and saved_uw <= 500 then unit_w = saved_uw end
 
     for i = 1, #layers do
         local str = reaper.GetExtState(SECTION, "LAYER_" .. i)
@@ -862,31 +871,16 @@ function draw_grid_button()
     ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive(), ba_col)
     ImGui.PushStyleColor(ctx, ImGui.Col_Text(), t_col)
 
-    -- reaper.ImGui_PushFont(ctx, font, 12)
 
-
-    -- reaper.ImGui_PushStyleVar( ctx, reaper.ImGui_StyleVar_FramePadding(), 0, 5)
-    -- reaper.ImGui_AlignTextToFramePadding( ctx )
 
     ImGui.Button(ctx, label .. '##grid', grid_width, button_h)
-    -- reaper.ImGui_PopFont( ctx )
-    -- reaper.ImGui_PopStyleVar( ctx )
-
 
     if ImGui.IsItemClicked(ctx, 1) then
         ImGui.OpenPopup(ctx, 'grid_settings_menu')
     end
-    -- if ImGui.IsItemClicked(ctx, 0) then
-    --   reaper.Main_OnCommand(1157, 0)
-    -- end
+
     ImGui.PopStyleColor(ctx, 4)
 
-    -- if snap then
-    --   local min_x, min_y = ImGui.GetItemRectMin(ctx)
-    --   local max_x, max_y = ImGui.GetItemRectMax(ctx)
-    --   local draw_list = ImGui.GetWindowDrawList(ctx)
-    --   ImGui.DrawList_AddRect(draw_list, min_x, min_y, max_x, max_y, rgba(38,176,167,1), 0, 0, 1)
-    -- end
 
     grid_hovered = reaper.ImGui_IsItemHovered(ctx)
 
@@ -1753,34 +1747,6 @@ function DrawSettingsWindow()
     local visible, open = reaper.ImGui_Begin(ctx, 'Monitor Settings', true, reaper.ImGui_WindowFlags_None())
     if visible then
         if reaper.ImGui_BeginTable(ctx, "LayersTable", 3, reaper.ImGui_TableFlags_BordersInnerV()) then
-            -- for i = 1, MAX_LAYERS do
-            --     reaper.ImGui_TableSetupColumn(ctx, "Layer " .. i)
-            -- end
-
-            -- local row_keys = {"vol", "lis", "corr", "ref", "ab"}
-            -- local row_names = {"Volume", "Listen", "Corr", "Ref", "MetricAB"}
-
-            -- for r = 1, #row_keys do
-            --   reaper.ImGui_TableNextRow(ctx)
-            --   for i = 1, MAX_LAYERS do
-            --       reaper.ImGui_TableSetColumnIndex(ctx, i-1)
-
-            --       -- Подсветка активной колонки
-            --       if current_layer == i then
-            --           local c = layer_colors[i]
-            --           if i == current_layer then a = 0.4 else a = 0.2 end
-            --           reaper.ImGui_TableSetBgColor(ctx, reaper.ImGui_TableBgTarget_CellBg(), rgba(c.r,c.g,c.b,a))
-            --       end
-
-            --       local l = layers[i]
-            --       if reaper.ImGui_Checkbox(ctx, row_names[r].."##"..i, l[row_keys[r]]) then
-            --           l[row_keys[r]] = not l[row_keys[r]]
-            --           should_resize = true
-            --           SaveSettings()
-            --       end
-            --   end
-            -- end
-            -- reaper.ImGui_TableSetupColumn(ctx, "Blocks")
 
             reaper.ImGui_TableSetupColumn(ctx, "Layer 1" .. (current_layer == 1 and " [Active]" or ""))
             reaper.ImGui_TableSetupColumn(ctx,
@@ -1907,21 +1873,6 @@ function DrawSettingsWindow()
 
         reaper.ImGui_Separator(ctx)
 
-        -- local function Toggle(label, var_name)
-        --     local current_val = _G[var_name]
-        --     local changed, new_val = reaper.ImGui_Checkbox(ctx, label, current_val)
-        --     if changed then
-        --         _G[var_name] = new_val
-        --         should_resize = true
-        --         SaveSettings()
-        --     end
-        -- end
-
-        -- Toggle("Volume Buttons", "USE_VOLUME_BUTTONS")
-        -- Toggle("Listen Bands",   "USE_LISTEN_BANDS")
-        -- Toggle("Corrections", "SHOW_CORRECTION_BTN")
-        -- Toggle("Metric AB",      "USE_METRICAB_SWITCH")
-        -- Toggle("References",   "USE_REFS_SWITCH")
 
         reaper.ImGui_Separator(ctx)
         if reaper.ImGui_TreeNode(ctx, "Advanced Settings") then
@@ -2093,6 +2044,8 @@ function DrawSettingsWindow()
                 USE_METRIC_IN_MONITORINGFX = true
                 USE_GRID_BOX = true
                 pw = 600
+                unit_w = 45
+                ui_unit = 45
                 should_resize = true
                 SaveSettings()
             end
@@ -2267,7 +2220,7 @@ end
 
 local ROW_SPACING, ROW_GAP = 2, 1
 local SETTINGS_W, AB_REF_W = 16, 30
-local ui_unit
+-- (ui_unit declared near unit_w so all functions share it)
 
 local function row_layout()
     local fixed = SETTINGS_W
@@ -2466,19 +2419,6 @@ function Main(unit_w, settings_w, corr_w, ab_ref_w, gap)
         draw_meter()
     end
 
-    -- local has_modules = SHOW_CORRECTION_BTN or USE_VOLUME_BUTTONS or USE_LISTEN_BANDS
-    --   or USE_GRID_BOX or USE_METRICAB_SWITCH or USE_REFS_SWITCH or USE_ITEM_COUNT
-    --   or (USE_MONFX and #mon_fx_presets > 0)
-    -- local last_sl = true
-    -- if USE_ITEM_COUNT then
-    --   last_sl = false
-    -- elseif USE_REFS_SWITCH then
-    --   last_sl = false
-    -- end
-    -- if has_modules then
-    --   if not last_sl then reaper.ImGui_SameLine(ctx) end
-    --   reaper.ImGui_Dummy(ctx, ROW_TAIL_GAP, 0)
-    -- end
 
     if free_mode and not FREE_MODE_TOP and not FREE_MODE_INLINE then
         reaper.ImGui_Spacing(ctx)
@@ -2520,6 +2460,13 @@ function get_bounds(hwnd)
     return left, top, right, bottom
 end
 
+-- Width-restore state. The window width is dynamic:
+--   total = fixed_part + units * unit_w (+ meter when visible).
+-- We persist the button *unit* (not just the total), so on restart the total
+-- is rebuilt for the currently active modules instead of collapsing.
+local size_initialized = false
+local last_snap_f, last_snap_u, last_snap_a, last_window_h = nil, nil, nil, nil
+
 function loop()
     master              = reaper.GetMasterTrack()
     local layout        = layers[current_layer]
@@ -2549,7 +2496,43 @@ function loop()
     snap_u = tonumber(snap_u) or 0
     snap_a = tonumber(snap_a) or 0
 
-    if should_resize then
+    -- Layout geometry itself changed (modules toggled, correction/item-count
+    -- text width, grid/meter visibility, height): re-fit the window while
+    -- keeping the current button unit, so manual stretch is preserved.
+    if size_initialized then
+        local geom_changed = false
+        if window_h ~= (last_window_h or window_h) then
+            geom_changed = true
+        elseif snap_u ~= (last_snap_u or snap_u) then
+            geom_changed = true
+        elseif math.abs(snap_f - (last_snap_f or snap_f)) > 1.0 then
+            geom_changed = true
+        elseif math.abs(snap_a - (last_snap_a or snap_a)) > 1.0 then
+            geom_changed = true
+        end
+        if geom_changed then should_resize = true end
+    end
+
+    if not size_initialized then
+        -- First run: rebuild the width from the saved button unit so the
+        -- total matches the currently active modules + meter visibility.
+        -- Old installs without UNIT_W fall back to deriving the unit from
+        -- the saved total width.
+        local u = tonumber(unit_w) or tonumber(ui_unit) or 45
+        local has_unit = reaper.GetExtState(SECTION, 'UNIT_W') ~= ''
+        if not has_unit and tonumber(pw) and tonumber(pw) > 60 and snap_u > 0 then
+            local derived = (tonumber(pw) - 10 - snap_f - snap_a) / snap_u
+            if derived and derived >= 10 and derived <= 500 then u = derived end
+        end
+        if not u or u < 10 then u = 45 end
+        unit_w = u
+        ui_unit = u
+        local target_pw = math.floor(snap_f + snap_u * u + snap_a + 10 + 0.5)
+        if target_pw < 60 then target_pw = 60 end
+        reaper.ImGui_SetNextWindowSize(ctx, target_pw, window_h, reaper.ImGui_Cond_Always())
+        pw = target_pw
+        size_initialized = true
+    elseif should_resize then
         local u = tonumber(ui_unit or unit_w) or 45
         local target_pw = math.floor(snap_f + snap_u * u + snap_a + 10 + 0.5)
         if target_pw < 60 then target_pw = 60 end
@@ -2557,11 +2540,9 @@ function loop()
         pw = target_pw
         should_resize = false
     else
-        -- if not pw or pw <= 0 then
-        local u = tonumber(ui_unit or unit_w) or 45
-        pw = math.floor(snap_f + snap_u * u + snap_a + 10 + 0.5)
-        reaper.ImGui_SetNextWindowSize(ctx, pw, window_h, reaper.ImGui_Cond_Always())
-        -- end
+        -- No forced resize: the user can drag the window edge freely.
+        -- Real size is picked up below via GetWindowSize and converted
+        -- back into the button unit, so manual stretch persists.
     end
 
     reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding(), 5, 4)
@@ -2570,10 +2551,13 @@ function loop()
 
     local visible, open = reaper.ImGui_Begin(ctx, 'Monitor Controller', true, window_flags)
     local real_pw, real_ph = reaper.ImGui_GetWindowSize(ctx)
-    if real_pw > 50 and not should_resize and ui_unit then
+    if real_pw and real_pw > 50 then
         pw = real_pw
-    else
-        pw = 40
+    elseif not pw or pw <= 50 then
+        -- Fallback only, never clobber a valid restored width with 40.
+        local u = tonumber(ui_unit or unit_w) or 45
+        pw = math.floor(snap_f + snap_u * u + snap_a + 10 + 0.5)
+        if pw < 60 then pw = 60 end
     end
 
     local win_content_w = pw - 10
@@ -2591,6 +2575,7 @@ function loop()
         local dynamic_area = win_content_w - (snap_f + snap_a)
         unit_w = (snap_u > 0) and (dynamic_area / snap_u) or 45
         if unit_w < 10 then unit_w = 10 end
+        if unit_w > 500 then unit_w = 500 end
         ui_unit = unit_w
 
         Main(unit_w, SETTINGS_W, corr_w, AB_REF_W, ROW_GAP)
@@ -2604,10 +2589,10 @@ function loop()
     reaper.ImGui_PopStyleVar(ctx, 2)
     reaper.ImGui_PopFont(ctx)
 
+    last_snap_f, last_snap_u, last_snap_a, last_window_h = snap_f, snap_u, snap_a, window_h
+
     if open then reaper.defer(loop) end
 end
-
---master = reaper.GetMasterTrack()
 
 if DISABLE_CORR_ON_START then
     master = reaper.GetMasterTrack()
@@ -2617,6 +2602,10 @@ end
 reaper.atexit(function()
     if pw then
         reaper.SetExtState(SECTION, 'pw', tostring(math.floor(pw)), true)
+    end
+    local uw = tonumber(ui_unit or unit_w)
+    if uw then
+        reaper.SetExtState(SECTION, 'UNIT_W', string.format('%.3f', uw), true)
     end
 end)
 
