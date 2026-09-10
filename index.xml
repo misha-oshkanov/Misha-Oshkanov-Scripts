@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="866c616f90bd608b7979727971f639ee18d970c3">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="8a967e53557c2819c0da3105616f27854f6500e9">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -1162,6 +1162,11 @@ many bug fixes]]></changelog>
         <changelog><![CDATA[grid box path fixes]]></changelog>
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/866c616f90bd608b7979727971f639ee18d970c3/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller.lua</source>
       </version>
+      <version name="5.1" author="Misha Oshkanov" time="2026-09-07T18:38:53Z">
+        <changelog><![CDATA[# free mode positioning fixes
+# new free mode settings and new placement variant]]></changelog>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/8a967e53557c2819c0da3105616f27854f6500e9/ReaScripts/UI%20Utilities/misha%20-%20Monitor%20Volume%20Controller.lua</source>
+      </version>
     </reapack>
     <reapack name="misha - project work timer.lua" type="script" desc="Project Work Timer: Smart time tracker with tags, afk and focus detection and alarms">
       <metadata>
@@ -1220,6 +1225,11 @@ many bug fixes]]></changelog>
       </version>
       <version name="3.0" author="Misha Oshkanov" time="2026-08-29T14:42:59Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/2ccc6c3a36263d7e4b34590b3f31fb8e2cb0e67f/ReaScripts/UI%20Utilities/misha%20-%20project%20work%20timer.lua</source>
+      </version>
+      <version name="3.1" author="Misha Oshkanov" time="2026-09-07T18:38:53Z">
+        <changelog><![CDATA[# font save fixed
+# do not start timer if no tag fixed]]></changelog>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/8a967e53557c2819c0da3105616f27854f6500e9/ReaScripts/UI%20Utilities/misha%20-%20project%20work%20timer.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Scroller.lua" type="script" desc="Scroller">
