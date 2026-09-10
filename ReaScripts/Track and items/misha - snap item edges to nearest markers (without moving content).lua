@@ -1,12 +1,14 @@
 -- @description Snap item edges to neares markers (without moving content)
 -- @author Misha Oshkanov
--- @version 1.1
+-- @version 1.2
 -- @about
 --  Move item edges to nearest markers
 --  if item start is bigger than new item start, then move item start to left marker
+--  v1.2: fixed nil comparison when no prev/next marker; looped items (B_LOOPSRC==1)
+--        are extended to the next marker without clamping to take source length
 
-local use_fades = true          
-local overlap_amount = 0.010    
+local use_fades = true
+local overlap_amount = 0.010
 local edge_offset = 0.005       -- Насколько края выходят за маркеры (в секундах)
 
 ------------------------------------------------------------
@@ -18,7 +20,7 @@ end
 local function GetAllMarkers()
     local markers = {}
     local i = 0
-    
+
     while true do
         local retval, isrgn, mpos = reaper.EnumProjectMarkers(i)
         if retval == 0 then break end
@@ -27,7 +29,7 @@ local function GetAllMarkers()
         end
         i = i + 1
     end
-    
+
     table.sort(markers)
     return markers
 end
@@ -56,7 +58,7 @@ end
 local function FindNearestMarker(markers, pos)
     local nearest = nil
     local minDist = math.huge
-    
+
     for _, mpos in ipairs(markers) do
         local dist = math.abs(mpos - pos)
         if dist < minDist then
@@ -64,40 +66,48 @@ local function FindNearestMarker(markers, pos)
             nearest = mpos
         end
     end
-    
+
     return nearest
 end
 
 local function SnapItemEdges(item, markers)
     if not item then return end
-    
+
     local pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
     local length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
     local endPos = pos + length
     local take = reaper.GetActiveTake(item)
-    
+
     local prev_marker_start = FindPreviousMarker(markers, pos)
     local near_marker_start = FindNearestMarker(markers, pos)
     local newStart = nil
 
-    if near_marker_start > prev_marker_start then 
-        newStart = near_marker_start
-    else 
-        newStart = prev_marker_start
+    if near_marker_start and prev_marker_start then
+        if near_marker_start > prev_marker_start then
+            newStart = near_marker_start
+        else
+            newStart = prev_marker_start
+        end
+    else
+        newStart = near_marker_start or prev_marker_start
     end
 
     local next_marker_end = FindNextMarker(markers, endPos)
     local near_marker_end = FindNearestMarker(markers, endPos)
     local newEnd   = nil
 
-    if near_marker_end < next_marker_end then 
-        newEnd = FindNearestMarker(markers, endPos)
+    if near_marker_end and next_marker_end then
+        if near_marker_end < next_marker_end then
+            newEnd = near_marker_end
+        else
+            newEnd = next_marker_end
+        end
     else
-        newEnd = FindNextMarker(markers, endPos)
+        newEnd = near_marker_end or next_marker_end
     end
 
     if not newStart or not newEnd then return end
-    
+
     if newEnd <= newStart then
         local correctedEnd = nil
         for _, mpos in ipairs(markers) do
@@ -106,7 +116,7 @@ local function SnapItemEdges(item, markers)
                 break
             end
         end
-        
+
         if correctedEnd then
             newEnd = correctedEnd
         else
@@ -117,7 +127,7 @@ local function SnapItemEdges(item, markers)
                     break
                 end
             end
-            
+
             if correctedStart then
                 newStart = correctedStart
             else
@@ -125,11 +135,13 @@ local function SnapItemEdges(item, markers)
             end
         end
     end
-    
+
     local startOffset = 0
     local sourceLength = 0
+    local loopSrc = reaper.GetMediaItemInfo_Value(item, "B_LOOPSRC") == 1
     if take then
         startOffset = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
+
         local source = reaper.GetMediaItemTake_Source(take)
         if source then
             sourceLength = reaper.GetMediaSourceLength(source)
@@ -139,93 +151,95 @@ local function SnapItemEdges(item, markers)
     local adjustedStart = newStart - edge_offset
     local delta = adjustedStart - pos
     local newStartOffset = startOffset + delta
-    
+
     if newStartOffset < 0 then
         newStartOffset = 0
     end
-    
+
     if take then
         reaper.SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", newStartOffset)
     end
     reaper.SetMediaItemInfo_Value(item, "D_POSITION", adjustedStart)
-    
+
     local adjustedEnd = newEnd + edge_offset
     local newLength = adjustedEnd - adjustedStart
-    
-    if take and sourceLength > 0 then
+
+    -- Если луп активирован (B_LOOPSRC == 1), не ограничиваем длину концом тейка,
+    -- чтобы конец айтема дотянулся до следующего маркера за счет лупирования.
+    -- Без лупа ограничиваем длиной сорса, иначе край уйдет в пустоту.
+    if take and sourceLength > 0 and not loopSrc then
         local maxLength = sourceLength - newStartOffset
         if newLength > maxLength then
             newLength = maxLength
         end
     end
-    
+
     if newLength > 0 then
         reaper.SetMediaItemInfo_Value(item, "D_LENGTH", newLength)
     end
-    
+
     reaper.UpdateItemInProject(item)
 end
 
 local function CreateSmartCrossfades()
     if not use_fades then return end
-    
+
     local itemCount = reaper.CountMediaItems(0)
-    
+
     for i = 0, itemCount - 1 do
         local sel_item = reaper.GetMediaItem(0, i)
         if not reaper.IsMediaItemSelected(sel_item) then goto continue end
-        
         local sel_track = reaper.GetMediaItem_Track(sel_item)
-        
+
         local sel_pos = reaper.GetMediaItemInfo_Value(sel_item, "D_POSITION")
         local sel_len = reaper.GetMediaItemInfo_Value(sel_item, "D_LENGTH")
         local sel_end = sel_pos + sel_len
-        
+
         for j = 0, itemCount - 1 do
             local other_item = reaper.GetMediaItem(0, j)
             if other_item == sel_item or reaper.IsMediaItemSelected(other_item) then goto next_item end
-            
+
             local oth_track = reaper.GetMediaItem_Track(other_item)
             if oth_track ~= sel_track then goto next_item end
-            
+
             local oth_pos = reaper.GetMediaItemInfo_Value(other_item, "D_POSITION")
             local oth_len = reaper.GetMediaItemInfo_Value(other_item, "D_LENGTH")
             local oth_end = oth_pos + oth_len
-            
+
             if sel_end > oth_pos and sel_pos < oth_end then
-                
+
                 if sel_end > oth_pos and sel_end < oth_end then
                     local marker = sel_end
-                    
+
                     local new_oth_pos = marker - overlap_amount
                     local delta = new_oth_pos - oth_pos
-                    
+
                     local take = reaper.GetActiveTake(other_item)
                     local startoffs = 0
                     local sourceLength = 0
-                    
+
                     if take then
                         startoffs = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
                         local source = reaper.GetMediaItemTake_Source(take)
                         if source then
                             sourceLength = reaper.GetMediaSourceLength(source)
                         end
-                        
+
                         local newStartOffset = startoffs + delta
                         if newStartOffset < 0 then newStartOffset = 0 end
-                        
+
                         reaper.SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", newStartOffset)
                     end
-                    
+
                     local current_len = reaper.GetMediaItemInfo_Value(other_item, "D_LENGTH")
                     reaper.SetMediaItemInfo_Value(other_item, "D_POSITION", new_oth_pos)
-                    
+
                     local new_len = current_len - delta
                     if new_len > 0 then
                         reaper.SetMediaItemInfo_Value(other_item, "D_LENGTH", new_len)
                     end
-                    
-                    if take and sourceLength > 0 then
+
+                    if take and sourceLength > 0 and reaper.GetMediaItemInfo_Value(other_item, "B_LOOPSRC") ~= 1 then
                         local currentLen = reaper.GetMediaItemInfo_Value(other_item, "D_LENGTH")
                         local currentStartOff = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
                         local maxLen = sourceLength - currentStartOff
@@ -233,24 +247,24 @@ local function CreateSmartCrossfades()
                             reaper.SetMediaItemInfo_Value(other_item, "D_LENGTH", maxLen)
                         end
                     end
-                    
+
                     reaper.SetMediaItemInfo_Value(sel_item,   "D_FADEOUTLEN", overlap_amount)
                     reaper.SetMediaItemInfo_Value(other_item, "D_FADEINLEN",  overlap_amount)
-                    
+
                     reaper.UpdateItemInProject(other_item)
 
                 elseif sel_pos > oth_pos and sel_pos < oth_end then
                     local marker = sel_pos
 
                     local new_oth_len = marker + overlap_amount - oth_pos
-                    
+
                     if new_oth_len > 0 then
                         local take = reaper.GetActiveTake(other_item)
-                        
+
                         if take then
                             local startOffset = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
                             local source = reaper.GetMediaItemTake_Source(take)
-                            if source then
+                            if source and reaper.GetMediaItemInfo_Value(other_item, "B_LOOPSRC") ~= 1 then
                                 local sourceLength = reaper.GetMediaSourceLength(source)
                                 local maxLen = sourceLength - startOffset
                                 if new_oth_len > maxLen then
@@ -258,12 +272,12 @@ local function CreateSmartCrossfades()
                                 end
                             end
                         end
-                        
+
                         reaper.SetMediaItemInfo_Value(other_item, "D_LENGTH", new_oth_len)
-                        
+
                         reaper.SetMediaItemInfo_Value(other_item, "D_FADEOUTLEN", overlap_amount)
                         reaper.SetMediaItemInfo_Value(sel_item,   "D_FADEINLEN",  overlap_amount)
-                        
+
                         reaper.UpdateItemInProject(other_item)
                     end
                 end
