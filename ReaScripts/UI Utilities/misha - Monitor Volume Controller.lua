@@ -1,15 +1,12 @@
 -- @description Monitor Volume Controller
 -- @author Misha Oshkanov
--- @version 5.3
+-- @version 5.3.1
 -- @about
 --  UI panel to quicly change level of your monitoring. It's a stepped contoller with defined levels.
 --  If you need more levels or change db values you can edit buttons table.
 --  Use right click to change modes between volume control and listen filters
 -- @changelog
---  # window height fixed now
---  # new rounded corners
---  # new channel listen mode to solo mid, side, l, r, swapped stereo
---  # new listen button design and new free mode design. Listen buttons can have fixed width now (change in settings)
+--  # mousewheel can toggle listen modes and change it
 --
 -----------------------------------------------------------------------------
 
@@ -1471,14 +1468,36 @@ function draw_listen_buttons(master, w)
             listen_button = ImGui.Button(ctx, lb_label, w, button_h)
             if i2 < #listen_buttons then ImGui.SameLine(ctx) end
 
-            -- Wheel over a band button cycles bands while a mode is active.
+            -- Wheel over a band button cycles Sub..High (Free excluded).
+            -- Past Sub down / past High up turns listen off (no wrap).
+            -- When nothing is active, wheel in either direction enables
+            -- the band under the cursor (except Free).
             if reaper.ImGui_IsItemHovered(ctx) then
                 local lb_wheel = reaper.ImGui_GetMouseWheel(ctx)
-                if lb_wheel ~= 0 and (ext or 0) > 0 then
-                    local ni = ext + (lb_wheel > 0 and 1 or -1)
-                    if ni < 1 then ni = #listen_buttons end
-                    if ni > #listen_buttons then ni = 1 end
-                    switch_listen_band(master, ni)
+                if lb_wheel ~= 0 then
+                    local wheel_last = #listen_buttons - 1 -- High; Free can't be entered via wheel
+                    local cur = ext or 0
+                    if cur == 0 then
+                        if i2 <= wheel_last then
+                            switch_listen_band(master, i2)
+                        end
+                    elseif cur == #listen_buttons then
+                        -- Free is outside the wheel chain: wheel turns listen off
+                        set_listen_state(master, 0)
+                        reaper.SetExtState('MISHA_MONITOR', 'LISTEN', '0', true)
+                        if free_mode and FREE_MODE_TOP and not FREE_MODE_INLINE then
+                            local x, y = reaper.ImGui_GetWindowPos(ctx)
+                            reaper.ImGui_SetWindowPos(ctx, x, y + 26)
+                        end
+                    else
+                        local ni = cur + (lb_wheel > 0 and 1 or -1)
+                        if ni < 1 or ni > wheel_last then
+                            set_listen_state(master, 0)
+                            reaper.SetExtState('MISHA_MONITOR', 'LISTEN', '0', true)
+                        else
+                            switch_listen_band(master, ni)
+                        end
+                    end
                 end
             end
 
