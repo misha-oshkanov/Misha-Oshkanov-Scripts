@@ -1,6 +1,6 @@
 -- @description Project Work Timer: Smart time tracker with tags, afk and focus detection and alarms
 -- @author Misha Oshkanov
--- @version 3.1
+-- @version 3.2
 -- @about
 --  Tracks active work time per project tab in REAPER.
 --  Switches timers between tabs automatically.
@@ -9,12 +9,13 @@
 --  Right click to open tag window and alarm settings
 --  Left click to open statistics
 -- @changelog
---  # font save fixed
---  # do not start timer if no tag fixed
+--  # + button added. Transfer current no tag time to selected tag
+--  # alarm timer fixed
 
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
+
 function print(msg)
     if msg==nil then msg="da" end
     reaper.ShowConsoleMsg(tostring(msg) .. '\n')
@@ -533,6 +534,18 @@ function DrawStatsWindow(proj_ptr)
         -- end
 
                 -- Вывод кнопок-иконок и интерактивных названий тегов
+        -- Живое время no tag за сегодня (для кнопок "+")
+        local stats_today_key = GetCurrentDateKey()
+        local no_tag_today_live = load_proj_time(proj_ptr, stats_today_key, "no tag")
+        do
+            local _, legacy_val = reaper.GetProjExtState(proj_ptr, "TIME_TRACKER", "TOTAL_TIME_" .. stats_today_key)
+            no_tag_today_live = no_tag_today_live + (tonumber(legacy_val) or 0)
+            if current_tag == "no tag" then
+                no_tag_today_live = no_tag_today_live + (total_time - load_total_tag_time(proj_ptr, "no tag"))
+            end
+            no_tag_today_live = math.max(0, no_tag_today_live)
+        end
+
         for _, tag_name in ipairs(total_tags_order) do
             local total_sec = total_per_tag[tag_name] or 0
             local should_hide_render = (tag_name == "rendering" and not rendertime_check)
@@ -542,6 +555,9 @@ function DrawStatsWindow(proj_ptr)
                 local tag_color = GetTagColor(tag_name, false)
 
                 local is_currently_active = (current_tag == tag_name)
+                -- "+" показываем только если есть что переносить и тег не выбран (системные теги исключаем)
+                local show_plus = (tag_name ~= "no tag") and (tag_name ~= "rendering") and (tag_name ~= "afk")
+                    and (not is_currently_active) and (no_tag_today_live > 0)
 
                 reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), tag_color)
                 reaper.ImGui_ColorButton(ctx, "##ico_" .. tag_name, tag_color, 0, 10, 20)
@@ -562,11 +578,47 @@ function DrawStatsWindow(proj_ptr)
 
                 local label_text = string.format("%s: %s##sel_%s",FormatTime(total_sec), tag_name, tag_name)
 
-                local tag_clicked = reaper.ImGui_Selectable(ctx, label_text, is_currently_active)
+                local tag_clicked = false
+                if show_plus then
+                    local avail_x, _ = reaper.ImGui_GetContentRegionAvail(ctx)
+                    tag_clicked = reaper.ImGui_Selectable(ctx, label_text, is_currently_active, 0, math.max(10, avail_x - 30))
+                else
+                    tag_clicked = reaper.ImGui_Selectable(ctx, label_text, is_currently_active)
+                end
 
                 reaper.ImGui_PopStyleColor(ctx, 4)
 
-                if tag_clicked and tag_name ~= "rendering" and tag_name ~= "afk" then
+                local plus_clicked = false
+                if show_plus then
+                    reaper.ImGui_SameLine(ctx)
+                    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), tag_color)
+                    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, 0.15))
+                    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, 0.35))
+                    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, 0.55))
+                    plus_clicked = reaper.ImGui_SmallButton(ctx, "+##stats_merge_" .. tag_name)
+                    reaper.ImGui_PopStyleColor(ctx, 4)
+                    if reaper.ImGui_IsItemHovered(ctx) then
+                        reaper.ImGui_SetItemTooltip(ctx, "Move no tag time to '" .. tag_name .. "': " .. FormatTime(no_tag_today_live))
+                    end
+                end
+
+                if plus_clicked then
+                    -- print(string.format("[Timer] merge click: moving %.1fs no-tag (%s) -> '%s'", no_tag_today_live, stats_today_key, tag_name))
+                    save_proj_time(proj_ptr, stats_today_key, current_tag, total_time)
+                    local no_tag_today = load_proj_time(proj_ptr, stats_today_key, "no tag")
+                    local _, legacy_val = reaper.GetProjExtState(proj_ptr, "TIME_TRACKER", "TOTAL_TIME_" .. stats_today_key)
+                    no_tag_today = no_tag_today + (tonumber(legacy_val) or 0)
+                    if no_tag_today > 0 then
+                        local target_today = load_proj_time(proj_ptr, stats_today_key, tag_name)
+                        reaper.SetProjExtState(proj_ptr, "TIME_TRACKER", "TOTAL_TIME_" .. stats_today_key .. "_" .. tag_name, tostring(target_today + no_tag_today))
+                        reaper.SetProjExtState(proj_ptr, "TIME_TRACKER", "TOTAL_TIME_" .. stats_today_key .. "_no tag", "0")
+                        reaper.SetProjExtState(proj_ptr, "TIME_TRACKER", "TOTAL_TIME_" .. stats_today_key, "")
+                    end
+                    current_tag = tag_name
+                    total_time = load_total_tag_time(proj_ptr, current_tag)
+                    reaper.SetProjExtState(proj_ptr, "TIME_TRACKER", "LAST_ACTIVE_TAG", current_tag)
+                    reaper.MarkProjectDirty(proj_ptr)
+                elseif tag_clicked and tag_name ~= "rendering" and tag_name ~= "afk" then
                     local current_date_key = GetCurrentDateKey()
                     save_proj_time(proj_ptr, current_date_key, current_tag, total_time)
 
@@ -1033,17 +1085,13 @@ function DrawStatsWindow(proj_ptr)
                 end
             end
 
-            if font_size_timer_r or font_size_ui_r or font_size_alarm_r then
-                save_settings()
-            end
 
-            if blink_check_r or notag_nocoutn_check_r or day_or_all_check_r or rendertime_check_r
-                or afktime_check_r or enlagre_check_r then
-                if reaper.ImGui_IsMouseReleased(ctx, reaper.ImGui_MouseButton_Left()) then
+            if blink_check_r or notag_nocoutn_check_r or font_size_timer_r or font_size_ui_r or
+            font_size_alarm_r or day_or_all_check_r or rendertime_check_r or afktime_check_r or enlagre_check_r then
+                if reaper.ImGui_IsMouseReleased( ctx, reaper.ImGui_MouseButton_Left() ) then
                     save_settings()
                 end
             end
-
             reaper.ImGui_Dummy(ctx,4,4)
             reaper.ImGui_TextDisabled( ctx, "Hotkeys and info:" )
             reaper.ImGui_TextDisabled( ctx, "Ctrl + click on timer to toggle show only today timer" )
@@ -1242,6 +1290,7 @@ function frame()
         local current_proj_path = reaper.GetProjectPath()
 
         if current_proj_ptr ~= last_project_ptr or current_date_key ~= last_date_key or current_proj_path ~= last_project_path then
+
             if last_project_ptr and last_date_key ~= "" and current_proj_path == last_project_path then
                 save_proj_time(last_project_ptr, last_date_key, current_tag, total_time)
             end
@@ -1261,8 +1310,6 @@ function frame()
             last_save = now
         end
 
-        stop_if_notag_nocoutn = notag_nocoutn_check == true and current_tag == "no tag"
-
         local is_afk = false
         if IsReaperFocused() or IsPlayingOrRecording() and not notag_nocoutn_check then
             local mouse_x, mouse_y = reaper.GetMousePosition()
@@ -1279,7 +1326,11 @@ function frame()
 
             is_afk = (now - last_input_time) > AFK_THRESHOLD
 
-            if delta < 60 and not is_afk and not stop_if_notag_nocoutn then
+            if delta < 60 and not is_afk then
+                if alert_active and alert_time_left > 0 then
+                    alert_time_left = alert_time_left - delta
+                    if alert_time_left < 0 then alert_time_left = 0 end
+                end
                  if rendertime_check and is_rendering then
                     local render_day_sec = load_proj_time(current_proj_ptr, current_date_key, "rendering")
                     render_day_sec = render_day_sec + delta
@@ -1426,6 +1477,18 @@ function frame()
             reaper.ImGui_TextDisabled(ctx, "Choose tag:")
             reaper.ImGui_Separator(ctx)
 
+            -- Живое время no tag за сегодня (для кнопок "+" и тултипов)
+            local no_tag_today_live = load_proj_time(current_proj_ptr, current_date_key, "no tag")
+            do
+                local _, legacy_val = reaper.GetProjExtState(current_proj_ptr, "TIME_TRACKER", "TOTAL_TIME_" .. current_date_key)
+                no_tag_today_live = no_tag_today_live + (tonumber(legacy_val) or 0)
+                if current_tag == "no tag" then
+                    -- Учитываем ещё не сохранённые секунды живого таймера
+                    no_tag_today_live = no_tag_today_live + (total_time - load_total_tag_time(current_proj_ptr, "no tag"))
+                end
+                no_tag_today_live = math.max(0, no_tag_today_live)
+            end
+
             for _, tag_obj in ipairs(available_tags) do
                 local tag_name = "unknown"
                 local tag_color = 0xFFFFFFFF
@@ -1438,16 +1501,70 @@ function frame()
                 end
 
                 reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), tag_color)
-                reaper.ImGui_ColorButton(ctx, "##ico_" .. tag_name, tag_color, 0, 10, 22)
+                local r, g, b, a = reaper.ImGui_ColorConvertU32ToDouble4(tag_color)
 
+                local bg_active_color = reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, 0.20)  -- 20% яркости для активного
+                local bg_hover_color  = reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, 0.35)  -- 35% яркости при наведении
+
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), tag_color)
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(), bg_hover_color)
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(),  bg_active_color)
+                reaper.ImGui_ColorButton(ctx, "##ico_" .. tag_name, tag_color, 0, 10, 22)
+                -- reaper.ImGui_PushStyleVar( ctx, reaper.ImGui_StyleVar_ItemSpacing(), 0, 0 )
                 reaper.ImGui_SameLine(ctx)
 
-                if reaper.ImGui_MenuItem(ctx, tag_name, nil, (current_tag == tag_name)) then
+                local is_current = (current_tag == tag_name)
+                -- "+" показываем только если есть что переносить и тег не выбран
+                local show_plus = (tag_name ~= "no tag") and (not is_current) and (no_tag_today_live > 0)
+
+                local tag_clicked = false
+                local plus_clicked = false
+
+                if show_plus then
+                    -- Ряд без пересечений: зона тега фиксированной ширины + кнопка справа
+                    local plus_w = 26
+                    local avail_x, _ = reaper.ImGui_GetContentRegionAvail(ctx)
+                    tag_clicked = reaper.ImGui_Selectable(ctx, tag_name .. "##row_" .. tag_name, is_current, 0, math.max(10, avail_x - plus_w))
+                    reaper.ImGui_SameLine(ctx)
+                    local pr, pg, pb, _ = reaper.ImGui_ColorConvertU32ToDouble4(tag_color)
+                    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), tag_color)
+                    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), reaper.ImGui_ColorConvertDouble4ToU32(pr, pg, pb, 0.15))
+                    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), reaper.ImGui_ColorConvertDouble4ToU32(pr, pg, pb, 0.35))
+                    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), reaper.ImGui_ColorConvertDouble4ToU32(pr, pg, pb, 0.55))
+
+                    plus_clicked = reaper.ImGui_SmallButton(ctx, "+##merge_" .. tag_name)
+                    reaper.ImGui_PopStyleColor(ctx, 4)
+                    if reaper.ImGui_IsItemHovered(ctx) then
+                        reaper.ImGui_SetItemTooltip(ctx, "Move time to '" .. tag_name .. "': " .. FormatTime(no_tag_today_live))
+                    end
+                else
+                    tag_clicked = reaper.ImGui_MenuItem(ctx, tag_name, nil, is_current)
+                end
+                -- reaper.ImGui_PopStyleVar( ctx )
+                if plus_clicked then
+                    -- print(string.format("[Timer] merge click: moving %.1fs no-tag (%s) -> '%s'", no_tag_today_live, current_date_key, tag_name))
+                    -- Сбрасываем живой таймер в хранилище, чтобы забрать всё сегодняшнее время no tag
+                    save_proj_time(current_proj_ptr, last_date_key, current_tag, total_time)
+                    local no_tag_today = load_proj_time(current_proj_ptr, current_date_key, "no tag")
+                    -- Подбираем остаток старого формата (ключ без суффикса тега)
+                    local _, legacy_val = reaper.GetProjExtState(current_proj_ptr, "TIME_TRACKER", "TOTAL_TIME_" .. current_date_key)
+                    no_tag_today = no_tag_today + (tonumber(legacy_val) or 0)
+                    if no_tag_today > 0 then
+                        local target_today = load_proj_time(current_proj_ptr, current_date_key, tag_name)
+                        reaper.SetProjExtState(current_proj_ptr, "TIME_TRACKER", "TOTAL_TIME_" .. current_date_key .. "_" .. tag_name, tostring(target_today + no_tag_today))
+                        reaper.SetProjExtState(current_proj_ptr, "TIME_TRACKER", "TOTAL_TIME_" .. current_date_key .. "_no tag", "0")
+                        reaper.SetProjExtState(current_proj_ptr, "TIME_TRACKER", "TOTAL_TIME_" .. current_date_key, "")
+                    end
+                    current_tag = tag_name
+                    total_time = load_total_tag_time(current_proj_ptr, current_tag)
+                    reaper.SetProjExtState(current_proj_ptr, "TIME_TRACKER", "LAST_ACTIVE_TAG", current_tag)
+                    reaper.MarkProjectDirty(current_proj_ptr)
+                elseif tag_clicked then
                     save_proj_time(current_proj_ptr, last_date_key, current_tag, total_time)
                     current_tag = tag_name
                     total_time = load_total_tag_time(current_proj_ptr, current_tag)
                 end
-                reaper.ImGui_PopStyleColor(ctx,1)
+                reaper.ImGui_PopStyleColor(ctx,4)
             end
 
             reaper.ImGui_Dummy(ctx,5,5)
@@ -1459,7 +1576,6 @@ function frame()
                 should_open_manage_modal = true
             end
 
-            reaper.ImGui_PopFont(ctx)
 
             reaper.ImGui_Spacing(ctx)
             reaper.ImGui_Separator(ctx)
@@ -1480,6 +1596,7 @@ function frame()
             if reaper.ImGui_Button(ctx, "1h", 40, 22) then set_alert(60) end
             reaper.ImGui_SameLine(ctx)
             if reaper.ImGui_Button(ctx, "2h", 40, 22) then set_alert(120) end
+                reaper.ImGui_PopFont(ctx)
 
             if alert_active and alert_time_left > 0 then
                 reaper.ImGui_Dummy( ctx, 10, 10 )
