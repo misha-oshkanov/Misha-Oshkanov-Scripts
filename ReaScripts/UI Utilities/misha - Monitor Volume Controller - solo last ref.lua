@@ -1,10 +1,8 @@
 -- @description Monitor Volume Controller Shortcut - toggle last ref solo
 -- @author Misha Oshkanov
--- @version 0.1
+-- @version 0.2
 -- @about
 --  Action to solo of last ref track
-
-
 
 function print(msg) reaper.ShowConsoleMsg(tostring(msg) .. '\n') end
 
@@ -30,7 +28,7 @@ REF_FOLDER_NAME = reaper.GetExtState( 'MISHA_MONITOR', 'REF_FOLDER')
 master = reaper.GetMasterTrack()
 
 function get_children_refs(parent)
-    if parent then 
+    if parent then
       local parentdepth = reaper.GetTrackDepth(parent)
       local parentnumber = reaper.GetMediaTrackInfo_Value(parent, "IP_TRACKNUMBER")
       local children = {}
@@ -45,9 +43,9 @@ function get_children_refs(parent)
         local _, name = reaper.GetTrackName(track)
 
         data.track = track
-        data.solo = solo 
-        data.name = name 
-        
+        data.solo = solo
+        data.name = name
+
         if depth > parentdepth then
             if mute == 0 then reaper.SetMediaTrackInfo_Value(track, 'B_MUTE', 1) end
             table.insert(children, data)
@@ -62,32 +60,32 @@ end
 function save_solos()
     solos = {}
     local count = reaper.CountTracks(0)
-    for k,v in ipairs(ref_data) do 
-        if v.solo then 
+    for k,v in ipairs(ref_data) do
+        if v.solo then
         is_ref_soloed = true
-        end 
+        end
     end
     if not is_ref_soloed then solos = {} end
-    for i=0,count-1 do 
-        local track = reaper.GetTrack(0, i) 
+    for i=0,count-1 do
+        local track = reaper.GetTrack(0, i)
         local solo = reaper.GetMediaTrackInfo_Value(track, 'I_SOLO')
-        if solo > 0 then 
+        if solo > 0 then
             is_ref = false
-            is_ref_soloed = false 
-            for k,v in ipairs(ref_data) do 
-                if v.track == track then 
+            is_ref_soloed = false
+            for k,v in ipairs(ref_data) do
+                if v.track == track then
                     is_ref = true
-                end 
+                end
             end
-            if not is_ref then 
+            if not is_ref then
                 local data = {}
-                data.solo = solo 
-                data.track = track 
+                data.solo = solo
+                data.track = track
                 table.insert(solos, data)
-            end 
+            end
         end
-    end 
-end 
+    end
+end
 
 function write_solos_to_ext()
     local parts = {}
@@ -112,26 +110,26 @@ end
 
 function unsolo_all_tracks()
   local count = reaper.CountTracks(0)
-  for i=0,count-1 do 
-    local track = reaper.GetTrack(0, i) 
+  for i=0,count-1 do
+    local track = reaper.GetTrack(0, i)
     local solo = reaper.GetMediaTrackInfo_Value(track, 'I_SOLO')
-    if solo > 0 then 
+    if solo > 0 then
       reaper.SetMediaTrackInfo_Value(track, 'I_SOLO',0)
-    end  
-  end 
-end 
+    end
+  end
+end
 
 function restore_solos()
   unsolo_all_tracks()
-  if #solos < 0 then return end  
-  for k,v in ipairs(solos) do 
+  if #solos < 0 then return end
+  for k,v in ipairs(solos) do
       reaper.SetMediaTrackInfo_Value(v.track, 'I_SOLO',v.solo)
   end
-end 
+end
 
 ref_solo_is_active = false
 function get_children_refs(parent)
-    if parent then 
+    if parent then
       local parentdepth = reaper.GetTrackDepth(parent)
       local parentnumber = reaper.GetMediaTrackInfo_Value(parent, "IP_TRACKNUMBER")
       local children = {}
@@ -143,14 +141,14 @@ function get_children_refs(parent)
         local solo = reaper.GetMediaTrackInfo_Value(track, 'I_SOLO') ~= 0
         local mute = reaper.GetMediaTrackInfo_Value(track, 'B_MUTE')
 
-        if solo then ref_solo_is_active = true end 
+        if solo then ref_solo_is_active = true end
 
         local _, name = reaper.GetTrackName(track)
 
         data.track = track
-        data.solo = solo 
+        data.solo = solo
         data.name = name
-        
+
         if depth > parentdepth then
             if mute == 0 then reaper.SetMediaTrackInfo_Value(track, 'B_MUTE', 1) end
             table.insert(children, data)
@@ -162,17 +160,19 @@ function get_children_refs(parent)
     end
 end
 
-if ref_solo_is_active then 
-    for k,ref in ipairs(ref_data) do 
-        if ref.solo then 
+if ref_solo_is_active then
+    for k,ref in ipairs(ref_data) do
+        if ref.solo then
             reaper.SetMediaTrackInfo_Value(ref.track, 'I_SOLO',0)
             restore_solos()
-        end 
+        end
     end
 else
     _, LAST_SOLO = reaper.GetProjExtState(0, 'MISHA_MONITOR', 'LAST_SOLO' )
     if LAST_SOLO ~= '' then
         solo_track = reaper.BR_GetMediaTrackByGUID(0, LAST_SOLO)
+    end
+    if solo_track then
         is_soloed = reaper.GetMediaTrackInfo_Value(solo_track, "I_SOLO" ) == 2
         if is_soloed then
             solos = load_solos_from_ext()
@@ -184,28 +184,28 @@ else
             unsolo_all_tracks()
             reaper.SetMediaTrackInfo_Value(solo_track, 'I_SOLO',2)
         end
-    else 
-    local count = reaper.CountTracks(0)
-        for i=0,count-1 do 
-            local track = reaper.GetTrack(0, i) 
+    else
+        local count = reaper.CountTracks(0)
+        for i=0,count-1 do
+            local track = reaper.GetTrack(0, i)
             local _, name = reaper.GetTrackName(track)
-                if name == REF_FOLDER_NAME then 
+                if name == REF_FOLDER_NAME then
                     ref_data = get_children_refs(track)
                     break
                 end
         end
-        -- printt(ref_data)
-        if not ref_solo_is_active then 
+        if #ref_data == 0 then return end
+        if not ref_solo_is_active then
             save_solos()
             write_solos_to_ext()
             unsolo_all_tracks()
             reaper.SetMediaTrackInfo_Value(ref_data[1].track, 'I_SOLO',2)
             reaper.SetProjExtState(0, 'MISHA_MONITOR', 'LAST_SOLO',reaper.GetTrackGUID(ref_data[1].track))
-        else 
-            for k,ref in ipairs(ref_data) do 
-                if ref.solo then 
+        else
+            for k,ref in ipairs(ref_data) do
+                if ref.solo then
                     reaper.SetMediaTrackInfo_Value(ref.track, 'I_SOLO',0)
-                end 
+                end
             end
         end
 
