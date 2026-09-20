@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="953d4e2778641c0289b71bcc5ff1657ea2a364f2">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="dcd17d6d722a23233fdaa771cf35136f61a026e5">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -785,7 +785,7 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Move item edges to nearest markers if item start is bigger than new item start, then move item start to left marker\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Move item edges to nearest markers if item start is bigger than new item start, then move item start to left marker v1.2: fixed nil comparison when no prev/next marker; looped items (B_LOOPSRC==1) are extended to the next marker without clamping to take source length\par}
 }
 ]]></description>
       </metadata>
@@ -794,6 +794,9 @@
       </version>
       <version name="1.1" author="Misha Oshkanov" time="2026-08-09T10:38:08Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/331621bcda5adb0cb850d6bc8cd36f14e4ca1464/ReaScripts/Track%20and%20items/misha%20-%20snap%20item%20edges%20to%20nearest%20markers%20(without%20moving%20content).lua</source>
+      </version>
+      <version name="1.2" author="Misha Oshkanov" time="2026-09-10T13:30:05Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/439772f8480643b25492b5da55ac289be2da4482/ReaScripts/Track%20and%20items/misha%20-%20snap%20item%20edges%20to%20nearest%20markers%20(without%20moving%20content).lua</source>
       </version>
     </reapack>
   </category>
@@ -1248,6 +1251,11 @@ many bug fixes]]></changelog>
         <changelog><![CDATA[# font save fixed
 # do not start timer if no tag fixed]]></changelog>
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/8a967e53557c2819c0da3105616f27854f6500e9/ReaScripts/UI%20Utilities/misha%20-%20project%20work%20timer.lua</source>
+      </version>
+      <version name="3.2" author="Misha Oshkanov" time="2026-09-20T07:38:35Z">
+        <changelog><![CDATA[# + button added. Transfer current no tag time to selected tag
+# alarm timer fixed]]></changelog>
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/dcd17d6d722a23233fdaa771cf35136f61a026e5/ReaScripts/UI%20Utilities/misha%20-%20project%20work%20timer.lua</source>
       </version>
     </reapack>
     <reapack name="misha - Scroller.lua" type="script" desc="Scroller">
