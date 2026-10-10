@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Misha-Oshkanov-Scripts" commit="646bae0a30556620551642e3096d6c2649ea8c0c">
+<index version="1" name="Misha-Oshkanov-Scripts" commit="d9fa1db3f0463f101740dbcade9e6e4b082a70d8">
   <category name="Effects">
     <reapack name="Dimmer Trim..jsfx" type="effect" desc="Dimmer Trim">
       <version name="1.0" author="Cockos" time="2024-09-04T10:06:52Z">
@@ -780,6 +780,9 @@
       </metadata>
       <version name="1.0" author="Misha Oshkanov, AZ" time="2026-09-10T13:00:40Z">
         <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/953d4e2778641c0289b71bcc5ff1657ea2a364f2/ReaScripts/Track%20and%20items/misha%20-%20smart%20trim%20or%20enlarge%20via%20mouse%20or%20razor.lua</source>
+      </version>
+      <version name="1.1" author="Misha Oshkanov, AZ" time="2026-10-10T07:26:51Z">
+        <source main="main">https://github.com/misha-oshkanov/Misha-Oshkanov-Scripts/raw/d9fa1db3f0463f101740dbcade9e6e4b082a70d8/ReaScripts/Track%20and%20items/misha%20-%20smart%20trim%20or%20enlarge%20via%20mouse%20or%20razor.lua</source>
       </version>
     </reapack>
     <reapack name="misha - snap item edges to nearest markers (without moving content).lua" type="script" desc="Snap item edges to neares markers (without moving content)">
