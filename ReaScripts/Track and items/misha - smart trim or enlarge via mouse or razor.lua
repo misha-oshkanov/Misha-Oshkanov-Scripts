@@ -1,6 +1,6 @@
 -- @description Smart trim or enlarge item via mouse or razor
 -- @author Misha Oshkanov, AZ
--- @version 1.0
+-- @version 1.1
 -- @about
 --  Use this script to trim item under mouse cursor. Depending on mouse position:
 --      if mouse cursor in the top half of the item, script will trim or enlarge start of the item
@@ -271,9 +271,8 @@ function SetItemEdges(item, startTime, endTime)
         end
     end
 end
-
 function print(...)
-    local values = { ... }
+    local values = {...}
     for i = 1, #values do values[i] = tostring(values[i]) end
     if #values == 0 then values[1] = 'nil' end
     reaper.ShowConsoleMsg(table.concat(values, ' ') .. '\n')
@@ -282,22 +281,64 @@ end
 function printt(t, indent)
     indent = indent or 0
     for k, v in pairs(t) do
-        if type(v) == "table" then
-            print(string.rep(" ", indent) .. k .. " = {")
-            printt(v, indent + 2)
-            print(string.rep(" ", indent) .. "}")
-        else
-            print(string.rep(" ", indent) .. k .. " = " .. tostring(v))
-        end
+      if type(v) == "table" then
+        print(string.rep(" ", indent) .. k .. " = {")
+        printt(v, indent + 2)
+        print(string.rep(" ", indent) .. "}")
+      else
+        print(string.rep(" ", indent) .. k .. " = " .. tostring(v))
+      end
     end
 end
+
 
 RespSnapItems = true
 RespGrouping = true
 
+-- ==================== НАСТРОЙКИ ФЕЙДОВ ====================
+
+-- Автоматическая установка фейдов при изменении краёв айтемов,
+-- чтобы избежать щелчков. Установите enabled = false чтобы отключить.
+FadeConfig = {
+    enabled = true,
+    duration = 0.01,  -- длительность фейда в секундах (10 мс по умолчанию)
+    shape = 1         -- 1 = linear (см. REAPER shape types)
+}
+
+function AdjustFade(item, fadeType, newEdgePos, oldEdgePos)
+    if not FadeConfig.enabled or not item or not fadeType then return end
+
+    if fadeType == "fadein" then
+        -- extend left (край уехал наружу) — фейд перемещается вместе с краем, длина без изменений
+        if newEdgePos < oldEdgePos then return end
+        local fadeLen = reaper.GetMediaItemInfo_Value(item, 'D_FADEINLEN')
+        local fadeinEnd = oldEdgePos + fadeLen
+        if newEdgePos < fadeinEnd then
+            local newLen = fadeinEnd - newEdgePos
+            reaper.SetMediaItemInfo_Value(item, 'D_FADEINLEN', newLen)
+        else
+            reaper.SetMediaItemInfo_Value(item, 'D_FADEINLEN', FadeConfig.duration)
+            reaper.SetMediaItemInfo_Value(item, 'C_FADEINSHAPE', FadeConfig.shape)
+        end
+    elseif fadeType == "fadeout" then
+        -- extend right (край уехал наружу) — фейд перемещается вместе с краем, длина без изменений
+        if newEdgePos > oldEdgePos then return end
+        local fadeLen = reaper.GetMediaItemInfo_Value(item, 'D_FADEOUTLEN')
+        local fadeoutStart = oldEdgePos - fadeLen
+        if newEdgePos > fadeoutStart then
+            local newLen = newEdgePos - fadeoutStart
+            reaper.SetMediaItemInfo_Value(item, 'D_FADEOUTLEN', newLen)
+        else
+            reaper.SetMediaItemInfo_Value(item, 'D_FADEOUTLEN', FadeConfig.duration)
+            reaper.SetMediaItemInfo_Value(item, 'C_FADEOUTSHAPE', FadeConfig.shape)
+        end
+    end
+end
+
+-- ===========================================================
+
 function EditItems(items, action, editTime)
     if not action or not editTime then return nil end
-
     local undoDesc = nil
 
     for _, item in ipairs(items) do
@@ -307,25 +348,32 @@ function EditItems(items, action, editTime)
 
         if action == "extend_left" then
             local leftLimit = GetItemSourceLeftLimit(item)
-            local newStart = math.max(editTime, leftLimit) -- <-- главное ограничение
+            local newStart = math.max(editTime, leftLimit)   -- <-- главное ограничение
 
             if newStart < iPos then
                 SetItemEdges(item, newStart, iEnd)
+                AdjustFade(item, "fadein", newStart, iPos)
                 undoDesc = "extend left"
             end
+
         elseif action == "extend_right" then
             if editTime > iEnd then
                 SetItemEdges(item, iPos, editTime)
+                AdjustFade(item, "fadeout", editTime, iEnd)
                 undoDesc = "extend right"
             end
+
         elseif action == "trim_left" then
             if iPos < editTime and editTime < iEnd then
                 SetItemEdges(item, editTime, iEnd)
+                AdjustFade(item, "fadein", editTime, iPos)
                 undoDesc = "left"
             end
+
         elseif action == "trim_right" then
             if iPos < editTime and editTime < iEnd then
                 SetItemEdges(item, iPos, editTime)
+                AdjustFade(item, "fadeout", editTime, iEnd)
                 undoDesc = "right"
             end
         end
@@ -407,10 +455,10 @@ function GetEditAction(item, mPos)
     return "trim_" .. side, mPos
 end
 
-function FieldMatch(Table, value, AddRemoveFlag)
-    for i = 1, #Table do
+function FieldMatch(Table,value, AddRemoveFlag)
+    for i=1, #Table do
         if value == Table[i] then
-            if AddRemoveFlag == false then table.remove(Table, i) end
+            if AddRemoveFlag == false then table.remove(Table,i) end
             if AddRemoveFlag ~= nil then return true, Table else return true end
         end
     end
@@ -418,14 +466,15 @@ function FieldMatch(Table, value, AddRemoveFlag)
     if AddRemoveFlag ~= nil then return false, Table else return false end
 end
 
+
 function GetPrefs(key)
     local retval, buf = reaper.get_config_var_string(key)
     if retval == true then return tonumber(buf) end
 end
 
 function RazorEditSelectionExists()
-    for i = 0, reaper.CountTracks(0) - 1 do
-        local _, x = reaper.GetSetMediaTrackInfo_String(reaper.GetTrack(0, i), "P_RAZOREDITS", "", false)
+    for i=0, reaper.CountTracks(0)-1 do
+        local _, x = reaper.GetSetMediaTrackInfo_String(reaper.GetTrack(0,i), "P_RAZOREDITS", "", false)
         if x ~= "" then return true end
     end
     return false
@@ -472,7 +521,6 @@ function MouseTrim()
 
     -- Определяем действие ОДИН РАЗ по исходному айтему
     local action, editTime = GetEditAction(item, mPos)
-
     if not action then
         reaper.PreventUIRefresh(-1)
         reaper.Undo_EndBlock2(0, "", -1)
@@ -480,7 +528,7 @@ function MouseTrim()
     end
 
     -- Собираем все айтемы для редактирования
-    local inisel = reaper.IsMediaItemSelected(item) and SelectedItems or { item }
+    local inisel = reaper.IsMediaItemSelected(item) and SelectedItems or {item}
 
     local allItemsForEdit = {}
     if RespGrouping and GroupEnabled == 1 then
@@ -495,10 +543,10 @@ function MouseTrim()
             refTime = reaper.GetMediaItemInfo_Value(item, 'D_POSITION') + 0.0001
         elseif action == "extend_right" then
             local iEnd = reaper.GetMediaItemInfo_Value(item, 'D_POSITION') +
-                reaper.GetMediaItemInfo_Value(item, 'D_LENGTH')
+                         reaper.GetMediaItemInfo_Value(item, 'D_LENGTH')
             refTime = iEnd - 0.0001
         end
-        AddTrMediaEditingGroup(allItemsForEdit, { refTime })
+        AddTrMediaEditingGroup(allItemsForEdit, {refTime})
     end
 
     local undoType = EditItems(allItemsForEdit, action, editTime)
@@ -519,8 +567,8 @@ end
 
 if RazorEditSelectionExists() then
     reaper.Undo_BeginBlock2(0)
-    reaper.Main_OnCommand(40508, 0) -- Razor: Select all items in razor edit area
-    reaper.Main_OnCommand(42406, 0) -- Razor: Trim items at razor edit area
+    reaper.Main_OnCommand(40508, 0)  -- Razor: Select all items in razor edit area
+    reaper.Main_OnCommand(42406, 0)  -- Razor: Trim items at razor edit area
     reaper.Undo_EndBlock2(0, "Trim Razor", -1)
 else
     MouseTrim()
